@@ -1,0 +1,157 @@
+# Baddie Strands — Website
+
+**Your Hair, Your Crown** · Born in Abuja, Nigeria · baddiestrands@gmail.com
+
+---
+
+## File Structure
+
+```
+bs-upgrade/
+├── index.html          ← Main public website
+├── styles.css          ← All design styles (colours, fonts, layout)
+├── data.js             ← All store data (products, prices, testimonials, quiz)
+├── admin.html          ← Admin dashboard (order management)
+├── admin.css           ← Admin dashboard styles
+├── supabase-setup.js   ← Supabase client — put your keys here
+├── supabase-schema.sql ← Run once in Supabase SQL Editor to create tables
+└── README.md           ← This file
+```
+
+Your product photos (e.g. `1001017209.jpg`) go in the same folder.
+
+---
+
+## Quick Start
+
+### 1. Deploy to Vercel
+
+1. Go to [vercel.com](https://vercel.com) → New Project → Upload
+2. Drag the entire `bs-upgrade` folder
+3. Click Deploy — your site is live in under a minute
+4. Go to Settings → Domains to connect `baddiestrands.com`
+
+### 2. Set Up Supabase (database)
+
+1. Go to [supabase.com](https://supabase.com) → New Project
+2. Name it `baddie-strands`, set a strong password, choose a region
+3. Wait ~2 minutes for it to spin up
+4. Go to **SQL Editor → New Query**, paste `supabase-schema.sql`, click **Run**
+5. Go to **Project Settings → API**, copy:
+   - Project URL
+   - anon / public key
+6. Open `supabase-setup.js` and replace the two placeholder values
+
+### 3. Add Paystack Key
+
+1. Log into [paystack.com](https://paystack.com) → Settings → API Keys
+2. Copy your Live Public Key (starts with `pk_live_`)
+3. Open `index.html`, find `BS_CONFIG` near the bottom, replace `'pk_live_YOUR_PAYSTACK_PUBLIC_KEY'`
+
+### 4. Add Access Bank Account Number
+
+In `index.html` inside `BS_CONFIG`, replace `'0000000000'` with your real account number.
+
+### 5. Redeploy
+
+After editing any file, go back to Vercel → Deployments → Redeploy (or just re-upload the folder).
+
+---
+
+## How Orders Work
+
+1. Customer browses → adds to bag → clicks Checkout
+2. If not signed in → prompted to sign in via email OTP
+3. Fills in delivery details (name, phone, address, all 36 states + FCT)
+4. Chooses payment: **Card via Paystack** or **Bank Transfer via Access Bank**
+5. Order is saved to Supabase → visible in your admin dashboard
+6. You receive a notification at baddiestrands@gmail.com (configure in Supabase → Auth → Email)
+
+---
+
+## Admin Dashboard
+
+**URL:** `yoursite.com/admin.html`
+
+Sign in with **baddiestrands@gmail.com** — a 6-digit code is sent to your inbox (same OTP system as the customer login, powered by Supabase). No one else can access the dashboard.
+
+**Dashboard features:**
+- Revenue, order count, pending orders, subscriber count
+- Full orders table with status dropdowns (Pending → Processing → Shipped → Delivered)
+- CSV export for orders and newsletter subscribers
+- Subscriber list
+
+---
+
+## Updating Products
+
+Open `data.js` and edit the `products` array. Each product has:
+
+| Field | What it does |
+|---|---|
+| `id` | Unique number — never reuse a deleted ID |
+| `name` | Product name shown on the card and modal |
+| `category` | `"wigs"`, `"bundles"`, or `"extensions"` — controls the filter tabs |
+| `price` | Price in Naira (number, no commas) |
+| `oldPrice` | Sale price shown crossed out — set to `null` if no sale |
+| `hot: true` | Shows the **Bestseller** badge |
+| `new: true` | Shows the **New In** badge |
+| `image` | Filename of your photo (e.g. `"my-wig.jpg"`) or a full URL |
+| `lengths` | Array of available lengths shown in the product modal |
+| `colors` | Hex codes for the colour swatches |
+
+---
+
+## Updating Delivery Prices
+
+Open `data.js`:
+- `DELIVERY` — the zones shown in the Delivery section on the homepage
+- `DELIVERY_FEES` — the fees used in checkout calculations (keyed by exact state name)
+
+---
+
+## Enabling Google & Apple Sign-In
+
+Both are wired in the code already. To activate:
+
+**Google:**
+1. Supabase → Authentication → Providers → Google → Enable
+2. Go to [console.cloud.google.com](https://console.cloud.google.com) → Create OAuth 2.0 credentials
+3. Add your Vercel URL as an authorised redirect URI
+4. Paste the Client ID and Secret into Supabase
+
+**Apple:**
+1. Requires an Apple Developer account ($99/year)
+2. Supabase → Authentication → Providers → Apple → follow the instructions
+
+---
+
+## Updating the Hero Image
+
+The hero uses `1001017209.jpg` — your real product photo. Just make sure that file is in the `bs-upgrade` folder when you upload to Vercel. To change it, open `index.html` and find:
+
+```html
+<div class="hero-bg" style="background-image:url('1001017209.jpg')"></div>
+```
+
+Replace the filename with your new image.
+
+---
+
+## Customising Colours
+
+Open `styles.css`. Near the top, find `:root { ... }` and change:
+
+```css
+--pink:  #ff3385;   /* Signature pink — used for buttons, accents, hover states */
+--black: #030303;   /* Background */
+--cream: #F9F6F0;   /* Main text colour */
+```
+
+---
+
+## Contact
+
+- Email: baddiestrands@gmail.com
+- WhatsApp: +234 703 324 7980
+- Instagram: [@the_baddie_strands](https://instagram.com/the_baddie_strands)
