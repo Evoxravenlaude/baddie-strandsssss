@@ -1,172 +1,91 @@
-# Baddie Strands — Website Documentation
+# Baddie Strands
 
-## 🖤 Overview
-A full luxury e-commerce website for Baddie Strands, a Nigerian-owned hair brand. Dark, minimal, and high-end aesthetic with a complete admin dashboard.
+**Your Hair, Your Crown.** The shop site for Baddie Strands, a Nigerian-owned luxury hair brand born in Abuja.
 
----
+This is a static site: plain HTML, CSS and JavaScript, no build step. Drop the folder on Netlify or Vercel to publish it.
 
-## 📁 File Structure
+To preview on your computer, run `npx serve` inside this folder and open the address it prints. Double-clicking `index.html` also works, but Chrome won't load the site's fonts from files on disk, so the headlines fall back to a system font.
 
-```
-baddie-strands/
-├── index.html       ← Main public website
-├── styles.css       ← Complete design system & all styles
-├── app.js           ← All site interactivity (cart, quiz, search, etc.)
-├── data.js          ← Product catalogue & content data
-├── admin.html       ← Admin dashboard (password protected)
-├── admin.css        ← Admin dashboard styles
-├── admin.js         ← Admin dashboard logic
-└── README.md        ← This file
-```
+## What's in the folder
 
----
-
-## 🚀 How to Launch
-
-### Option A — Open Locally
-Just open `index.html` in any modern browser. No server needed.
-
-### Option B — Host on Netlify (Recommended, Free)
-1. Go to [netlify.com](https://netlify.com) and sign up
-2. Click **"Add new site" → "Deploy manually"**
-3. Drag and drop the entire `baddie-strands/` folder
-4. Your site goes live instantly with a free URL
-5. Optionally connect a custom domain (e.g. baddiestrands.com)
-
-### Option C — Host on Vercel
-1. Go to [vercel.com](https://vercel.com) → New Project
-2. Upload the folder or connect a GitHub repo
-3. Deploy
-
----
-
-## 🛍 Public Website Features
-
-| Feature | Description |
+| File | What it does |
 |---|---|
-| **Hero Section** | Full-screen split layout with animated title, stats, and rolling ticker |
-| **Feature Strip** | Animated marquee of key selling points |
-| **About Section** | Brand story with Nigerian roots + worldwide reach |
-| **Shop** | 12 products with filter (All / Wigs / Bundles / Extensions) |
-| **Product Cards** | Hover to reveal quick-add, wishlist, and view buttons |
-| **Product Modal** | Full product detail — length selector, quantity, add to cart |
-| **Cart Drawer** | Slide-out cart with quantity controls, totals, WhatsApp checkout |
-| **Search Overlay** | Live search with instant results (press `/` key to open) |
-| **Knowledge Hub** | Hair basics (6 cards) + interactive care guide (4 tabs: Washing, Styling, Storage, Maintenance) |
-| **Hair Quiz** | 5-question personalised recommendation engine |
-| **Testimonials** | Auto-advancing carousel with 6 verified reviews |
-| **Delivery Section** | Nigeria + International zones with prices and ETAs |
-| **Contact** | 3 channels (WhatsApp, Email, Instagram) + message form |
-| **Newsletter** | Email capture with localStorage persistence |
-| **Custom Cursor** | Gold dot + trailing ring cursor |
-| **Scroll Reveal** | Smooth entrance animations on all sections |
-| **Noise Texture** | Subtle grain overlay for luxury depth |
-| **Ticker Banner** | Gold banner with scrolling announcements |
-| **Mobile Menu** | Full-screen overlay nav for mobile |
-| **Toast Notifications** | Elegant cart/action feedback popups |
+| `index.html` | The shop page |
+| `styles.css` | All shop styling |
+| `app.js` | Showroom, grid, product detail, bag, search, quiz, guides |
+| `checkout.js` | Sign-in, delivery details, payment, order record |
+| `config.js` | **Your settings**: contact details, Paystack key, bank account, EmailJS keys, hours |
+| `data.js` | **Your content**: products, knowledge hub, reviews, quiz, delivery zones and fees |
+| `admin.html`, `admin.css`, `admin.js` | The admin dashboard |
+| `assets/fonts/` | The three typefaces, hosted with the site |
 
----
+## Before you go live
 
-## 🔐 Admin Dashboard
+Work through these in `config.js`. The admin dashboard shows the same checklist under **Setup**.
 
-### Access
-URL: `/admin.html`
+1. **Contact details.** Check the WhatsApp number, email and Instagram handle. The old site used two spellings of the email address (`baddiestrands@` and `baddiestrandss@`); this one uses `baddiestrands@gmail.com` everywhere. Change it in one place if that's wrong.
+2. **Card payments.** Paste your Paystack public key into `paystackPublicKey`. Until you do, "Pay by card" is switched off at checkout.
+3. **Bank transfer.** Replace `0000000000` with your real account number. Until you do, bank transfer is switched off so nobody can send money to a placeholder.
+4. **Email.** Add your EmailJS keys so sign-in codes and new-order emails are sent. Until you do, the sign-in code is shown on screen so you can still test.
+5. **Admin sign-in.** Change the username and password at the top of `admin.js`.
+6. **Replace the sample content.** The product photos are stock images, and the reviews, ratings, review counts and the "500+ happy queens" figures came with the original template. Swap in your own before launch.
 
-**Default Credentials:**
-- Username: `baddie_admin`
-- Password: `strands2024`
+While card and bank transfer are both off, checkout still works: the customer places the order and sends it to you on WhatsApp with one tap.
 
-> ⚠️ Change the password in `admin.js` under `const ADMIN` before going live.
+## How orders reach you
 
-### Dashboard Pages
+- A customer adds pieces to the bag, signs in with an email code, enters delivery details and pays.
+- The delivery fee comes from `DELIVERY_FEES` in `data.js`, by state.
+- You are told about the order by **email** (once EmailJS is connected) and by the **WhatsApp** button on the confirmation screen. Card payments also appear in your Paystack dashboard.
+- Card payments are confirmed in the customer's browser. Check the payment in Paystack before you ship.
 
-| Page | Features |
+### What the admin dashboard can and can't see
+
+The site has no server or database. Everything it remembers is saved in the browser it is used in. That means:
+
+- The dashboard shows visits, sign-ups and orders **made on that same device**, plus orders you record by hand with **Record an order**.
+- An order a customer places on her own phone does **not** appear in your dashboard. It reaches you by email and WhatsApp.
+- Product edits made in the dashboard are saved in your browser only. To publish them, press **Copy for data.js**, paste over the `products` list in `data.js`, and redeploy.
+- Newsletter sign-ups are stored on the visitor's device. To collect them centrally, connect a mailing-list service or a database.
+
+Sign-in works the same way: it identifies a customer by email for that device. It is not a secure account system.
+
+If you want orders, subscribers and product edits shared across devices, the site needs a backend. Your earlier `bs-upgrade` folder used Supabase for this; that version has not been rebuilt in this design.
+
+## Changing things
+
+**Products** live in `data.js`. Copy a product, give it a new `id`, and edit the fields. `tone` is the backdrop colour that piece gets in the showroom. For `image`, use a file name in this folder or a full `https://` link.
+
+**Delivery** has two lists in `data.js`: `DELIVERY` is what the shop shows, `DELIVERY_FEES` is what checkout charges. Keep them in step.
+
+**Colours and type** are set at the top of `styles.css` under "Tokens".
+
+**Length guide.** The landmarks ("20 inches is mid-back") and how much shorter wavy and curly textures sit are in `lengthGuide` in `data.js`. They are standard approximations. Check them against your own units.
+
+## Where the design comes from
+
+Each part of the site borrows a pattern from one of the reference sites.
+
+| Part | Borrowed from |
 |---|---|
-| **Dashboard** | Revenue stats, 7-day chart, recent orders, top products, quick actions, store health |
-| **Analytics** | Page views, revenue, avg order value, conversion rate, sessions chart, category chart, product performance table |
-| **Products** | Full grid of all products, add/edit/delete, search & filter |
-| **Orders** | Full order table, status updater (dropdown), filter by status, CSV export |
-| **Subscribers** | Newsletter subscriber list, count, CSV export |
-| **Settings** | Store info, feature toggles, password change, delivery reference, data exports |
+| Rounded window frame, floating pill menu that opens into tiles, showroom with one piece at a time | patike.ch |
+| Opening counter, giant headline with the photo rising through it, corner card, reviews layout | dialedcoffee.com |
+| Product detail: ghost word behind the piece, status line, feature tags, letters that sharpen in | brocksbushes.moonshiners.co.uk |
+| Length guide with texture toggle and ruler, pill buttons with a circled arrow | lofliballs.com |
+| Shade scale, care steps with outlined numerals, delivery timeline, newsletter panel | nettiesbees.com |
+| Drifting photo wall with the motto blended over it | ruthgriffioen.art |
+| Grid view: staggered columns, bar-bracketed names, marker under the chosen filter | pistacchioecaffe.it |
+| Wine manifesto block, quiz card with big option tiles and a full-width bar, growing footer type | carnilove.ashfall.studio |
+| Story section: lowercase wordmark, thread line from the dot, parenthesised labels, live Abuja clock | concretaceramiche.it |
+| Hair basics as numbered chapters with a plus to expand, stacked section index | arcteryx.com System 0 |
+| Bestsellers ranking with ticked frame and outlined numeral, oval buttons, "ask for it" line, toasts | enigmascult.com |
 
-### How Orders Work
-Orders are placed via WhatsApp checkout. When a customer clicks "Checkout via WhatsApp," a pre-filled message with all cart items is sent to your number (+234 703 324 7980). Manually add confirmed orders in the admin panel.
+## Browser support
 
----
+Current Chrome, Edge, Safari and Firefox. The site respects the "reduce motion" setting and every control can be reached with a keyboard.
 
-## 🎨 Customisation Guide
+## Contact
 
-### Change Colours
-Edit CSS variables at the top of `styles.css`:
-```css
---gold: #c9a96e;      /* Main accent colour */
---cream: #f5efe6;     /* Text colour */
---black: #0a0a0a;     /* Background */
-```
-
-### Add Products
-1. Go to `admin.html` → Products → **+ Add Product**
-2. Fill in name, type, category, price, stock, image URL, description
-3. Click Save — product appears live immediately
-
-To add products permanently (survives browser refresh), also add them to the `products` array in `data.js`.
-
-### Change WhatsApp Number
-Search for `2347033247980` in `app.js` and `admin.js` and replace with your number (digits only, no spaces or +).
-
-### Update Contact Info
-- **index.html**: Update the contact section links
-- **admin.js**: Update store info in settings
-- **data.js**: No contact info stored here
-
-### Change Admin Password
-In `admin.js`, find:
-```js
-const ADMIN = {
-  username: 'baddie_admin',
-  password: 'strands2024',
-  ...
-};
-```
-Change to your preferred credentials.
-
----
-
-## 📱 Responsive Breakpoints
-- Desktop: Full two-column layouts, sidebar nav
-- Tablet (≤1024px): Single-column sections, no admin sidebar
-- Mobile (≤768px): Mobile menu, stacked layouts, 2-column product grid
-
----
-
-## 🌍 Delivery Coverage
-**Nigeria:** All 36 states + FCT Abuja
-**International:** UK, Europe, USA, Canada, West Africa, Rest of Africa
-
----
-
-## 📊 Analytics
-The site tracks:
-- Total page views (stored in localStorage as `bs_analytics`)
-- Daily sessions (last 30 days)
-- Product views (per product ID)
-
-All analytics are visible in the Admin → Analytics page.
-
-For production analytics, consider connecting **Google Analytics** or **Plausible Analytics** by adding their script tag to `index.html`.
-
----
-
-## 💡 Next Steps (Recommended)
-1. **Connect a domain** — Purchase baddiestrands.com or similar
-2. **Add Google Analytics** — For real traffic data
-3. **Add Paystack** — For direct card payments (Nigerian payment gateway)
-4. **SEO** — Add your actual Instagram images to replace Unsplash photos
-5. **WhatsApp Business API** — For automated order confirmations
-
----
-
-## 🇳🇬 Contact
 - WhatsApp: +234 703 324 7980
-- Email: baddiestrandss@gmail.com
+- Email: baddiestrands@gmail.com
 - Instagram: [@the_baddie_strands](https://instagram.com/the_baddie_strands)
