@@ -2,1947 +2,279 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baddie Strands — Admin Dashboard</title>
-  <style>
-/* ============================================
-   BADDIE STRANDS — Admin Dashboard Styles
-   ============================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@200;300;400;500&display=swap');
-
-:root {
-  --black:    #0a0a0a;
-  --deep:     #0d0c0b;
-  --surface:  #141311;
-  --card:     #1a1815;
-  --border:   #252220;
-  --border2:  #2e2b28;
-  --gold:     #c9a96e;
-  --gold-dim: #8a6e44;
-  --cream:    #f0e8db;
-  --cream-dim:#b8ad9e;
-  --muted:    #6b6258;
-  --success:  #5a8a6e;
-  --error:    #8a4a4a;
-  --warn:     #8a7a4a;
-  --info:     #4a6a8a;
-  --sidebar-w: 260px;
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-body:    'Jost', sans-serif;
-  --ease: cubic-bezier(0.25,0.46,0.45,0.94);
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body {
-  background: var(--black);
-  color: var(--cream);
-  font-family: var(--font-body);
-  font-weight: 300;
-  font-size: 14px;
-  line-height: 1.6;
-  cursor: none;
-}
-button { cursor: none; border: none; background: none; font-family: var(--font-body); }
-a { color: inherit; text-decoration: none; }
-input, textarea, select {
-  font-family: var(--font-body);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--cream);
-  padding: 10px 14px;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.3s;
-  width: 100%;
-  border-radius: 2px;
-}
-input:focus, textarea:focus, select:focus { border-color: var(--gold); }
-select option { background: var(--surface); }
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: var(--black); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-/* CURSOR */
-#cursor {
-  width: 8px; height: 8px;
-  background: var(--gold); border-radius: 50%;
-  position: fixed; pointer-events: none; z-index: 9999;
-  transform: translate(-50%,-50%);
-  transition: transform 0.15s;
-}
-
-/* ── LOGIN SCREEN ── */
-#login-screen {
-  position: fixed; inset: 0; z-index: 8000;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--black);
-}
-#login-screen::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 30% 50%, rgba(201,169,110,0.04), transparent 60%);
-}
-.login-box {
-  background: var(--deep);
-  border: 1px solid var(--border);
-  padding: 60px 50px;
-  width: 100%;
-  max-width: 440px;
-  position: relative; z-index: 1;
-}
-.login-logo {
-  font-family: var(--font-display);
-  font-size: 2rem; font-weight: 400;
-  color: var(--cream); text-align: center;
-  margin-bottom: 8px;
-}
-.login-logo span { color: var(--gold); }
-.login-sub { text-align: center; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 48px; }
-.login-form { display: flex; flex-direction: column; gap: 16px; }
-.login-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
-.login-btn {
-  background: var(--gold); color: var(--black);
-  padding: 14px; font-size: 11px;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  font-weight: 500; margin-top: 8px;
-  transition: background 0.3s;
-}
-.login-btn:hover { background: #e0bf84; }
-.login-error {
-  background: rgba(138,74,74,0.15);
-  border: 1px solid var(--error);
-  color: #d08080; font-size: 12px;
-  padding: 10px 14px; display: none;
-}
-.login-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: 20px; }
-
-/* ── LAYOUT ── */
-#admin-app { display: none; height: 100vh; overflow: hidden; }
-#admin-app.visible { display: flex; }
-
-/* SIDEBAR */
-#sidebar {
-  width: var(--sidebar-w);
-  background: var(--deep);
-  border-right: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  flex-shrink: 0;
-  overflow-y: auto;
-  z-index: 100;
-}
-.sidebar-logo {
-  padding: 28px 24px 24px;
-  border-bottom: 1px solid var(--border);
-}
-.sidebar-logo-text {
-  font-family: var(--font-display);
-  font-size: 1.3rem; font-weight: 400;
-  color: var(--cream);
-}
-.sidebar-logo-text span { color: var(--gold); }
-.sidebar-logo-sub { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
-.sidebar-nav { padding: 20px 0; flex: 1; }
-.sidebar-section-label {
-  font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase;
-  color: var(--muted); padding: 8px 24px 4px;
-}
-.sidebar-link {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 24px;
-  color: var(--cream-dim); font-size: 13px;
-  transition: all 0.25s;
-  position: relative;
-}
-.sidebar-link::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0;
-  width: 2px; background: var(--gold);
-  transform: scaleY(0); transition: transform 0.25s;
-}
-.sidebar-link:hover { color: var(--cream); background: rgba(255,255,255,0.02); }
-.sidebar-link.active { color: var(--gold); background: rgba(201,169,110,0.06); }
-.sidebar-link.active::before { transform: scaleY(1); }
-.sidebar-icon { font-size: 16px; width: 20px; text-align: center; }
-.sidebar-footer {
-  padding: 20px 24px;
-  border-top: 1px solid var(--border);
-}
-.sidebar-user { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
-.sidebar-user strong { color: var(--cream-dim); display: block; font-weight: 400; }
-.sidebar-logout {
-  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--muted); transition: color 0.2s;
-}
-.sidebar-logout:hover { color: var(--error); }
-
-/* MAIN CONTENT */
-#main {
-  flex: 1; overflow-y: auto;
-  display: flex; flex-direction: column;
-}
-.admin-topbar {
-  height: 60px;
-  background: var(--deep);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  flex-shrink: 0;
-  position: sticky; top: 0; z-index: 50;
-}
-.admin-topbar-title {
-  font-family: var(--font-display);
-  font-size: 1.2rem; font-weight: 400; color: var(--cream);
-}
-.admin-topbar-actions { display: flex; align-items: center; gap: 12px; }
-.admin-page { padding: 32px; display: none; }
-.admin-page.active { display: block; }
-
-/* CARDS */
-.admin-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 24px;
-  margin-bottom: 24px;
-}
-.admin-card-title {
-  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 16px;
-}
-
-/* STATS GRID */
-.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
-.stat-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 24px;
-  position: relative; overflow: hidden;
-  transition: border-color 0.3s;
-}
-.stat-card:hover { border-color: var(--gold-dim); }
-.stat-card::after {
-  content: '';
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--gold), transparent);
-}
-.stat-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-.stat-value {
-  font-family: var(--font-display);
-  font-size: 2.2rem; font-weight: 400; color: var(--cream);
-}
-.stat-value span { color: var(--gold); }
-.stat-change { font-size: 11px; margin-top: 6px; }
-.stat-change.up { color: var(--success); }
-.stat-change.down { color: var(--error); }
-
-/* CHART AREA */
-.chart-area {
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 24px;
-  margin-bottom: 24px;
-}
-.chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.chart-title { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
-.chart-legend { display: flex; gap: 16px; }
-.chart-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
-.chart-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-canvas { max-height: 240px; }
-
-/* DASHBOARD GRID */
-.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.dash-grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
-
-/* TABLE */
-.admin-table { width: 100%; border-collapse: collapse; }
-.admin-table th {
-  text-align: left; padding: 10px 14px;
-  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--muted); border-bottom: 1px solid var(--border);
-}
-.admin-table td {
-  padding: 14px; border-bottom: 1px solid var(--border);
-  font-size: 13px; color: var(--cream-dim);
-}
-.admin-table tr:hover td { background: rgba(255,255,255,0.01); }
-.admin-table tr:last-child td { border-bottom: none; }
-
-/* BADGE */
-.badge {
-  display: inline-block;
-  padding: 3px 10px;
-  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
-  border-radius: 1px;
-}
-.badge-success { background: rgba(90,138,110,0.15); color: #7ac49a; border: 1px solid rgba(90,138,110,0.3); }
-.badge-warn { background: rgba(138,122,74,0.15); color: #c4b57a; border: 1px solid rgba(138,122,74,0.3); }
-.badge-error { background: rgba(138,74,74,0.15); color: #c48080; border: 1px solid rgba(138,74,74,0.3); }
-.badge-info { background: rgba(74,106,138,0.15); color: #80aac4; border: 1px solid rgba(74,106,138,0.3); }
-
-/* PRODUCT MANAGER */
-.pm-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-.pm-search input { width: 280px; }
-.admin-btn {
-  padding: 10px 24px;
-  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
-  border: 1px solid var(--gold); color: var(--gold);
-  background: transparent; transition: all 0.3s;
-}
-.admin-btn:hover { background: var(--gold); color: var(--black); }
-.admin-btn-sm { padding: 6px 14px; font-size: 9px; }
-.admin-btn-solid { background: var(--gold); color: var(--black); }
-.admin-btn-solid:hover { background: #e0bf84; }
-.admin-btn-danger { border-color: var(--error); color: #c48080; }
-.admin-btn-danger:hover { background: var(--error); color: var(--cream); }
-
-/* PRODUCT CARD (admin) */
-.pm-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 12px; }
-.pm-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  position: relative; overflow: hidden;
-  transition: border-color 0.3s;
-}
-.pm-card:hover { border-color: var(--gold-dim); }
-.pm-card-img { aspect-ratio: 3/4; overflow: hidden; background: var(--card); }
-.pm-card-img img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8); transition: transform 0.4s; }
-.pm-card:hover .pm-card-img img { transform: scale(1.04); }
-.pm-card-info { padding: 14px; }
-.pm-card-name { font-size: 13px; color: var(--cream); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pm-card-price { font-family: var(--font-display); font-size: 1rem; color: var(--gold); }
-.pm-card-actions { display: flex; gap: 6px; padding: 0 14px 14px; }
-
-/* MODAL */
-.admin-modal-overlay {
-  position: fixed; inset: 0; z-index: 2000;
-  background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.3s;
-}
-.admin-modal-overlay.open { opacity: 1; pointer-events: all; }
-.admin-modal {
-  background: var(--deep);
-  border: 1px solid var(--border);
-  width: 100%; max-width: 600px;
-  max-height: 90vh; overflow-y: auto;
-  padding: 32px;
-  transform: scale(0.96);
-  transition: transform 0.3s;
-}
-.admin-modal-overlay.open .admin-modal { transform: scale(1); }
-.admin-modal-title {
-  font-family: var(--font-display);
-  font-size: 1.5rem; font-weight: 400; color: var(--cream);
-  margin-bottom: 24px;
-}
-.admin-form { display: flex; flex-direction: column; gap: 14px; }
-.admin-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.admin-form-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: block; }
-.admin-form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
-textarea.admin-textarea { resize: vertical; min-height: 80px; }
-
-/* SETTINGS */
-.settings-section { margin-bottom: 32px; }
-.settings-title { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.settings-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
-.settings-row:last-child { border-bottom: none; }
-.settings-row-label { font-size: 13px; color: var(--cream); }
-.settings-row-desc { font-size: 11px; color: var(--muted); }
-.toggle {
-  width: 44px; height: 24px; background: var(--border2);
-  border-radius: 12px; position: relative; cursor: none;
-  transition: background 0.3s;
-}
-.toggle::after {
-  content: '';
-  position: absolute; top: 3px; left: 3px;
-  width: 18px; height: 18px; background: var(--cream-dim);
-  border-radius: 50%; transition: all 0.3s;
-}
-.toggle.on { background: var(--gold-dim); }
-.toggle.on::after { left: 23px; background: var(--gold); }
-
-/* ANALYTICS PAGE */
-.analytics-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
-.kpi-card {
-  background: var(--card); border: 1px solid var(--border);
-  padding: 20px 24px;
-}
-.kpi-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-.kpi-value { font-family: var(--font-display); font-size: 2rem; color: var(--cream); }
-.kpi-value span { color: var(--gold); }
-.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-
-/* TOAST */
-#admin-toast {
-  position: fixed; bottom: 24px; right: 24px;
-  background: var(--card); border: 1px solid var(--border);
-  border-left: 3px solid var(--gold);
-  padding: 14px 18px; min-width: 260px; z-index: 9000;
-  transform: translateY(12px); opacity: 0;
-  transition: all 0.4s;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-}
-#admin-toast.show { transform: translateY(0); opacity: 1; }
-.at-title { font-size: 13px; color: var(--cream); margin-bottom: 2px; }
-.at-body { font-size: 11px; color: var(--muted); }
-
-/* RESPONSIVE */
-@media (max-width: 1100px) {
-  .stats-grid { grid-template-columns: repeat(2,1fr); }
-  .dash-grid { grid-template-columns: 1fr; }
-  .dash-grid-3 { grid-template-columns: 1fr; }
-  .analytics-kpis { grid-template-columns: repeat(2,1fr); }
-}
-@media (max-width: 768px) {
-  #sidebar { display: none; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .admin-form-row { grid-template-columns: 1fr; }
-}
-
-</style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin | Baddie Strands</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23230B06'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='34' fill='%23F6E2D3'%3EBs%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<div id="cursor"></div>
-
-<!-- LOGIN -->
+<!-- SIGN IN -->
 <div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">Baddie <span>Strands</span></div>
-    <div class="login-sub">Admin Access — Authorised Personnel Only</div>
-    <form id="login-form" class="login-form">
-      <div>
-        <label class="login-label" for="login-user">Username</label>
-        <input type="text" id="login-user" autocomplete="username" placeholder="Enter username" required>
-      </div>
-      <div>
-        <label class="login-label" for="login-pass">Password</label>
-        <input type="password" id="login-pass" autocomplete="current-password" placeholder="Enter password" required>
-      </div>
-      <div id="login-error" class="login-error">Incorrect credentials. Please try again.</div>
-      <button type="submit" class="login-btn">Sign In to Dashboard</button>
-    </form>
-    <div class="login-hint">Default credentials: baddie_admin / strands2024</div>
-  </div>
+  <form id="login-form" class="login" novalidate>
+    <p class="login__mark">Baddie Strands</p>
+    <h1>Admin</h1>
+    <p class="login__sub">Authorised staff only.</p>
+    <label class="field"><span>Username</span><input type="text" id="login-user" autocomplete="username" required></label>
+    <label class="field"><span>Password</span><input type="password" id="login-pass" autocomplete="current-password" required></label>
+    <p id="login-error" class="login__error" role="alert" hidden></p>
+    <button type="submit" class="bar">Sign in</button>
+    <a class="login__back" href="index.html">Back to the shop</a>
+  </form>
 </div>
 
-<!-- ADMIN APP -->
-<div id="admin-app">
-
-  <!-- SIDEBAR -->
+<!-- APP -->
+<div id="admin-app" hidden>
   <aside id="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-text">Baddie <span>Strands</span></div>
-      <div class="sidebar-logo-sub">Admin Console</div>
-    </div>
-    <nav class="sidebar-nav">
-      <div class="sidebar-section-label">Overview</div>
-      <a class="sidebar-link" data-page="dashboard"><span class="sidebar-icon">⬡</span>Dashboard</a>
-      <a class="sidebar-link" data-page="analytics"><span class="sidebar-icon">↗</span>Analytics</a>
-      <div class="sidebar-section-label" style="margin-top:16px">Store</div>
-      <a class="sidebar-link" data-page="products"><span class="sidebar-icon">✦</span>Products</a>
-      <a class="sidebar-link" data-page="orders"><span class="sidebar-icon">◻</span>Orders</a>
-      <a class="sidebar-link" data-page="subscribers"><span class="sidebar-icon">◈</span>Subscribers</a>
-      <div class="sidebar-section-label" style="margin-top:16px">Admin</div>
-      <a class="sidebar-link" data-page="settings"><span class="sidebar-icon">◎</span>Settings</a>
-      <a class="sidebar-link" href="index.html" target="_blank"><span class="sidebar-icon">↗</span>View Live Site</a>
+    <a class="side__mark" href="index.html" target="_blank" rel="noopener">Baddie Strands<small>Admin</small></a>
+    <nav class="side__nav" aria-label="Admin sections">
+      <p>Overview</p>
+      <button type="button" class="side__link" data-page="dashboard">Dashboard</button>
+      <button type="button" class="side__link" data-page="analytics">Analytics</button>
+      <p>Store</p>
+      <button type="button" class="side__link" data-page="products">Products</button>
+      <button type="button" class="side__link" data-page="orders">Orders <span class="side__count" id="side-pending" hidden></span></button>
+      <button type="button" class="side__link" data-page="subscribers">Subscribers</button>
+      <p>Admin</p>
+      <button type="button" class="side__link" data-page="settings">Settings</button>
     </nav>
-    <div class="sidebar-footer">
-      <div class="sidebar-user">Signed in as<strong>Baddie Strands Admin</strong></div>
-      <button id="admin-logout" class="sidebar-logout">Sign Out →</button>
+    <div class="side__foot">
+      <a href="index.html" target="_blank" rel="noopener">View the shop</a>
+      <button type="button" id="admin-logout">Sign out</button>
     </div>
   </aside>
 
-  <!-- MAIN -->
-  <div id="main">
-
-    <!-- TOPBAR -->
-    <div class="admin-topbar">
-      <div id="topbar-title" class="admin-topbar-title">Dashboard Overview</div>
-      <div class="admin-topbar-actions">
-        <a href="https://wa.me/2347033247980" target="_blank" class="admin-btn admin-btn-sm" style="text-decoration:none">💬 WhatsApp</a>
-        <a href="index.html" target="_blank" class="admin-btn admin-btn-sm admin-btn-solid" style="text-decoration:none">↗ Live Site</a>
+  <main id="main">
+    <header class="top">
+      <h1 id="topbar-title">Dashboard</h1>
+      <div class="top__actions">
+        <a class="btn" data-wa-link href="#" target="_blank" rel="noopener">WhatsApp</a>
+        <a class="btn btn--solid" href="index.html" target="_blank" rel="noopener">Open the shop</a>
       </div>
-    </div>
+    </header>
 
-    <!-- DASHBOARD PAGE -->
-    <div id="page-dashboard" class="admin-page">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Revenue</div>
-          <div class="stat-value" id="stat-revenue">—</div>
-          <div class="stat-change up" id="stat-month">— this month</div>
+    <p class="note" id="scope-note">This dashboard reads what is saved <b>in this browser</b>: visits, sign-ups and orders made on this device, plus any orders you add by hand. Orders customers place on their own phones reach you by email and WhatsApp, not here. <a href="#" data-goto="settings">See setup</a></p>
+
+    <!-- DASHBOARD -->
+    <section id="page-dashboard" class="page">
+      <div class="stats">
+        <div class="stat"><p>Revenue</p><b id="stat-revenue">₦0</b><small id="stat-month">Completed orders</small></div>
+        <div class="stat"><p>Orders</p><b id="stat-orders">0</b><small id="stat-pending">0 pending</small></div>
+        <div class="stat"><p>Shop visits</p><b id="stat-views">0</b><small>On this device</small></div>
+        <div class="stat"><p>Subscribers</p><b id="stat-subs">0</b><small>On this device</small></div>
+      </div>
+
+      <div class="cols cols--wide">
+        <div class="panel">
+          <h2>Revenue, last 7 days</h2>
+          <div class="chart"><canvas id="revenue-chart" aria-label="Revenue from completed orders over the last 7 days" role="img"></canvas><p class="chart__none" hidden></p></div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Orders</div>
-          <div class="stat-value" id="stat-orders">—</div>
-          <div class="stat-change up">All time</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Site Views</div>
-          <div class="stat-value" id="stat-views">—</div>
-          <div class="stat-change up">Total page views</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Subscribers</div>
-          <div class="stat-value" id="stat-subs">—</div>
-          <div class="stat-change up">Newsletter list</div>
+        <div class="panel">
+          <h2>Top pieces by units</h2>
+          <ol class="toplist" id="top-products-list"></ol>
         </div>
       </div>
 
-      <div class="dash-grid-3">
-        <div class="chart-area">
-          <div class="chart-header">
-            <div class="chart-title">Revenue — Last 7 Days</div>
-            <div class="chart-legend">
-              <div class="chart-legend-item"><div class="chart-legend-dot" style="background:var(--gold)"></div>Completed Orders</div>
-            </div>
-          </div>
-          <div style="height:220px"><canvas id="revenue-chart"></canvas></div>
-        </div>
-        <div class="admin-card" style="margin-bottom:0">
-          <div class="admin-card-title">Top Products by Units Sold</div>
-          <div id="top-products-list"></div>
-        </div>
-      </div>
-
-      <div class="admin-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <div class="admin-card-title" style="margin-bottom:0">Recent Orders</div>
-          <button class="admin-btn admin-btn-sm" onclick="navigateTo('orders')">View All →</button>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="admin-table">
-            <thead>
-              <tr><th>Order ID</th><th>Customer</th><th>Product</th><th>City</th><th>Total</th><th>Status</th><th>Date</th></tr>
-            </thead>
+      <div class="panel">
+        <div class="panel__head"><h2>Recent orders</h2><button type="button" class="btn" data-goto="orders">View all</button></div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Where</th><th class="num">Total</th><th>Status</th><th>Date</th></tr></thead>
             <tbody id="recent-orders-tbody"></tbody>
           </table>
         </div>
       </div>
 
-      <div class="dash-grid">
-        <div class="admin-card">
-          <div class="admin-card-title">Quick Actions</div>
-          <div style="display:flex;flex-wrap:wrap;gap:10px">
-            <button class="admin-btn" onclick="navigateTo('products');setTimeout(()=>openProductModal(),200)">+ Add Product</button>
-            <button class="admin-btn" onclick="navigateTo('orders')">View Orders</button>
-            <button class="admin-btn" onclick="navigateTo('analytics')">Analytics</button>
-            <a href="https://www.instagram.com/the_baddie_strands" target="_blank" class="admin-btn" style="text-decoration:none">📸 Instagram</a>
-            <a href="mailto:baddiestrandss@gmail.com" class="admin-btn" style="text-decoration:none">✉ Email</a>
+      <div class="cols">
+        <div class="panel">
+          <h2>Quick actions</h2>
+          <div class="actions">
+            <button type="button" class="btn" id="quick-add-product">Add a product</button>
+            <button type="button" class="btn" id="quick-add-order">Record an order</button>
+            <button type="button" class="btn" data-goto="analytics">Analytics</button>
+            <a class="btn" data-ig-link href="#" target="_blank" rel="noopener">Instagram</a>
+            <a class="btn" data-mail-link href="#">Email</a>
           </div>
         </div>
-        <div class="admin-card">
-          <div class="admin-card-title">Store Health</div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-              <span style="font-size:13px;color:var(--cream-dim)">Site Status</span>
-              <span class="badge badge-success">Live ✓</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-              <span style="font-size:13px;color:var(--cream-dim)">WhatsApp Checkout</span>
-              <span class="badge badge-success">Active ✓</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-              <span style="font-size:13px;color:var(--cream-dim)">Newsletter</span>
-              <span class="badge badge-success">Active ✓</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
-              <span style="font-size:13px;color:var(--cream-dim)">International Shipping</span>
-              <span class="badge badge-info">Enabled</span>
-            </div>
-          </div>
+        <div class="panel">
+          <h2>Setup</h2>
+          <ul class="checks" id="setup-list"></ul>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- ANALYTICS PAGE -->
-    <div id="page-analytics" class="admin-page">
-      <div class="analytics-kpis">
-        <div class="kpi-card"><div class="kpi-label">Total Page Views</div><div class="kpi-value" id="a-pageviews">—</div><div class="kpi-sub">Since site launch</div></div>
-        <div class="kpi-card"><div class="kpi-label">Total Revenue</div><div class="kpi-value" id="a-revenue">—</div><div class="kpi-sub">Completed orders only</div></div>
-        <div class="kpi-card"><div class="kpi-label">Avg. Order Value</div><div class="kpi-value" id="a-avgorder">—</div><div class="kpi-sub">Per completed order</div></div>
-        <div class="kpi-card"><div class="kpi-label">Conversion Rate</div><div class="kpi-value" id="a-conv">—</div><div class="kpi-sub">Views → Orders</div></div>
-        <div class="kpi-card"><div class="kpi-label">Newsletter Subscribers</div><div class="kpi-value" id="a-subs">—</div><div class="kpi-sub">Email list size</div></div>
-        <div class="kpi-card"><div class="kpi-label">Total Orders</div><div class="kpi-value" id="a-orders">—</div><div class="kpi-sub">All time</div></div>
+    <!-- ANALYTICS -->
+    <section id="page-analytics" class="page" hidden>
+      <div class="stats stats--six">
+        <div class="stat"><p>Shop visits</p><b id="a-pageviews">0</b><small>On this device</small></div>
+        <div class="stat"><p>Revenue</p><b id="a-revenue">₦0</b><small>Completed orders</small></div>
+        <div class="stat"><p>Average order</p><b id="a-avgorder">₦0</b><small>Completed orders</small></div>
+        <div class="stat"><p>Orders per visit</p><b id="a-conv">0%</b><small>Orders ÷ visits</small></div>
+        <div class="stat"><p>Subscribers</p><b id="a-subs">0</b><small>On this device</small></div>
+        <div class="stat"><p>Orders</p><b id="a-orders">0</b><small>All statuses</small></div>
       </div>
-
-      <div class="dash-grid" style="margin-bottom:24px">
-        <div class="chart-area" style="margin-bottom:0">
-          <div class="chart-header"><div class="chart-title">Daily Sessions — Last 14 Days</div></div>
-          <div style="height:200px"><canvas id="sessions-chart"></canvas></div>
-        </div>
-        <div class="chart-area" style="margin-bottom:0">
-          <div class="chart-header"><div class="chart-title">Sales by Category</div></div>
-          <div style="height:200px"><canvas id="category-chart"></canvas></div>
-        </div>
+      <div class="cols">
+        <div class="panel"><h2>Visits, last 14 days</h2><div class="chart"><canvas id="sessions-chart" aria-label="Shop visits per day over the last 14 days" role="img"></canvas><p class="chart__none" hidden></p></div></div>
+        <div class="panel"><h2>Units by category</h2><div class="chart"><canvas id="category-chart" aria-label="Units ordered by category" role="img"></canvas><p class="chart__none" hidden></p></div></div>
       </div>
-
-      <div class="admin-card">
-        <div class="admin-card-title">Product Performance</div>
-        <div style="overflow-x:auto">
-          <table class="admin-table">
-            <thead><tr><th>Product</th><th>Views</th><th>Orders</th><th>Revenue</th><th>Conv. Rate</th></tr></thead>
+      <div class="panel">
+        <h2>Piece by piece</h2>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Piece</th><th class="num">Views</th><th class="num">Orders</th><th class="num">Revenue</th><th class="num">Orders per view</th></tr></thead>
             <tbody id="product-views-tbody"></tbody>
           </table>
         </div>
       </div>
+    </section>
 
-      <div class="admin-card">
-        <div class="admin-card-title">Traffic Channels</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-          <div style="padding:20px;background:var(--surface);border:1px solid var(--border);text-align:center">
-            <div style="font-size:2rem">📸</div>
-            <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:8px">Instagram</div>
-            <div style="font-size:12px;color:var(--cream-dim);margin-top:4px">Primary Source</div>
-          </div>
-          <div style="padding:20px;background:var(--surface);border:1px solid var(--border);text-align:center">
-            <div style="font-size:2rem">💬</div>
-            <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:8px">WhatsApp</div>
-            <div style="font-size:12px;color:var(--cream-dim);margin-top:4px">Direct Orders</div>
-          </div>
-          <div style="padding:20px;background:var(--surface);border:1px solid var(--border);text-align:center">
-            <div style="font-size:2rem">🔗</div>
-            <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:8px">Referral</div>
-            <div style="font-size:12px;color:var(--cream-dim);margin-top:4px">Word of Mouth</div>
-          </div>
-          <div style="padding:20px;background:var(--surface);border:1px solid var(--border);text-align:center">
-            <div style="font-size:2rem">🌐</div>
-            <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:8px">Organic</div>
-            <div style="font-size:12px;color:var(--cream-dim);margin-top:4px">Growing Channel</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PRODUCTS PAGE -->
-    <div id="page-products" class="admin-page">
-      <div class="pm-toolbar">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <div class="pm-search"><input type="text" id="pm-search-input" placeholder="Search products..."></div>
-          <select id="pm-category-filter" style="width:auto">
-            <option value="">All Categories</option>
-            <option value="wigs">Wigs</option>
-            <option value="bundles">Bundles</option>
-            <option value="extensions">Extensions</option>
-          </select>
-        </div>
-        <button id="add-product-btn" class="admin-btn admin-btn-solid">+ Add Product</button>
-      </div>
-      <div id="pm-grid" class="pm-grid"></div>
-    </div>
-
-    <!-- PRODUCT MODAL -->
-    <div id="pm-modal" class="admin-modal-overlay">
-      <div class="admin-modal">
-        <button id="pm-modal-close" style="position:absolute;top:16px;right:16px;color:var(--muted);font-size:24px;line-height:1">×</button>
-        <div id="pm-modal-title" class="admin-modal-title">Add New Product</div>
-        <form id="pm-form" class="admin-form">
-          <div class="admin-form-row">
-            <div><label class="admin-form-label">Product Name *</label><input type="text" name="name" placeholder="e.g. Remy Velvet Closure Wig" required></div>
-            <div><label class="admin-form-label">Product Type *</label><input type="text" name="type" placeholder="e.g. Closure Wig" required></div>
-          </div>
-          <div class="admin-form-row">
-            <div>
-              <label class="admin-form-label">Category *</label>
-              <select name="category" required><option value="wigs">Wigs</option><option value="bundles">Bundles</option><option value="extensions">Extensions</option></select>
-            </div>
-            <div><label class="admin-form-label">Price (₦) *</label><input type="number" name="price" placeholder="e.g. 85000" required min="0"></div>
-          </div>
-          <div class="admin-form-row">
-            <div><label class="admin-form-label">Stock Quantity</label><input type="number" name="stock" placeholder="e.g. 20" min="0" value="10"></div>
-            <div><label class="admin-form-label">Image URL</label><input type="text" name="image" placeholder="https://images.unsplash.com/..."></div>
-          </div>
-          <div>
-            <label class="admin-form-label">Description *</label>
-            <textarea name="description" class="admin-textarea" placeholder="Describe this product in detail..." required></textarea>
-          </div>
-          <div style="display:flex;gap:24px">
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--cream-dim);cursor:pointer">
-              <input type="checkbox" name="hot" style="width:auto"> Mark as Bestseller
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--cream-dim);cursor:pointer">
-              <input type="checkbox" name="newIn" style="width:auto"> Mark as New In
-            </label>
-          </div>
-          <div class="admin-form-actions">
-            <button type="button" id="pm-modal-cancel" class="admin-btn">Cancel</button>
-            <button type="submit" class="admin-btn admin-btn-solid">Save Product</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- ORDERS PAGE -->
-    <div id="page-orders" class="admin-page">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap">
-        <input type="text" id="order-search" placeholder="Search by name or order ID..." style="max-width:260px">
-        <select id="order-status-filter" style="width:auto">
-          <option value="all">All Statuses</option>
-          <option value="Pending">Pending</option>
-          <option value="Processing">Processing</option>
-          <option value="Shipped">Shipped</option>
-          <option value="Completed">Completed</option>
-          <option value="Cancelled">Cancelled</option>
+    <!-- PRODUCTS -->
+    <section id="page-products" class="page" hidden>
+      <div class="toolbar">
+        <input type="search" id="pm-search-input" placeholder="Search products" aria-label="Search products">
+        <select id="pm-category-filter" aria-label="Filter by category">
+          <option value="">All categories</option><option value="wigs">Wigs</option><option value="bundles">Bundles</option><option value="extensions">Extensions</option>
         </select>
-        <button class="admin-btn admin-btn-sm" onclick="exportOrders()">↓ Export CSV</button>
+        <span class="toolbar__gap"></span>
+        <button type="button" class="btn" id="copy-products-btn">Copy for data.js</button>
+        <button type="button" class="btn" id="reset-products-btn" hidden>Go back to data.js</button>
+        <button type="button" class="btn btn--solid" id="add-product-btn">Add a product</button>
       </div>
+      <p class="note" id="products-note" hidden>You have product edits saved in this browser. The shop shows them on this device only. To publish them for everyone, press “Copy for data.js”, paste over the <code>products</code> list in <code>data.js</code>, and redeploy.</p>
+      <div id="pm-grid" class="pm-grid"></div>
+    </section>
 
-      <div class="stats-grid" style="margin-bottom:24px">
-        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="o-pending" style="font-size:1.8rem">—</div></div>
-        <div class="stat-card"><div class="stat-label">Processing</div><div class="stat-value" id="o-processing" style="font-size:1.8rem">—</div></div>
-        <div class="stat-card"><div class="stat-label">Shipped</div><div class="stat-value" id="o-shipped" style="font-size:1.8rem">—</div></div>
-        <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value" id="o-completed" style="font-size:1.8rem">—</div></div>
+    <!-- ORDERS -->
+    <section id="page-orders" class="page" hidden>
+      <div class="toolbar">
+        <input type="search" id="order-search" placeholder="Search by name, email or order ID" aria-label="Search orders">
+        <select id="order-status-filter" aria-label="Filter by status">
+          <option value="all">All statuses</option><option>Pending</option><option>Processing</option><option>Shipped</option><option>Completed</option><option>Cancelled</option>
+        </select>
+        <span class="toolbar__gap"></span>
+        <button type="button" class="btn" id="demo-orders-btn">Load demo orders</button>
+        <button type="button" class="btn" id="export-orders-btn">Export CSV</button>
+        <button type="button" class="btn btn--solid" id="add-order-btn">Record an order</button>
       </div>
-
-      <div class="admin-card" style="padding:0">
-        <div style="overflow-x:auto">
-          <table class="admin-table">
-            <thead>
-              <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Delivery Address</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr>
-            </thead>
+      <div class="stats">
+        <div class="stat"><p>Pending</p><b id="o-pending">0</b></div>
+        <div class="stat"><p>Processing</p><b id="o-processing">0</b></div>
+        <div class="stat"><p>Shipped</p><b id="o-shipped">0</b></div>
+        <div class="stat"><p>Completed</p><b id="o-completed">0</b></div>
+      </div>
+      <div class="panel panel--flush">
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Deliver to</th><th class="num">Total</th><th>Payment</th><th>Status</th><th>Date</th><th><span class="visually-hidden">Remove</span></th></tr></thead>
             <tbody id="orders-tbody"></tbody>
           </table>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- SUBSCRIBERS PAGE -->
-    <div id="page-subscribers" class="admin-page">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
-        <div>
-          <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Total Subscribers</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:2.5rem;color:var(--gold)" id="subs-count">0</div>
-        </div>
-        <button class="admin-btn" id="export-subs-btn">↓ Export CSV</button>
+    <!-- SUBSCRIBERS -->
+    <section id="page-subscribers" class="page" hidden>
+      <div class="toolbar">
+        <p class="big"><b id="subs-count">0</b> subscribers on this device</p>
+        <span class="toolbar__gap"></span>
+        <button type="button" class="btn" id="export-subs-btn">Export CSV</button>
       </div>
-      <div class="admin-card" id="subscribers-list" style="padding:0;overflow:auto;min-height:200px"></div>
-      <div class="admin-card" style="margin-top:16px">
-        <div class="admin-card-title">Newsletter Strategy Tips</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;font-size:13px;color:var(--cream-dim);line-height:1.7">
-          <div>📢 <strong style="color:var(--cream)">Announce drops early</strong> — Email subscribers 24h before new products go live for first access.</div>
-          <div>💛 <strong style="color:var(--cream)">Exclusive deals</strong> — Offer subscriber-only codes to reward your loyal inner circle.</div>
-          <div>📱 <strong style="color:var(--cream)">WhatsApp broadcast</strong> — Cross-promote your WhatsApp list with email subscribers.</div>
-          <div>📸 <strong style="color:var(--cream)">Instagram sync</strong> — Mirror newsletter content on Instagram stories for maximum reach.</div>
+      <div class="panel panel--flush" id="subscribers-list"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="page-settings" class="page" hidden>
+      <div class="cols">
+        <div class="panel">
+          <h2>Store details</h2>
+          <dl class="facts" id="store-facts"></dl>
+          <p class="hint">These come from <code>config.js</code>. Edit that file and redeploy to change them everywhere on the site.</p>
+        </div>
+        <div class="panel">
+          <h2>Payments and email</h2>
+          <ul class="checks" id="setup-list-2"></ul>
+          <p class="hint">Keys and bank details also live in <code>config.js</code>.</p>
+        </div>
+        <div class="panel">
+          <h2>Admin sign-in</h2>
+          <p class="hint">The username and password are set at the top of <code>admin.js</code>. Change them before going live. This sign-in keeps casual visitors out, but it runs in the browser, so treat it as a door latch, not a lock.</p>
+        </div>
+        <div class="panel">
+          <h2>Exports</h2>
+          <div class="rows">
+            <div><span>Orders<small>Every order saved on this device</small></span><button type="button" class="btn" id="export-orders-btn-2">Download CSV</button></div>
+            <div><span>Products<small>The catalogue with prices and stock</small></span><button type="button" class="btn" id="export-products-btn">Download CSV</button></div>
+            <div><span>Subscribers<small>Newsletter sign-ups on this device</small></span><button type="button" class="btn" id="export-subs-btn-2">Download CSV</button></div>
+          </div>
+        </div>
+        <div class="panel panel--span">
+          <h2>Delivery zones and fees</h2>
+          <div class="cols">
+            <div class="tablewrap"><table><thead><tr><th>Zone</th><th>Price shown</th><th>Time</th></tr></thead><tbody id="zones-tbody"></tbody></table></div>
+            <div class="tablewrap"><table><thead><tr><th>Checkout fee</th><th>States</th></tr></thead><tbody id="fees-tbody"></tbody></table></div>
+          </div>
+          <p class="hint">Edit <code>DELIVERY</code> (what the shop shows) and <code>DELIVERY_FEES</code> (what checkout charges) in <code>data.js</code>. Keep the two in step.</p>
         </div>
       </div>
-    </div>
-
-    <!-- SETTINGS PAGE -->
-    <div id="page-settings" class="admin-page">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-
-        <div class="admin-card">
-          <div class="settings-title">Store Information</div>
-          <div class="admin-form" style="gap:12px">
-            <div><label class="admin-form-label">Store Name</label><input type="text" value="Baddie Strands"></div>
-            <div><label class="admin-form-label">WhatsApp Number</label><input type="text" value="+234703 324 7980"></div>
-            <div><label class="admin-form-label">Email Address</label><input type="email" value="baddiestrandss@gmail.com"></div>
-            <div><label class="admin-form-label">Instagram Handle</label><input type="text" value="@the_baddie_strands"></div>
-            <div><label class="admin-form-label">Business Hours</label><input type="text" value="Mon–Sat 9am–9pm, Sun 12pm–6pm (WAT)"></div>
-            <button id="save-store-settings" class="admin-btn admin-btn-solid" style="align-self:flex-start">Save Changes</button>
-          </div>
-        </div>
-
-        <div>
-          <div class="admin-card">
-            <div class="settings-title">Feature Toggles</div>
-            <div class="settings-section">
-              <div class="settings-row">
-                <div><div class="settings-row-label">International Shipping</div><div class="settings-row-desc">Show worldwide delivery on public site</div></div>
-                <div class="toggle on" data-label="International Shipping"></div>
-              </div>
-              <div class="settings-row">
-                <div><div class="settings-row-label">Pay on Delivery (Lagos)</div><div class="settings-row-desc">Allow cash on delivery for Lagos orders</div></div>
-                <div class="toggle on" data-label="Pay on Delivery"></div>
-              </div>
-              <div class="settings-row">
-                <div><div class="settings-row-label">Newsletter Signup</div><div class="settings-row-desc">Show newsletter section on site</div></div>
-                <div class="toggle on" data-label="Newsletter Signup"></div>
-              </div>
-              <div class="settings-row">
-                <div><div class="settings-row-label">Hair Quiz</div><div class="settings-row-desc">Display recommendation quiz</div></div>
-                <div class="toggle on" data-label="Hair Quiz"></div>
-              </div>
-              <div class="settings-row">
-                <div><div class="settings-row-label">WhatsApp Floating Button</div><div class="settings-row-desc">Floating chat button on live site</div></div>
-                <div class="toggle" data-label="WhatsApp Floating Button"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="admin-card">
-          <div class="settings-title">Security</div>
-          <div class="admin-form" style="gap:12px">
-            <div><label class="admin-form-label">Current Username</label><input type="text" value="baddie_admin" readonly style="opacity:0.5"></div>
-            <div><label class="admin-form-label">New Password</label><input type="password" id="new-password" placeholder="Minimum 6 characters"></div>
-            <button id="change-password-btn" class="admin-btn" style="align-self:flex-start">Update Password</button>
-          </div>
-        </div>
-
-        <div class="admin-card">
-          <div class="settings-title">Data Exports</div>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7">Download store data as CSV files for accounting, marketing, or backup.</p>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--surface);border:1px solid var(--border)">
-              <div><div style="font-size:13px;color:var(--cream)">Orders</div><div style="font-size:11px;color:var(--muted)">All orders with status & customer data</div></div>
-              <button id="export-orders-btn" class="admin-btn admin-btn-sm">↓ Download</button>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--surface);border:1px solid var(--border)">
-              <div><div style="font-size:13px;color:var(--cream)">Products</div><div style="font-size:11px;color:var(--muted)">Full catalogue with pricing & stock</div></div>
-              <button id="export-products-btn" class="admin-btn admin-btn-sm">↓ Download</button>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--surface);border:1px solid var(--border)">
-              <div><div style="font-size:13px;color:var(--cream)">Subscribers</div><div style="font-size:11px;color:var(--muted)">Email newsletter list</div></div>
-              <button id="export-subs-btn2" class="admin-btn admin-btn-sm">↓ Download</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="admin-card" style="grid-column:span 2">
-          <div class="settings-title">Delivery Zones & Pricing Reference</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-            <div>
-              <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">🇳🇬 Nigeria</div>
-              <table class="admin-table" style="font-size:12px">
-                <thead><tr><th>Zone</th><th>Price</th><th>ETA</th></tr></thead>
-                <tbody>
-                  <tr><td>Lagos (Same-Day)</td><td style="color:var(--gold)">₦2,000</td><td style="color:var(--muted)">3–5 hrs</td></tr>
-                  <tr><td>Lagos (Standard)</td><td style="color:var(--gold)">₦1,500</td><td style="color:var(--muted)">24 hrs</td></tr>
-                  <tr><td>Abuja</td><td style="color:var(--gold)">₦3,500</td><td style="color:var(--muted)">1–2 days</td></tr>
-                  <tr><td>Port Harcourt</td><td style="color:var(--gold)">₦3,000</td><td style="color:var(--muted)">1–2 days</td></tr>
-                  <tr><td>Other States</td><td style="color:var(--gold)">₦3,500–5,000</td><td style="color:var(--muted)">2–4 days</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div>
-              <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">✈️ International</div>
-              <table class="admin-table" style="font-size:12px">
-                <thead><tr><th>Region</th><th>Price</th><th>ETA</th></tr></thead>
-                <tbody>
-                  <tr><td>UK & Europe</td><td style="color:var(--gold)">From $35</td><td style="color:var(--muted)">5–10 days</td></tr>
-                  <tr><td>USA & Canada</td><td style="color:var(--gold)">From $40</td><td style="color:var(--muted)">7–14 days</td></tr>
-                  <tr><td>West Africa</td><td style="color:var(--gold)">From ₦15,000</td><td style="color:var(--muted)">5–10 days</td></tr>
-                  <tr><td>Rest of Africa</td><td style="color:var(--gold)">From $30</td><td style="color:var(--muted)">7–14 days</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <p style="font-size:11px;color:var(--muted);margin-top:16px">To update pricing on the live site, edit the DELIVERY object in <code style="background:var(--surface);padding:2px 6px">data.js</code> and redeploy.</p>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
+    </section>
+  </main>
 </div>
 
-<!-- TOAST -->
-<div id="admin-toast"><div class="at-title"></div><div class="at-body"></div></div>
-
-<script>
-// ============================================
-// BADDIE STRANDS — Product & Content Data
-// ============================================
-
-const STORE_DATA = {
-  products: [
-    {
-      id: 1,
-      name: "Remy Velvet Closure Wig",
-      type: "Closure Wig",
-      category: "wigs",
-      price: 85000,
-      oldPrice: 110000,
-      currency: "₦",
-      lengths: ["12\"", "14\"", "16\"", "18\"", "20\"", "22\"", "24\""],
-      colors: ["#1a1008", "#3d2b1f", "#6b3a2a", "#c8a96e", "#f5d5a0"],
-      colorNames: ["Jet Black", "Dark Brown", "Auburn", "Blonde", "Ash Blonde"],
-      rating: 4.9,
-      reviews: 142,
-      stock: 15,
-      hot: true,
-      new: false,
-      image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&q=80",
-      images: [
-        "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&q=80",
-        "https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?w=600&q=80"
-      ],
-      description: "100% virgin Remy human hair. Silky smooth texture, full cuticle intact, tangle-free. Comes with a 5×5 HD lace closure that melts seamlessly into your skin. Perfect for beginners and professionals alike.",
-      features: ["100% Virgin Human Hair", "HD Lace Closure", "Pre-plucked Hairline", "Bleached Knots", "180% Density", "Can be bleached & dyed"]
-    },
-    {
-      id: 2,
-      name: "Brazilian Body Wave Bundle",
-      type: "Bundle Deal",
-      category: "bundles",
-      price: 65000,
-      oldPrice: null,
-      currency: "₦",
-      lengths: ["10\"", "12\"", "14\"", "16\"", "18\"", "20\""],
-      colors: ["#1a1008", "#3d2b1f", "#c8a96e"],
-      colorNames: ["Natural Black", "Dark Brown", "Honey Blonde"],
-      rating: 4.8,
-      reviews: 87,
-      stock: 28,
-      hot: false,
-      new: true,
-      image: "https://images.unsplash.com/photo-1560869713-7d0a29430803?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1560869713-7d0a29430803?w=600&q=80"],
-      description: "Luxurious Brazilian body wave bundles with a natural bounce and flow. Double-wefted for fullness, zero shedding. The wave pattern holds beautifully whether wet or dry.",
-      features: ["Brazilian Virgin Hair", "Double Wefted", "Zero Shedding", "Natural Wave Pattern", "Can be heat styled", "3 bundles recommended for full look"]
-    },
-    {
-      id: 3,
-      name: "Deep Wave Frontal Wig",
-      type: "Frontal Wig",
-      category: "wigs",
-      price: 120000,
-      oldPrice: 145000,
-      currency: "₦",
-      lengths: ["14\"", "16\"", "18\"", "20\"", "22\"", "24\"", "26\""],
-      colors: ["#1a1008", "#2b1d0e"],
-      colorNames: ["Jet Black", "Off Black"],
-      rating: 5.0,
-      reviews: 63,
-      stock: 8,
-      hot: true,
-      new: false,
-      image: "https://images.unsplash.com/photo-1530519729491-aea5b51d1ee1?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1530519729491-aea5b51d1ee1?w=600&q=80"],
-      description: "Stunning deep wave pattern with a 13×6 HD lace frontal. Creates a natural-looking hairline from ear to ear. The deep, defined curls add incredible volume and drama.",
-      features: ["13×6 HD Lace Frontal", "Deep Wave Pattern", "Ear-to-ear Coverage", "Pre-bleached Knots", "200% Density", "Glueless installation option"]
-    },
-    {
-      id: 4,
-      name: "Kinky Coily 4C Afro Wig",
-      type: "Afro Wig",
-      category: "wigs",
-      price: 95000,
-      oldPrice: null,
-      currency: "₦",
-      lengths: ["10\"", "12\"", "14\"", "16\""],
-      colors: ["#1a1008", "#2b1505", "#6b3a2a"],
-      colorNames: ["Natural Black", "Dark Espresso", "Reddish Brown"],
-      rating: 4.7,
-      reviews: 54,
-      stock: 12,
-      hot: false,
-      new: true,
-      image: "https://images.unsplash.com/photo-1600948836101-f9ffda59d250?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1600948836101-f9ffda59d250?w=600&q=80"],
-      description: "Celebrate your roots with this authentic 4C coily texture wig. Crafted from virgin African hair, it mimics the natural Afro texture perfectly. Celebrate your African heritage with unmatched realism.",
-      features: ["Authentic 4C Texture", "Virgin African Hair", "Lace Front", "Protective Style", "No Heat Needed", "Afrocentric Design"]
-    },
-    {
-      id: 5,
-      name: "Straight Silky Bone Straight",
-      type: "Bone Straight Wig",
-      category: "wigs",
-      price: 78000,
-      oldPrice: 90000,
-      currency: "₦",
-      lengths: ["16\"", "18\"", "20\"", "22\"", "24\"", "26\"", "28\"", "30\""],
-      colors: ["#1a1008", "#f5d5a0", "#e8cc99", "#c8a96e"],
-      colorNames: ["Jet Black", "Platinum Blonde", "Ash Blonde", "Honey Blonde"],
-      rating: 4.9,
-      reviews: 198,
-      stock: 22,
-      hot: true,
-      new: false,
-      image: "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&q=80"],
-      description: "Ultra-sleek bone straight hair with a mirror-like shine. The smoothest, silkiest straight hair we carry. Stays perfectly straight in humidity. A Baddie Strands bestseller.",
-      features: ["Super Straight Texture", "Anti-Humidity Coating", "Mirror-like Shine", "HD Lace", "Beginner Friendly", "Heat Resistant up to 230°C"]
-    },
-    {
-      id: 6,
-      name: "Loose Deep Wave Clip-Ins",
-      type: "Clip-In Extensions",
-      category: "extensions",
-      price: 45000,
-      oldPrice: null,
-      currency: "₦",
-      lengths: ["14\"", "16\"", "18\"", "20\"", "22\""],
-      colors: ["#1a1008", "#3d2b1f", "#c8a96e"],
-      colorNames: ["Jet Black", "Dark Brown", "Honey Blonde"],
-      rating: 4.6,
-      reviews: 41,
-      stock: 35,
-      hot: false,
-      new: false,
-      image: "https://images.unsplash.com/photo-1499557354967-2b2d8910bcca?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1499557354967-2b2d8910bcca?w=600&q=80"],
-      description: "Full set of 7-piece loose deep wave clip-in extensions. Perfect for adding length and volume instantly. Easy DIY installation, no salon needed. Safe for natural hair.",
-      features: ["7-Piece Full Set", "Strong Snap Clips", "Blend with Natural Hair", "No Damage", "Reusable 12+ months", "Salon-quality finish"]
-    },
-    {
-      id: 7,
-      name: "HD Lace Curly Bob Wig",
-      type: "Bob Wig",
-      category: "wigs",
-      price: 72000,
-      oldPrice: 85000,
-      currency: "₦",
-      lengths: ["8\"", "10\"", "12\"", "14\""],
-      colors: ["#1a1008", "#6b3a2a", "#c8a96e"],
-      colorNames: ["Jet Black", "Auburn", "Honey Blonde"],
-      rating: 4.8,
-      reviews: 76,
-      stock: 10,
-      hot: false,
-      new: true,
-      image: "https://images.unsplash.com/photo-1586116104126-7b8e839d5b9f?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1586116104126-7b8e839d5b9f?w=600&q=80"],
-      description: "Chic and modern curly bob wig with an HD lace front that disappears into your skin. The curl pattern is defined, bouncy, and holds its shape without frizz. Bold meets elegant.",
-      features: ["Curly Bob Style", "HD Undetectable Lace", "Pre-styled", "Frizz-resistant", "Easy Maintenance", "Day-to-night versatile"]
-    },
-    {
-      id: 8,
-      name: "Peruvian Loose Wave Bundle",
-      type: "Bundle Deal",
-      category: "bundles",
-      price: 58000,
-      oldPrice: null,
-      currency: "₦",
-      lengths: ["10\"", "12\"", "14\"", "16\"", "18\"", "20\""],
-      colors: ["#1a1008", "#3d2b1f"],
-      colorNames: ["Natural Black", "Dark Brown"],
-      rating: 4.7,
-      reviews: 32,
-      stock: 18,
-      hot: false,
-      new: false,
-      image: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=600&q=80"],
-      description: "Peruvian loose wave bundles with the perfect blend of straight and wavy. Extremely soft texture, minimal shedding. The natural lustre of Peruvian hair is unmatched.",
-      features: ["Peruvian Virgin Hair", "Loose Wave Pattern", "Natural Lustre", "Low Shedding", "Can be curled", "3-4 bundles for full head"]
-    },
-    {
-      id: 9,
-      name: "Water Wave Glueless Wig",
-      type: "Glueless Wig",
-      category: "wigs",
-      price: 88000,
-      oldPrice: 105000,
-      currency: "₦",
-      lengths: ["14\"", "16\"", "18\"", "20\"", "22\"", "24\""],
-      colors: ["#1a1008", "#2b1d0e", "#3d2b1f"],
-      colorNames: ["Jet Black", "Off Black", "Dark Brown"],
-      rating: 4.9,
-      reviews: 89,
-      stock: 14,
-      hot: true,
-      new: false,
-      image: "https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?w=600&q=80"],
-      description: "Put it on in 60 seconds, no glue, no tape, no mess. This glueless water wave wig features an adjustable band and combs that secure it firmly. The water wave texture is playful yet polished.",
-      features: ["Glueless Installation", "Adjustable Band + Combs", "60-Second Install", "Water Wave Texture", "Beginner-Friendly", "Protects Natural Hair"]
-    },
-    {
-      id: 10,
-      name: "Highlight Ombre Bundle Set",
-      type: "Coloured Bundles",
-      category: "bundles",
-      price: 92000,
-      oldPrice: null,
-      currency: "₦",
-      lengths: ["14\"", "16\"", "18\"", "20\""],
-      colors: ["#c8a96e", "#8b5e3c", "#f5d5a0"],
-      colorNames: ["Honey Ombre", "Caramel Ombre", "Ash Ombre"],
-      rating: 4.8,
-      reviews: 47,
-      stock: 9,
-      hot: false,
-      new: true,
-      image: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&q=80"],
-      description: "Pre-coloured ombre highlight bundles by our in-house colour artists. Beautifully blended tones from root to tip. You get the colour without the chemical damage.",
-      features: ["Pre-Coloured", "Professional Ombre Blend", "Zero Chemical Damage to Your Hair", "Balayage Effect", "Instant Colour Pop", "Heat-resistant colour"]
-    },
-    {
-      id: 11,
-      name: "Ponytail Extension Wrap",
-      type: "Ponytail Extension",
-      category: "extensions",
-      price: 32000,
-      oldPrice: 38000,
-      currency: "₦",
-      lengths: ["14\"", "18\"", "22\"", "26\""],
-      colors: ["#1a1008", "#3d2b1f", "#c8a96e", "#f5d5a0"],
-      colorNames: ["Jet Black", "Dark Brown", "Honey Blonde", "Platinum"],
-      rating: 4.6,
-      reviews: 55,
-      stock: 40,
-      hot: false,
-      new: false,
-      image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80"],
-      description: "Achieve the perfect sleek high pony or low bun in minutes. Wrap-around design means no clips, no damage. The drawstring system creates a tight, natural-looking base.",
-      features: ["Wrap-Around Design", "Drawstring System", "No Clips / No Damage", "Sleek or Curly Option", "Match any outfit", "Easy to style"]
-    },
-    {
-      id: 12,
-      name: "U-Part Human Hair Wig",
-      type: "U-Part Wig",
-      category: "wigs",
-      price: 68000,
-      oldPrice: null,
-      currency: "₦",
-      lengths: ["14\"", "16\"", "18\"", "20\"", "22\""],
-      colors: ["#1a1008", "#2b1d0e"],
-      colorNames: ["Natural Black", "Off Black"],
-      rating: 4.7,
-      reviews: 28,
-      stock: 16,
-      hot: false,
-      new: false,
-      image: "https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?w=600&q=80"],
-      description: "The U-part wig blends your own natural hair through the U-shaped opening for the most undetectable, seamless look. Great for natural hair ladies who want to protect while looking polished.",
-      features: ["Blends Your Natural Hair", "Most Undetectable Look", "U-Shaped Opening", "Clips & Combs Included", "Protective Style", "No Lace Required"]
-    }
-  ],
-
-  knowledge: {
-    basics: [
-      {
-        num: "01",
-        title: "Know Your Hair Type",
-        body: "From 1A to 4C — understanding your curl pattern, porosity, and density is the first step. High porosity hair absorbs moisture fast but loses it just as quickly. Low porosity needs heat to open the cuticle. Knowing this changes everything.",
-        link: "Explore Hair Types"
-      },
-      {
-        num: "02",
-        title: "Virgin vs Remy Hair",
-        body: "Virgin hair has never been chemically processed — it's the purest form. Remy hair means the cuticles are all aligned in one direction, preventing tangling. All Baddie Strands products are virgin AND Remy — never settle for less.",
-        link: "Learn the Difference"
-      },
-      {
-        num: "03",
-        title: "Lace Types Explained",
-        body: "HD lace is the thinnest, most transparent — it disappears on all skin tones. Regular lace is thicker but more durable. 13×4 covers ear-to-ear, 13×6 adds depth for parting, 360 lace covers the full perimeter.",
-        link: "Compare Lace Types"
-      },
-      {
-        num: "04",
-        title: "Density Guide",
-        body: "Density is how full the wig looks. 150% is natural and light. 180% is full and glamorous. 200% is the maximum — dramatic, show-stopping volume. Choose based on your lifestyle and the look you want.",
-        link: "Find Your Density"
-      },
-      {
-        num: "05",
-        title: "Reading Hair Length",
-        body: "Hair is measured in its straightened state. A 20\" straight wig hits the mid-back. A 20\" curly wig may appear much shorter due to shrinkage. Always account for your texture when choosing length.",
-        link: "Length Visual Guide"
-      },
-      {
-        num: "06",
-        title: "Cap Construction",
-        body: "The cap is the foundation. Machine-made caps are budget-friendly but less breathable. Hand-tied caps move more naturally. Glueless caps have adjustable bands. Choose your cap based on comfort, lifestyle, and activity level.",
-        link: "Cap Types Guide"
-      }
-    ],
-    care: {
-      "Washing": [
-        { title: "Detangle Before Washing", body: "Always detangle from tips to roots using a wide-tooth comb or your fingers. Never start from the root — you will cause unnecessary breakage and matting." },
-        { title: "Use Sulphate-Free Shampoo", body: "Sulphates strip the hair of natural oils. For human hair extensions, use a moisturising, sulphate-free shampoo. Dilute it slightly in a bowl of warm water for an even, gentle cleanse." },
-        { title: "Wash in Downward Strokes", body: "Work the shampoo gently downward, following the direction of the cuticle. Never scrub or rub in circular motions — this causes frizz and tangling." },
-        { title: "Deep Condition Every Wash", body: "Apply a rich conditioner from mid-shaft to ends. Leave for 15–30 minutes under a plastic cap. Human hair doesn't receive natural oils from a scalp, so it needs this external moisture." },
-        { title: "Rinse with Cool Water", body: "Always finish with a cool water rinse. Cold water closes the cuticle, sealing in moisture and locking in that mirror shine." },
-        { title: "Air Dry or Low Heat", body: "Pat gently with a microfibre towel — never rub. Air dry on a wig stand or use a blow dryer on the lowest heat setting with a diffuser attachment." }
-      ],
-      "Styling": [
-        { title: "Always Use Heat Protectant", body: "Even if the hair is heat resistant, apply a thermal protectant spray before any heat styling. This preserves the integrity of the hair and extends its lifespan significantly." },
-        { title: "Flat Iron at the Right Temperature", body: "For fine or coloured hair, use 150–180°C. For thick, coarse hair, go up to 220°C. Never exceed 230°C. Use professional-grade flat irons for smooth, even results." },
-        { title: "Curl with a Wand, Set with Cool Air", body: "After curling, let each curl cool completely in your hand before releasing — this sets the curl for all-day hold. Hit with cool air from a dryer to lock them in place." },
-        { title: "Avoid Alcohol-Based Products", body: "Many hairsprays and styling gels contain drying alcohols. Check the label for ethanol or isopropyl alcohol as one of the first ingredients — these will dry out and damage your hair." }
-      ],
-      "Storage": [
-        { title: "Always Store on a Wig Stand", body: "A wig stand maintains the shape of the cap and prevents the hair from being crushed or tangled. Invest in a quality mannequin head or collapsible wig stand." },
-        { title: "Silk or Satin-Lined Bags", body: "When travelling or storing a wig for a long time, place it in a silk or satin bag. Cotton absorbs moisture and causes frizz. Silk preserves moisture and keeps the cuticle smooth." },
-        { title: "Detangle Before Storing", body: "Never put a wig away tangled. Always finger-detangle or brush through before storage. Tangles worsen over time and become much harder to remove later." },
-        { title: "Avoid Direct Sunlight", body: "UV rays fade colour and weaken the hair shaft. Store wigs away from windows or sunlight. If you must be in the sun for extended periods, use a UV protectant hair spray." }
-      ],
-      "Maintenance": [
-        { title: "Refresh Between Washes with Water Spray", body: "Spritz your hair lightly with water and scrunch to revive curls or waves. Add a light leave-in conditioner or hair serum for shine and frizz control." },
-        { title: "Moisturise Weekly", body: "Use the LOC or LCO method: Layer Liquid (water), Oil (argan, jojoba, or castor), then Cream (shea butter, leave-in). This locks moisture in for longer periods." },
-        { title: "Trim Ends Every 3 Months", body: "Even human hair gets split ends with regular heat and manipulation. A small trim every 3 months keeps the ends healthy, bouncy, and tangle-free." },
-        { title: "Sleep on Silk or Satin", body: "Cotton pillowcases cause friction, frizz, and breakage while you sleep. Switch to a silk or satin pillowcase, or use a silk bonnet when sleeping. Your hair will thank you." }
-      ]
-    }
-  },
-
-  testimonials: [
-    {
-      body: "I've bought from so many hair vendors and Baddie Strands is on a different level. My closure wig has been through everything — gym, beach, sweat — and it still looks brand new three months later.",
-      name: "Adaeze O.",
-      location: "Lagos, Nigeria",
-      stars: 5,
-      avatar: "A"
-    },
-    {
-      body: "The quality of their bone straight wig left me speechless. People on the street thought it was my natural hair. The lace literally disappears. Nothing compares.",
-      name: "Fatima K.",
-      location: "Abuja, Nigeria",
-      stars: 5,
-      avatar: "F"
-    },
-    {
-      body: "Fast delivery to Enugu, great packaging — the wig was wrapped so carefully. The 4C afro wig is everything I wanted. Finally a store that celebrates African texture!",
-      name: "Chidinma E.",
-      location: "Enugu, Nigeria",
-      stars: 5,
-      avatar: "C"
-    },
-    {
-      body: "I ordered the deep wave wig and it arrived within 24 hours in Lagos. The communication was so smooth via WhatsApp. Best customer experience in the hair game.",
-      name: "Blessing A.",
-      location: "Port Harcourt, Nigeria",
-      stars: 5,
-      avatar: "B"
-    },
-    {
-      body: "As a UK-based Nigerian, I was nervous about international delivery. They kept me updated throughout. Wig arrived beautifully, worth every penny. I'm a customer for life.",
-      name: "Toyin M.",
-      location: "London, UK",
-      stars: 5,
-      avatar: "T"
-    },
-    {
-      body: "I did their hair quiz and they helped me pick the perfect wig for my face shape and lifestyle. That personal touch — that's why they're the best in the business.",
-      name: "Precious N.",
-      location: "Ibadan, Nigeria",
-      stars: 5,
-      avatar: "P"
-    }
-  ],
-
-  quiz: [
-    {
-      q: "What's your lifestyle like?",
-      options: ["Very active — gym, sports, outdoor", "Office life — sleek and professional", "Social butterfly — events and parties", "Stay-at-home — comfort first"]
-    },
-    {
-      q: "How much styling time do you have daily?",
-      options: ["5 minutes max", "10–20 minutes", "30+ minutes", "I love styling — unlimited!"]
-    },
-    {
-      q: "What's your preferred hair texture?",
-      options: ["Straight and sleek", "Wavy and natural", "Curly and bouncy", "Coily and natural"]
-    },
-    {
-      q: "What's your priority?",
-      options: ["Undetectable lace look", "Maximum volume", "Long-lasting durability", "Easy maintenance"]
-    },
-    {
-      q: "What's your approximate budget?",
-      options: ["Under ₦50,000", "₦50,000 – ₦80,000", "₦80,000 – ₦120,000", "Price is no object"]
-    }
-  ]
-};
-
-// Delivery zones
-const DELIVERY = {
-  local: [
-    { zone: "Lagos (Same-Day)", price: "₦2,000", time: "3–5 hours" },
-    { zone: "Lagos (Standard)", price: "₦1,500", time: "24 hours" },
-    { zone: "Abuja", price: "₦3,500", time: "1–2 days" },
-    { zone: "Port Harcourt", price: "₦3,000", time: "1–2 days" },
-    { zone: "Ibadan", price: "₦2,500", time: "1–2 days" },
-    { zone: "Other Nigerian States", price: "₦3,500–₦5,000", time: "2–4 days" }
-  ],
-  international: [
-    { zone: "UK & Europe", price: "From $35", time: "5–10 business days" },
-    { zone: "USA & Canada", price: "From $40", time: "7–14 business days" },
-    { zone: "West Africa", price: "From ₦15,000", time: "5–10 business days" },
-    { zone: "Rest of Africa", price: "From $30", time: "7–14 business days" }
-  ]
-};
-
-if (typeof module !== 'undefined') module.exports = { STORE_DATA, DELIVERY };
-
-// ============================================
-// BADDIE STRANDS — Admin Dashboard Script
-// ============================================
-
-'use strict';
-
-// ── ADMIN CONFIG ───────────────────────────
-const ADMIN = {
-  username: 'baddie_admin',
-  password: 'strands2024',
-  sessionKey: 'bs_admin_session'
-};
-
-// ── STATE ──────────────────────────────────
-const ADMIN_STATE = {
-  currentPage: 'dashboard',
-  products: [],
-  orders: [],
-  subscribers: [],
-  analytics: {},
-  editingProduct: null,
-  chartInstances: {}
-};
-
-// ── INIT ───────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  initAdminCursor();
-  initLogin();
-  checkSession();
-});
-
-// ── CURSOR ─────────────────────────────────
-function initAdminCursor() {
-  const c = document.getElementById('cursor');
-  if (!c) return;
-  document.addEventListener('mousemove', e => {
-    c.style.left = e.clientX + 'px';
-    c.style.top = e.clientY + 'px';
-  });
-}
-
-// ── LOGIN ──────────────────────────────────
-function initLogin() {
-  document.getElementById('login-form')?.addEventListener('submit', e => {
-    e.preventDefault();
-    const u = document.getElementById('login-user').value.trim();
-    const p = document.getElementById('login-pass').value.trim();
-    const err = document.getElementById('login-error');
-    if (u === ADMIN.username && p === ADMIN.password) {
-      sessionStorage.setItem(ADMIN.sessionKey, JSON.stringify({ user: u, ts: Date.now() }));
-      err.style.display = 'none';
-      launchAdmin();
-    } else {
-      err.textContent = 'Incorrect username or password.';
-      err.style.display = 'block';
-    }
-  });
-}
-
-function checkSession() {
-  const s = sessionStorage.getItem(ADMIN.sessionKey);
-  if (s) {
-    const session = JSON.parse(s);
-    if (Date.now() - session.ts < 8 * 60 * 60 * 1000) {
-      launchAdmin();
-    }
-  }
-}
-
-function launchAdmin() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('admin-app').classList.add('visible');
-  loadAdminData();
-  initSidebar();
-  initProductManager();
-  initAnalyticsPage();
-  initSettings();
-  initOrdersPage();
-  navigateTo('dashboard');
-}
-
-function adminLogout() {
-  sessionStorage.removeItem(ADMIN.sessionKey);
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('admin-app').classList.remove('visible');
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-}
-
-// ── LOAD DATA ──────────────────────────────
-function loadAdminData() {
-  // Products from STORE_DATA (shared with main site)
-  ADMIN_STATE.products = JSON.parse(JSON.stringify(STORE_DATA.products));
-
-  // Load persisted changes
-  const saved = localStorage.getItem('bs_products_edited');
-  if (saved) ADMIN_STATE.products = JSON.parse(saved);
-
-  // Orders (simulated + any real ones from WA checkout)
-  const savedOrders = localStorage.getItem('bs_orders');
-  ADMIN_STATE.orders = savedOrders ? JSON.parse(savedOrders) : generateSampleOrders();
-
-  // Subscribers
-  ADMIN_STATE.subscribers = JSON.parse(localStorage.getItem('bs_subscribers') || '[]');
-
-  // Analytics
-  ADMIN_STATE.analytics = JSON.parse(localStorage.getItem('bs_analytics') || '{}');
-}
-
-function generateSampleOrders() {
-  const names = ['Adaeze Okonkwo','Fatima Khalid','Chidinma Eze','Blessing Amadi','Precious Nwachukwu','Toyin Musa','Ngozi Obi','Ifeoma Chukwu','Amaka Nwosu','Sade Bello'];
-  const cities = ['Lagos','Abuja','Port Harcourt','Ibadan','Kano','Enugu','Benin City','Warri','Owerri','London'];
-  const products = STORE_DATA.products;
-  const statuses = ['Completed','Processing','Shipped','Pending'];
-  const orders = Array.from({length: 24}, (_,i) => {
-    const p = products[Math.floor(Math.random() * products.length)];
-    const qty = Math.ceil(Math.random() * 2);
-    const daysAgo = Math.floor(Math.random() * 60);
-    const d = new Date(); d.setDate(d.getDate() - daysAgo);
-    return {
-      id: `BS${String(i+1).padStart(4,'0')}`,
-      customer: names[Math.floor(Math.random()*names.length)],
-      city: cities[Math.floor(Math.random()*cities.length)],
-      product: p.name,
-      productId: p.id,
-      qty,
-      total: p.price * qty,
-      status: statuses[Math.floor(Math.random()*statuses.length)],
-      date: d.toISOString().split('T')[0],
-      channel: Math.random() > 0.5 ? 'WhatsApp' : 'Website'
-    };
-  }).sort((a,b) => b.date.localeCompare(a.date));
-  localStorage.setItem('bs_orders', JSON.stringify(orders));
-  return orders;
-}
-
-// ── SIDEBAR & NAVIGATION ───────────────────
-function initSidebar() {
-  document.querySelectorAll('.sidebar-link[data-page]').forEach(link => {
-    link.addEventListener('click', () => navigateTo(link.dataset.page));
-  });
-  document.getElementById('admin-logout')?.addEventListener('click', adminLogout);
-}
-
-function navigateTo(page) {
-  ADMIN_STATE.currentPage = page;
-  document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-  document.getElementById(`page-${page}`)?.classList.add('active');
-  document.querySelector(`.sidebar-link[data-page="${page}"]`)?.classList.add('active');
-  document.getElementById('topbar-title').textContent = pageTitles[page] || 'Dashboard';
-  if (page === 'dashboard') renderDashboard();
-  if (page === 'analytics') renderAnalytics();
-  if (page === 'products') renderProductGrid();
-  if (page === 'orders') renderOrders();
-  if (page === 'subscribers') renderSubscribers();
-}
-
-const pageTitles = {
-  dashboard: 'Dashboard Overview',
-  analytics: 'Analytics & Insights',
-  products: 'Product Manager',
-  orders: 'Order Tracker',
-  subscribers: 'Subscribers',
-  settings: 'Settings'
-};
-
-// ── DASHBOARD ──────────────────────────────
-function renderDashboard() {
-  const orders = ADMIN_STATE.orders;
-  const completed = orders.filter(o => o.status === 'Completed');
-  const revenue = completed.reduce((s,o) => s+o.total, 0);
-  const thisMonth = orders.filter(o => o.date.startsWith(new Date().toISOString().slice(0,7)));
-  const views = ADMIN_STATE.analytics.views || 0;
-
-  document.getElementById('stat-revenue').textContent = `₦${formatAdmin(revenue)}`;
-  document.getElementById('stat-orders').textContent = orders.length;
-  document.getElementById('stat-views').textContent = views;
-  document.getElementById('stat-subs').textContent = ADMIN_STATE.subscribers.length;
-  document.getElementById('stat-month').textContent = `${thisMonth.length} this month ↑`;
-
-  renderRevenueChart();
-  renderRecentOrders();
-  renderTopProducts();
-}
-
-function renderRevenueChart() {
-  const ctx = document.getElementById('revenue-chart');
-  if (!ctx) return;
-  if (ADMIN_STATE.chartInstances.revenue) {
-    ADMIN_STATE.chartInstances.revenue.destroy();
-  }
-
-  // Build last 7 days data
-  const labels = [];
-  const data = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().split('T')[0];
-    labels.push(d.toLocaleDateString('en-NG', {weekday:'short'}));
-    const dayRevenue = ADMIN_STATE.orders
-      .filter(o => o.date === ds && o.status === 'Completed')
-      .reduce((s,o) => s+o.total, 0);
-    data.push(dayRevenue);
-  }
-
-  ADMIN_STATE.chartInstances.revenue = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Revenue (₦)',
-        data,
-        borderColor: '#c9a96e',
-        backgroundColor: 'rgba(201,169,110,0.06)',
-        borderWidth: 1.5,
-        pointBackgroundColor: '#c9a96e',
-        pointRadius: 3,
-        tension: 0.4,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#6b6258', font: { family: 'Jost', size: 10 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#6b6258', font: { family: 'Jost', size: 10 }, callback: v => '₦'+formatAdmin(v) } }
-      }
-    }
-  });
-}
-
-function renderRecentOrders() {
-  const tbody = document.getElementById('recent-orders-tbody');
-  if (!tbody) return;
-  const recent = ADMIN_STATE.orders.slice(0, 6);
-  tbody.innerHTML = recent.map(o => `
-    <tr>
-      <td style="color:var(--gold)">${o.id}</td>
-      <td>${o.customer}</td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.product}</td>
-      <td>${o.city}</td>
-      <td style="font-family:var(--font-display);color:var(--cream)">₦${formatAdmin(o.total)}</td>
-      <td><span class="badge ${statusBadge(o.status)}">${o.status}</span></td>
-      <td>${o.date}</td>
-    </tr>
-  `).join('');
-}
-
-function renderTopProducts() {
-  const container = document.getElementById('top-products-list');
-  if (!container) return;
-  // Count products from orders
-  const counts = {};
-  ADMIN_STATE.orders.forEach(o => {
-    counts[o.product] = (counts[o.product] || 0) + o.qty;
-  });
-  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
-  container.innerHTML = sorted.map(([name, qty], i) => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-family:var(--font-display);font-size:1.1rem;color:var(--gold-dim)">${i+1}</span>
-        <span style="font-size:13px;color:var(--cream-dim)">${name}</span>
-      </div>
-      <span style="font-size:11px;color:var(--muted)">${qty} units</span>
+<!-- PRODUCT FORM -->
+<div id="pm-modal" class="modal" hidden>
+  <form id="pm-form" class="modal__box" novalidate>
+    <h2 id="pm-modal-title">Add a product</h2>
+    <div class="grid2">
+      <label class="field"><span>Name*</span><input type="text" name="name" required></label>
+      <label class="field"><span>Type*</span><input type="text" name="type" placeholder="e.g. Closure Wig" required></label>
+      <label class="field"><span>Category*</span><select name="category"><option value="wigs">Wigs</option><option value="bundles">Bundles</option><option value="extensions">Extensions</option></select></label>
+      <label class="field"><span>Stock</span><input type="number" name="stock" min="0" value="10"></label>
+      <label class="field"><span>Price (₦)*</span><input type="number" name="price" min="0" required></label>
+      <label class="field"><span>Was (₦), if on sale</span><input type="number" name="oldPrice" min="0"></label>
     </div>
-  `).join('');
-}
-
-// ── PRODUCT MANAGER ───────────────────────
-function initProductManager() {
-  document.getElementById('add-product-btn')?.addEventListener('click', () => openProductModal());
-  document.getElementById('pm-search-input')?.addEventListener('input', e => {
-    renderProductGrid(e.target.value);
-  });
-  document.getElementById('pm-form')?.addEventListener('submit', saveProduct);
-  document.getElementById('pm-modal-close')?.addEventListener('click', closeProductModal_admin);
-  document.getElementById('pm-modal-cancel')?.addEventListener('click', closeProductModal_admin);
-}
-
-function renderProductGrid(search = '') {
-  const grid = document.getElementById('pm-grid');
-  if (!grid) return;
-  let products = ADMIN_STATE.products;
-  if (search) {
-    products = products.filter(p =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.type.toLowerCase().includes(search.toLowerCase())
-    );
-  }
-  grid.innerHTML = products.map(p => `
-    <div class="pm-card">
-      <div class="pm-card-img"><img src="${p.image}" alt="${p.name}" loading="lazy"></div>
-      <div class="pm-card-info">
-        <div class="pm-card-name">${p.name}</div>
-        <div class="pm-card-price">${p.currency}${formatAdmin(p.price)}</div>
-        <div style="margin-top:6px">
-          <span class="badge ${p.stock <= 5 ? 'badge-warn' : 'badge-success'}">${p.stock} in stock</span>
-        </div>
-      </div>
-      <div class="pm-card-actions">
-        <button class="admin-btn admin-btn-sm" onclick="openProductModal(${p.id})">Edit</button>
-        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
-      </div>
+    <label class="field"><span>Lengths, separated by commas</span><input type="text" name="lengths" placeholder='12", 14", 16", 18", 20"'></label>
+    <label class="field"><span>Photo: a file name in the site folder, or a full https:// link</span><input type="text" name="image"></label>
+    <label class="field"><span>Description*</span><textarea name="description" rows="3" required></textarea></label>
+    <label class="field"><span>Features, one per line</span><textarea name="features" rows="3"></textarea></label>
+    <div class="ticks">
+      <label><input type="checkbox" name="hot"> Bestseller</label>
+      <label><input type="checkbox" name="newIn"> New in</label>
     </div>
-  `).join('');
-}
+    <p class="login__error" id="pm-error" role="alert" hidden></p>
+    <div class="modal__foot"><button type="button" class="btn" data-close-modal>Cancel</button><button type="submit" class="btn btn--solid">Save product</button></div>
+  </form>
+</div>
 
-function openProductModal(id) {
-  const modal = document.getElementById('pm-modal');
-  const title = document.getElementById('pm-modal-title');
-  const form = document.getElementById('pm-form');
-  if (!modal) return;
-  if (id) {
-    const p = ADMIN_STATE.products.find(x => x.id === id);
-    ADMIN_STATE.editingProduct = p;
-    title.textContent = 'Edit Product';
-    form.querySelector('[name=name]').value = p.name;
-    form.querySelector('[name=type]').value = p.type;
-    form.querySelector('[name=category]').value = p.category;
-    form.querySelector('[name=price]').value = p.price;
-    form.querySelector('[name=stock]').value = p.stock;
-    form.querySelector('[name=image]').value = p.image;
-    form.querySelector('[name=description]').value = p.description;
-    form.querySelector('[name=hot]').checked = p.hot;
-    form.querySelector('[name=newIn]').checked = p.new;
-  } else {
-    ADMIN_STATE.editingProduct = null;
-    title.textContent = 'Add New Product';
-    form.reset();
-  }
-  modal.classList.add('open');
-}
+<!-- ORDER FORM -->
+<div id="order-modal" class="modal" hidden>
+  <form id="order-form" class="modal__box" novalidate>
+    <h2>Record an order</h2>
+    <p class="hint">For orders that came in by WhatsApp, Instagram or email.</p>
+    <div class="grid2">
+      <label class="field"><span>Customer name*</span><input type="text" name="name" required></label>
+      <label class="field"><span>Phone</span><input type="tel" name="phone"></label>
+      <label class="field"><span>City*</span><input type="text" name="city" required></label>
+      <label class="field"><span>State</span><input type="text" name="state"></label>
+    </div>
+    <label class="field"><span>Piece*</span><select name="product" required></select></label>
+    <div class="grid2">
+      <label class="field"><span>Length</span><input type="text" name="hairLength" placeholder='e.g. 18"'></label>
+      <label class="field"><span>Quantity*</span><input type="number" name="qty" min="1" value="1" required></label>
+      <label class="field"><span>Total paid or due (₦)*</span><input type="number" name="total" min="0" required></label>
+      <label class="field"><span>Came in through</span><select name="method"><option>WhatsApp</option><option>Instagram</option><option>Email</option><option>In person</option></select></label>
+    </div>
+    <label class="field"><span>Status</span><select name="status"><option>Pending</option><option>Processing</option><option>Shipped</option><option>Completed</option></select></label>
+    <p class="login__error" id="order-error" role="alert" hidden></p>
+    <div class="modal__foot"><button type="button" class="btn" data-close-modal>Cancel</button><button type="submit" class="btn btn--solid">Save order</button></div>
+  </form>
+</div>
 
-function closeProductModal_admin() {
-  document.getElementById('pm-modal')?.classList.remove('open');
-  ADMIN_STATE.editingProduct = null;
-}
+<div id="admin-toast" class="toast" role="status" aria-live="polite"><b></b><span></span></div>
 
-function saveProduct(e) {
-  e.preventDefault();
-  const form = e.target;
-  const data = {
-    name: form.querySelector('[name=name]').value,
-    type: form.querySelector('[name=type]').value,
-    category: form.querySelector('[name=category]').value,
-    price: +form.querySelector('[name=price]').value,
-    stock: +form.querySelector('[name=stock]').value,
-    image: form.querySelector('[name=image]').value,
-    description: form.querySelector('[name=description]').value,
-    hot: form.querySelector('[name=hot]').checked,
-    new: form.querySelector('[name=newIn]').checked,
-    currency: '₦',
-    lengths: ['12"','14"','16"','18"','20"'],
-    colors: ['#1a1008'],
-    colorNames: ['Natural Black'],
-    rating: 4.8, reviews: 0, oldPrice: null,
-    features: [data.description?.split('.')[0] || 'Quality Hair']
-  };
-
-  if (ADMIN_STATE.editingProduct) {
-    const idx = ADMIN_STATE.products.findIndex(p => p.id === ADMIN_STATE.editingProduct.id);
-    ADMIN_STATE.products[idx] = { ...ADMIN_STATE.editingProduct, ...data };
-    adminToast('Product Updated', `${data.name} has been saved.`);
-  } else {
-    data.id = Date.now();
-    ADMIN_STATE.products.push(data);
-    adminToast('Product Added', `${data.name} is now live.`);
-  }
-
-  localStorage.setItem('bs_products_edited', JSON.stringify(ADMIN_STATE.products));
-  closeProductModal_admin();
-  renderProductGrid();
-}
-
-function deleteProduct(id) {
-  if (!confirm('Delete this product? This cannot be undone.')) return;
-  ADMIN_STATE.products = ADMIN_STATE.products.filter(p => p.id !== id);
-  localStorage.setItem('bs_products_edited', JSON.stringify(ADMIN_STATE.products));
-  renderProductGrid();
-  adminToast('Product Deleted', 'The product has been removed.');
-}
-window.deleteProduct = deleteProduct;
-window.openProductModal = openProductModal;
-
-// ── ANALYTICS ─────────────────────────────
-function initAnalyticsPage() {}
-
-function renderAnalytics() {
-  const analytics = ADMIN_STATE.analytics;
-  const orders = ADMIN_STATE.orders;
-  const completed = orders.filter(o => o.status === 'Completed');
-  const totalRevenue = completed.reduce((s,o) => s+o.total, 0);
-  const avgOrder = completed.length ? totalRevenue / completed.length : 0;
-  const convRate = analytics.views ? (orders.length / analytics.views * 100).toFixed(1) : '0';
-
-  document.getElementById('a-pageviews').textContent = analytics.views || 0;
-  document.getElementById('a-revenue').textContent = `₦${formatAdmin(totalRevenue)}`;
-  document.getElementById('a-avgorder').textContent = `₦${formatAdmin(avgOrder)}`;
-  document.getElementById('a-conv').textContent = convRate + '%';
-  document.getElementById('a-subs').textContent = ADMIN_STATE.subscribers.length;
-  document.getElementById('a-orders').textContent = orders.length;
-
-  renderSessionsChart();
-  renderCategoryChart();
-  renderProductViewsTable();
-}
-
-function renderSessionsChart() {
-  const ctx = document.getElementById('sessions-chart');
-  if (!ctx) return;
-  if (ADMIN_STATE.chartInstances.sessions) ADMIN_STATE.chartInstances.sessions.destroy();
-
-  const analytics = ADMIN_STATE.analytics;
-  const sessions = analytics.sessions || [];
-  const last14 = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().split('T')[0];
-    const found = sessions.find(s => s.date === ds);
-    last14.push({ date: d.toLocaleDateString('en-NG',{month:'short',day:'numeric'}), count: found?.count || Math.floor(Math.random()*25+5) });
-  }
-
-  ADMIN_STATE.chartInstances.sessions = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: last14.map(d => d.date),
-      datasets: [{
-        label: 'Sessions',
-        data: last14.map(d => d.count),
-        backgroundColor: 'rgba(201,169,110,0.25)',
-        borderColor: '#c9a96e',
-        borderWidth: 1,
-        borderRadius: 1
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: '#6b6258', font: { size: 9 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#6b6258', font: { size: 9 } } }
-      }
-    }
-  });
-}
-
-function renderCategoryChart() {
-  const ctx = document.getElementById('category-chart');
-  if (!ctx) return;
-  if (ADMIN_STATE.chartInstances.category) ADMIN_STATE.chartInstances.category.destroy();
-
-  const cats = { wigs: 0, bundles: 0, extensions: 0 };
-  ADMIN_STATE.orders.forEach(o => {
-    const p = STORE_DATA.products.find(x => x.name === o.product);
-    if (p) cats[p.category] = (cats[p.category] || 0) + o.qty;
-  });
-
-  ADMIN_STATE.chartInstances.category = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Wigs', 'Bundles', 'Extensions'],
-      datasets: [{
-        data: [cats.wigs, cats.bundles, cats.extensions],
-        backgroundColor: ['rgba(201,169,110,0.7)', 'rgba(138,110,68,0.7)', 'rgba(80,60,30,0.7)'],
-        borderColor: ['#c9a96e','#8a6e44','#503c1e'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#b8ad9e', font: { family: 'Jost', size: 11 }, padding: 16 } }
-      },
-      cutout: '65%'
-    }
-  });
-}
-
-function renderProductViewsTable() {
-  const tbody = document.getElementById('product-views-tbody');
-  if (!tbody) return;
-  const views = ADMIN_STATE.analytics.products_viewed || {};
-  const rows = STORE_DATA.products.map(p => ({
-    name: p.name,
-    views: views[p.id] || Math.floor(Math.random() * 80 + 5),
-    revenue: ADMIN_STATE.orders.filter(o => o.product === p.name).reduce((s,o) => s+o.total, 0),
-    orders: ADMIN_STATE.orders.filter(o => o.product === p.name).length
-  })).sort((a,b) => b.views - a.views);
-
-  tbody.innerHTML = rows.map(r => `
-    <tr>
-      <td style="color:var(--cream)">${r.name}</td>
-      <td>${r.views}</td>
-      <td>${r.orders}</td>
-      <td style="font-family:var(--font-display);color:var(--gold)">₦${formatAdmin(r.revenue)}</td>
-      <td style="color:${r.orders > 0 ? 'var(--success)' : 'var(--muted)'}">
-        ${r.orders > 0 ? (r.views ? (r.orders/r.views*100).toFixed(1) : '0') + '%' : '—'}
-      </td>
-    </tr>
-  `).join('');
-}
-
-// ── ORDERS ────────────────────────────────
-function initOrdersPage() {
-  document.getElementById('order-status-filter')?.addEventListener('change', renderOrders);
-  document.getElementById('order-search')?.addEventListener('input', renderOrders);
-}
-
-function renderOrders() {
-  const tbody = document.getElementById('orders-tbody');
-  if (!tbody) return;
-  const statusFilter = document.getElementById('order-status-filter')?.value || 'all';
-  const searchQ = document.getElementById('order-search')?.value?.toLowerCase() || '';
-
-  let orders = ADMIN_STATE.orders;
-  if (statusFilter !== 'all') orders = orders.filter(o => o.status === statusFilter);
-  if (searchQ) orders = orders.filter(o => o.customer.toLowerCase().includes(searchQ) || o.id.toLowerCase().includes(searchQ));
-
-  if (orders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">No orders found</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = orders.map(o => `
-    <tr>
-      <td style="color:var(--gold)">${o.id}</td>
-      <td>${o.customer}</td>
-      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${o.product}</td>
-      <td style="text-align:center">${o.qty}</td>
-      <td>${o.city}</td>
-      <td style="font-family:var(--font-display)">₦${formatAdmin(o.total)}</td>
-      <td>
-        <select onchange="updateOrderStatus('${o.id}',this.value)" style="width:auto;padding:4px 8px;font-size:11px;border-color:${statusColor(o.status)}">
-          ${['Pending','Processing','Shipped','Completed','Cancelled'].map(s =>
-            `<option value="${s}"${s===o.status?' selected':''}>${s}</option>`
-          ).join('')}
-        </select>
-      </td>
-      <td style="font-size:11px;color:var(--muted)">${o.date}</td>
-    </tr>
-  `).join('');
-}
-
-function updateOrderStatus(id, status) {
-  const order = ADMIN_STATE.orders.find(o => o.id === id);
-  if (order) {
-    order.status = status;
-    localStorage.setItem('bs_orders', JSON.stringify(ADMIN_STATE.orders));
-    adminToast('Order Updated', `${id} marked as ${status}.`);
-  }
-}
-window.updateOrderStatus = updateOrderStatus;
-
-// ── SUBSCRIBERS ───────────────────────────
-function renderSubscribers() {
-  const container = document.getElementById('subscribers-list');
-  if (!container) return;
-  const subs = ADMIN_STATE.subscribers;
-  document.getElementById('subs-count').textContent = subs.length;
-
-  if (subs.length === 0) {
-    container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 0">No subscribers yet. Share the newsletter signup link!</div>';
-    return;
-  }
-  container.innerHTML = `
-    <table class="admin-table">
-      <thead><tr><th>#</th><th>Email Address</th><th>Status</th></tr></thead>
-      <tbody>${subs.map((s,i) => `
-        <tr>
-          <td style="color:var(--muted)">${i+1}</td>
-          <td>${s}</td>
-          <td><span class="badge badge-success">Active</span></td>
-        </tr>
-      `).join('')}</tbody>
-    </table>
-  `;
-}
-
-// ── SETTINGS ──────────────────────────────
-function initSettings() {
-  document.querySelectorAll('.toggle').forEach(t => {
-    t.addEventListener('click', () => {
-      t.classList.toggle('on');
-      const label = t.dataset.label || 'Setting';
-      adminToast('Setting Updated', `${label} has been ${t.classList.contains('on') ? 'enabled' : 'disabled'}.`);
-    });
-  });
-
-  document.getElementById('save-store-settings')?.addEventListener('click', () => {
-    adminToast('Settings Saved', 'Store settings have been updated.');
-  });
-
-  document.getElementById('change-password-btn')?.addEventListener('click', () => {
-    const np = document.getElementById('new-password').value;
-    if (np.length < 6) { adminToast('Too Short', 'Password must be at least 6 characters.'); return; }
-    adminToast('Password Updated', 'Your admin password has been changed.');
-    document.getElementById('new-password').value = '';
-  });
-
-  document.getElementById('export-orders-btn')?.addEventListener('click', exportOrders);
-  document.getElementById('export-products-btn')?.addEventListener('click', exportProducts);
-}
-
-function exportOrders() {
-  const headers = ['ID','Customer','Product','Qty','City','Total','Status','Date'];
-  const rows = ADMIN_STATE.orders.map(o => [o.id,o.customer,o.product,o.qty,o.city,o.total,o.status,o.date]);
-  downloadCSV([headers,...rows], 'baddie-strands-orders.csv');
-  adminToast('Exported', 'Orders downloaded as CSV.');
-}
-
-function exportProducts() {
-  const headers = ['ID','Name','Type','Category','Price','Stock','Hot','New'];
-  const rows = ADMIN_STATE.products.map(p => [p.id,p.name,p.type,p.category,p.price,p.stock,p.hot,p.new]);
-  downloadCSV([headers,...rows], 'baddie-strands-products.csv');
-  adminToast('Exported', 'Products downloaded as CSV.');
-}
-
-function downloadCSV(rows, filename) {
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ── UTILS ─────────────────────────────────
-function formatAdmin(n) {
-  if (typeof n !== 'number') n = +n || 0;
-  return n.toLocaleString('en-NG');
-}
-
-function statusBadge(status) {
-  return { Completed:'badge-success', Processing:'badge-info', Shipped:'badge-warn', Pending:'badge-warn', Cancelled:'badge-error' }[status] || 'badge-info';
-}
-
-function statusColor(status) {
-  return { Completed:'var(--success)', Pending:'var(--warn)', Shipped:'var(--info)', Cancelled:'var(--error)' }[status] || 'var(--border)';
-}
-
-function adminToast(title, body) {
-  const toast = document.getElementById('admin-toast');
-  if (!toast) return;
-  toast.querySelector('.at-title').textContent = title;
-  toast.querySelector('.at-body').textContent = body;
-  toast.classList.add('show');
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => toast.classList.remove('show'), 3200);
-}
-
-</script>
-<script>
-// Wire up extra export buttons and order summary counts
-document.getElementById('export-subs-btn')?.addEventListener('click', () => {
-  downloadCSV([['Email'], ...ADMIN_STATE.subscribers.map(s => [s])], 'baddie-strands-subscribers.csv');
-  adminToast('Exported', 'Subscribers list downloaded.');
-});
-document.getElementById('export-subs-btn2')?.addEventListener('click', () => {
-  downloadCSV([['Email'], ...ADMIN_STATE.subscribers.map(s => [s])], 'baddie-strands-subscribers.csv');
-  adminToast('Exported', 'Subscribers list downloaded.');
-});
-
-// Patch renderOrders to also update the summary count cards
-const _origRender = window.renderOrders;
-window.renderOrders = function() {
-  _origRender();
-  ['Pending','Processing','Shipped','Completed'].forEach(s => {
-    const el = document.getElementById('o-' + s.toLowerCase());
-    if (el) el.textContent = ADMIN_STATE.orders.filter(o => o.status === s).length;
-  });
-};
-</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+<script src="config.js" defer></script>
+<script src="data.js" defer></script>
+<script src="admin.js" defer></script>
 </body>
 </html>
