@@ -1,7 +1,8 @@
 // ============================================================
 // BADDIE STRANDS — Storefront
-// Showroom, grid, product detail, bag, search, quiz, guides.
-// Sign-in and checkout live in checkout.js.
+// Loader, the pinned texture scene, showroom, stylist, product
+// detail, story, reviews, answers. Motion: GSAP + ScrollTrigger
+// + Lenis. Sign-in and checkout live in checkout.js.
 // ============================================================
 'use strict';
 
@@ -14,12 +15,16 @@
   const pad2 = (n) => String(n).padStart(2, '0');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const icon = (id) => `<svg class="ico" aria-hidden="true"><use href="#i-${id}"/></svg>`;
-  const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+  const G = window.gsap, ST = window.ScrollTrigger, Split = window.SplitText;
+  const motion = !!(G && ST) && !reduced;
+  if (G && ST) G.registerPlugin(ST);
+  if (G && Split) G.registerPlugin(Split);
+  const narrow = () => window.innerWidth < 860;
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   const store = {
-    get(key, fallback) {
-      try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch (e) { return fallback; }
-    },
+    get(key, fallback) { try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch (e) { return fallback; } },
     set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable */ } },
     del(key) { try { localStorage.removeItem(key); } catch (e) { /* storage unavailable */ } }
   };
@@ -27,55 +32,82 @@
   // ── Products ─────────────────────────────────────────────
   const CATEGORY_TONE = { wigs: '#7A1E46', bundles: '#A6652F', extensions: '#7D6BA8' };
   const CATEGORIES = [['all', 'All'], ['wigs', 'Wigs'], ['bundles', 'Bundles'], ['extensions', 'Extensions']];
-
   function tidy(p) {
     const colors = Array.isArray(p.colors) && p.colors.length ? p.colors : ['#1a1008'];
     const names = Array.isArray(p.colorNames) ? p.colorNames : [];
-    const images = (Array.isArray(p.images) && p.images.length ? p.images : [p.image]).filter(Boolean);
     return Object.assign({}, p, {
-      name: String(p.name || 'Untitled piece'),
-      type: String(p.type || ''),
-      category: p.category || 'wigs',
-      price: Number(p.price) || 0,
-      oldPrice: p.oldPrice ? Number(p.oldPrice) : null,
-      lengths: Array.isArray(p.lengths) && p.lengths.length ? p.lengths.map(String) : ['One length'],
-      colors,
-      colorNames: colors.map((c, i) => String(names[i] || 'Shade ' + (i + 1))),
-      image: p.image || images[0] || '',
-      images,
-      features: Array.isArray(p.features) ? p.features.filter(Boolean) : [],
-      rating: Number(p.rating) || 0,
-      reviews: Number(p.reviews) || 0,
+      name: String(p.name || 'Untitled piece'), type: String(p.type || ''), category: p.category || 'wigs',
+      price: Number(p.price) || 0, oldPrice: p.oldPrice ? Number(p.oldPrice) : null,
+      lengths: Array.isArray(p.lengths) && p.lengths.length ? p.lengths.map(String) : ['18"'],
+      colors, colorNames: colors.map((c, i) => String(names[i] || 'Shade ' + (i + 1))),
+      image: p.image || '', features: Array.isArray(p.features) ? p.features.filter(Boolean) : [],
+      rating: Number(p.rating) || 0, reviews: Number(p.reviews) || 0,
       stock: p.stock == null || p.stock === '' ? null : Number(p.stock),
       tone: p.tone || CATEGORY_TONE[p.category] || '#6F0A3A',
+      texture: Strands.TEXTURES[p.texture] ? p.texture : 'body',
       description: String(p.description || '')
     });
   }
-
   const edited = store.get('bs_products_edited', null);
   const usingEdits = Array.isArray(edited) && edited.length > 0;
   const PRODUCTS = (usingEdits ? edited : STORE_DATA.products).map(tidy);
   const byId = (id) => PRODUCTS.find((p) => String(p.id) === String(id));
-  const bestsellers = () => {
-    const hot = PRODUCTS.filter((p) => p.hot);
-    return (hot.length ? hot : PRODUCTS.slice()).sort((a, b) => b.reviews - a.reviews || b.rating - a.rating);
-  };
+  const bestsellers = () => { const hot = PRODUCTS.filter((p) => p.hot); return (hot.length ? hot : PRODUCTS.slice()).sort((a, b) => b.reviews - a.reviews); };
+  const inches = Strands.inches;
+  const look = (p, ci, len) => Strands.lookOf(p, ci || 0, len ? inches(len) : null);
+  const hexState = (h) => { const c = Strands.rgb(h); return { r: c[0], g: c[1], b: c[2] }; };
+  const tipState = (h) => { const c = Strands.rgb(h); return { r2: c[0], g2: c[1], b2: c[2] }; };
+  const shapeState = (shape) => ({ dome: shape === 'dome' ? 1 : 0, weft: shape === 'weft' || shape === 'clip' ? 1 : 0, pony: shape === 'pony' ? 1 : 0, clip: shape === 'clip' ? 1 : 0 });
+  const stateOf = (lk) => Object.assign({}, Strands.TEXTURES[lk.texture], hexState(lk.shade), tipState(lk.tip || lk.shade), shapeState(lk.shape));
 
-  // ── Pictures ─────────────────────────────────────────────
-  function sized(url, w, h) {
-    if (!url) return '';
-    if (!/images\.unsplash\.com/.test(url)) return url;
-    return url.split('?')[0] + '?auto=format&fit=crop&crop=faces,entropy&q=78&w=' + w + (h ? '&h=' + h : '');
+  // Drawn pictures take 10–90ms each, so they are painted in idle time, one
+  // at a time, and fade in. Pics.now() draws one straight away when needed.
+  const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  const Pics = (() => {
+    const jobs = new Map(), done = new Map();
+    let busy = false, started = false;
+    const idle = window.requestIdleCallback ? (f) => window.requestIdleCallback(f, { timeout: 400 }) : (f) => setTimeout(f, 30);
+    const key = (p, o) => [p.id, p.texture, (p.colors || []).join(''), o.w, o.h, o.ci || 0, o.inches || ''].join('|');
+    const opts = (o) => ({ w: o.w, h: o.h, shade: o.ci || 0, inches: o.inches, bg: false });
+    function kick() { if (!started || busy || !jobs.size) return; busy = true; idle(step); }
+    function step() {
+      busy = false;
+      const first = jobs.entries().next().value;
+      if (!first) return;
+      const [k, j] = first;
+      jobs.delete(k);
+      const url = Strands.thumb(j.p, opts(j.o));
+      done.set(k, url);
+      $$('img[data-hair]').forEach((im) => { if (im.dataset.hair === k) { im.src = url; im.classList.add('is-in'); } });
+      kick();
+    }
+    return {
+      // returns [src, key, ready]
+      get(p, o) {
+        const k = key(p, o);
+        if (done.has(k)) return [done.get(k), k, true];
+        if (!jobs.has(k)) jobs.set(k, { p, o });
+        kick();
+        return [BLANK, k, false];
+      },
+      now(p, o) {
+        const k = key(p, o);
+        if (!done.has(k)) { done.set(k, Strands.thumb(p, opts(o))); jobs.delete(k); }
+        return done.get(k);
+      },
+      start() { started = true; kick(); }
+    };
+  })();
+  function pic(p, o, extra) {
+    if (p.image) return `<img src="${esc(p.image)}" alt="${esc(o.alt || '')}"${extra || ''} loading="lazy" decoding="async">`;
+    const [src, k, ready] = Pics.get(p, o);
+    return `<img src="${esc(src)}" data-hair="${esc(k)}" class="${ready ? 'is-in' : ''}" alt="${esc(o.alt || '')}"${extra || ''}>`;
   }
-  function media(url, w, h, alt, tone, cls, tag) {
-    const t = tag || 'span';
-    const img = url ? `<img src="${esc(sized(url, w, h))}" alt="${esc(alt || '')}" loading="lazy" decoding="async">` : '';
-    return `<${t} class="media ${cls || ''}${url ? '' : ' is-missing'}" style="--tone:${esc(tone || '#6F0A3A')}">${img}</${t}>`;
+  // Picture for a product: their own photo if set, otherwise its hair, drawn.
+  function art(p, o) {
+    o = Object.assign({ w: 360, h: 450 }, o);
+    return `<${o.tag || 'span'} class="art${p.image ? ' art--photo' : ''} ${o.cls || ''}" style="--tone:${esc(p.tone)}${o.style ? ';' + o.style : ''}"${o.attrs || ''}>${pic(p, o)}</${o.tag || 'span'}>`;
   }
-  document.addEventListener('error', (e) => {
-    const t = e.target;
-    if (t && t.tagName === 'IMG') { const m = t.closest('.media'); if (m) m.classList.add('is-missing'); }
-  }, true);
 
   // ── Toast ────────────────────────────────────────────────
   function toast(title, body) {
@@ -88,11 +120,28 @@
     toast.timer = setTimeout(() => el.classList.remove('is-on'), 3800);
   }
 
-  // ── Overlays (detail, bag, search, quiz, sign in, checkout) ──
+  // ── Smooth scrolling ─────────────────────────────────────
+  let lenis = null;
+  if (motion && window.Lenis) {
+    lenis = new window.Lenis({ lerp: 0.1, smoothWheel: true, wheelMultiplier: 1 });
+    lenis.on('scroll', ST.update);
+    G.ticker.add((t) => lenis.raf(t * 1000));
+    G.ticker.lagSmoothing(0);
+  }
+  function scrollToY(y, fast) {
+    if (lenis) lenis.scrollTo(y, { duration: fast ? 0.9 : 1.5, force: true });
+    else window.scrollTo({ top: y, behavior: reduced ? 'auto' : 'smooth' });
+  }
+  function scrollToEl(el) {
+    if (!el) return;
+    if (lenis) lenis.scrollTo(el, { duration: 1.5, force: true });
+    else el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  // ── Overlays ─────────────────────────────────────────────
   const Overlay = (() => {
     let open = [];
-    const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
-
+    const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
     function show(id, focusSelector) {
       const el = document.getElementById(id);
       if (!el || open.includes(el)) return;
@@ -102,6 +151,7 @@
       el.classList.add('is-open');
       open.push(el);
       document.body.classList.add('is-locked');
+      if (lenis) lenis.stop();
       const target = (focusSelector && $(focusSelector, el)) || $('[role="dialog"]', el);
       setTimeout(() => { if (target && el.classList.contains('is-open')) target.focus({ preventScroll: true }); }, 80);
     }
@@ -110,15 +160,12 @@
       if (!el || !open.includes(el)) return;
       el.classList.remove('is-open');
       open = open.filter((x) => x !== el);
-      if (!open.length) document.body.classList.remove('is-locked');
+      if (!open.length) { document.body.classList.remove('is-locked'); if (lenis) lenis.start(); }
       setTimeout(() => { if (!el.classList.contains('is-open')) el.hidden = true; }, reduced ? 0 : 460);
       el.dispatchEvent(new CustomEvent('overlay:close'));
       if (el.returnTo && document.contains(el.returnTo) && !open.length) el.returnTo.focus({ preventScroll: true });
     }
-    document.addEventListener('click', (e) => {
-      const c = e.target.closest('[data-close]');
-      if (c) hide(c.closest('.overlay'));
-    });
+    document.addEventListener('click', (e) => { const c = e.target.closest('[data-close]'); if (c) hide(c.closest('.overlay')); });
     document.addEventListener('keydown', (e) => {
       const top = open[open.length - 1];
       if (!top) return;
@@ -135,10 +182,9 @@
 
   // ── Visit counts for the admin dashboard ─────────────────
   const Stats = {
-    read() { const a = store.get('bs_analytics', {}); return { views: a.views || 0, sessions: a.sessions || [], products_viewed: a.products_viewed || {} }; },
+    read() { const a = store.get('bs_analytics', {}) || {}; return { views: a.views || 0, sessions: a.sessions || [], products_viewed: a.products_viewed || {} }; },
     pageView() {
-      const a = this.read();
-      a.views++;
+      const a = this.read(); a.views++;
       const today = new Date().toISOString().split('T')[0];
       const hit = a.sessions.find((s) => s.date === today);
       if (hit) hit.count++; else { a.sessions.push({ date: today, count: 1 }); if (a.sessions.length > 30) a.sessions.shift(); }
@@ -154,55 +200,69 @@
     toggle(id) {
       const key = String(id), p = byId(id);
       if (this.has(key)) { this.ids = this.ids.filter((x) => x !== key); toast('Removed', (p ? p.name : 'Piece') + ' is no longer saved.'); }
-      else { this.ids.push(key); toast('Saved', (p ? p.name : 'Piece') + ' is in your saved pieces.'); }
+      else { this.ids.push(key); toast('Saved', (p ? p.name : 'Piece') + ' is waiting for you under Saved.'); }
       store.set('bs_wishlist', this.ids);
-      Shop.refresh();
-      Detail.syncSave();
+      Shop.refresh(); Detail.syncSave();
     }
   };
 
   // ── Bag ──────────────────────────────────────────────────
+  function fly(fromEl, p, ci) {
+    const bag = $('#bag-btn');
+    if (!motion || !fromEl || !bag) { if (bag) { bag.classList.remove('is-bump'); void bag.offsetWidth; bag.classList.add('is-bump'); } return; }
+    const a = fromEl.getBoundingClientRect(), b = bag.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'fly art';
+    el.style.setProperty('--tone', p.tone);
+    el.innerHTML = `<img src="${esc(p.image || Pics.now(p, { w: 160, h: 200, ci: ci || 0 }))}" alt="">`;
+    document.body.appendChild(el);
+    const x0 = a.left + a.width / 2 - 28, y0 = a.top + a.height / 2 - 35, x1 = b.left + b.width / 2 - 28, y1 = b.top + b.height / 2 - 35;
+    G.set(el, { x: x0, y: y0, scale: 0.6, rotate: -8 });
+    G.timeline({ onComplete: () => { el.remove(); bag.classList.remove('is-bump'); void bag.offsetWidth; bag.classList.add('is-bump'); } })
+      .to(el, { scale: 1.15, duration: 0.25, ease: 'back.out(2)' })
+      .to(el, { x: x1, duration: 0.75, ease: 'power2.inOut' }, 0.15)
+      .to(el, { y: Math.min(y0, y1) - 120, duration: 0.35, ease: 'power2.out' }, 0.15)
+      .to(el, { y: y1, duration: 0.4, ease: 'power2.in' }, 0.5)
+      .to(el, { scale: 0.2, rotate: 12, opacity: 0.2, duration: 0.3 }, 0.62);
+  }
   const Cart = {
     items: (store.get('bs_cart', []) || []).filter((i) => i && i.key && i.name && Number(i.price) >= 0 && Number(i.qty) > 0),
     count() { return this.items.reduce((s, i) => s + Number(i.qty), 0); },
     subtotal() { return this.items.reduce((s, i) => s + Number(i.price) * Number(i.qty), 0); },
     save() { store.set('bs_cart', this.items); this.paint(); },
-    add(p, qty, length, shade, quiet) {
+    add(p, qty, length, shade, opts) {
+      opts = opts || {};
       const len = length || p.lengths[0];
+      const ci = Math.max(0, p.colorNames.indexOf(shade));
       const key = [p.id, len, shade || ''].join('_');
       const found = this.items.find((i) => i.key === key);
       if (found) found.qty += qty;
-      else this.items.push({ key, id: p.id, name: p.name, type: p.type, price: p.price, currency: '₦', image: p.image, length: len, color: shade || '', qty });
+      else this.items.push({ key, id: p.id, name: p.name, type: p.type, price: p.price, currency: '₦', image: p.image || '', ci, length: len, color: shade || '', qty });
       this.save();
-      if (!quiet) toast('Added to bag', `${p.name}, ${len}${shade ? ', ' + shade : ''}`);
+      fly(opts.from, p, ci);
+      if (!opts.quiet) toast('In your bag', `${p.name}, ${len}${shade ? ', ' + shade : ''}`);
     },
-    step(key, by) {
-      const it = this.items.find((i) => i.key === key);
-      if (!it) return;
-      it.qty = Math.max(1, Number(it.qty) + by);
-      this.save();
-    },
+    step(key, by) { const it = this.items.find((i) => i.key === key); if (!it) return; it.qty = Math.max(1, Number(it.qty) + by); this.save(); },
     remove(key) { this.items = this.items.filter((i) => i.key !== key); this.save(); },
     clear() { this.items = []; this.save(); },
     paint() {
-      const n = this.count();
-      const badge = $('#bag-count');
+      const n = this.count(), badge = $('#bag-count');
       badge.textContent = n;
       badge.classList.toggle('is-full', n > 0);
       $('#bag-btn').setAttribute('aria-label', n ? `Open your bag, ${n} item${n === 1 ? '' : 's'}` : 'Open your bag');
       $('#cart-n').textContent = n ? `(${n})` : '';
       const list = $('#cart-items'), foot = $('#cart-foot');
       if (!this.items.length) {
-        list.innerHTML = `<div class="empty"><b>Your bag is empty</b><p>Find a piece you love and it will wait for you here.</p><button class="btn btn--line" type="button" data-shop-filter="all" data-close>Shop the collection</button></div>`;
+        list.innerHTML = `<div class="empty"><b>Your bag is empty</b><p>Find a piece you love and it will wait for you here.</p><button class="btn btn--line" type="button" data-shop-filter="all" data-close>Go to the shop</button></div>`;
         foot.hidden = true;
         return;
       }
       foot.hidden = false;
       list.innerHTML = this.items.map((i) => {
-        const p = byId(i.id);
+        const p = byId(i.id) || { id: i.id, tone: '#6F0A3A', image: i.image, colors: ['#1a1008'], texture: 'body', category: 'wigs', lengths: [i.length] };
         const bits = [i.type, i.length, i.color].filter(Boolean).map(esc).join(' · ');
         return `<div class="line" data-key="${esc(i.key)}">
-          ${media(i.image, 180, 225, '', p ? p.tone : '')}
+          ${art(p, { w: 168, h: 210, ci: i.ci || 0, inches: inches(i.length) })}
           <div><b>${esc(i.name)}</b><small>${bits}</small>
             <div class="stepper"><button type="button" data-step="-1" aria-label="One fewer ${esc(i.name)}">${icon('minus')}</button><output>${Number(i.qty)}</output><button type="button" data-step="1" aria-label="One more ${esc(i.name)}">${icon('plus')}</button></div>
           </div>
@@ -213,20 +273,187 @@
     }
   };
 
-  // ── Shop: showroom and grid ──────────────────────────────
+  // ── Cursor ───────────────────────────────────────────────
+  function initCursor() {
+    if (!motion || !fine) return;
+    const c = $('#cursor'), label = $('.cursor__label', c);
+    document.documentElement.classList.add('has-cursor');
+    const xTo = G.quickTo(c, 'x', { duration: 0.32, ease: 'power3' }), yTo = G.quickTo(c, 'y', { duration: 0.32, ease: 'power3' });
+    window.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') { xTo(e.clientX); yTo(e.clientY); c.style.opacity = 1; } }, { passive: true });
+    document.addEventListener('pointerleave', () => { c.style.opacity = 0; });
+    document.addEventListener('pointerover', (e) => {
+      const t = e.target;
+      const act = t.closest('a,button,select,summary,label,input[type="range"],[role="radio"]');
+      const zone = t.closest('[data-cursor]');
+      c.classList.toggle('is-hover', !!act);
+      const word = !act && zone ? zone.dataset.cursor : '';
+      c.classList.toggle('is-label', !!word);
+      label.textContent = word;
+    });
+    window.addEventListener('pointerdown', () => c.classList.add('is-down'));
+    window.addEventListener('pointerup', () => c.classList.remove('is-down'));
+  }
+
+  // ── Characters, words, lines ─────────────────────────────
+  function chars(el) {
+    if (el.dataset.chars) return $$('.ch', el);
+    el.dataset.chars = '1';
+    const text = el.textContent;
+    el.innerHTML = `<span class="visually-hidden">${esc(text.trim())}</span>` + Array.from(text).map((c) => (c === ' ' ? ' ' : `<span class="ch" aria-hidden="true">${esc(c)}</span>`)).join('');
+    return $$('.ch', el);
+  }
+  function words(el) {
+    const parts = el.textContent.trim().split(/\s+/);
+    el.innerHTML = parts.map((w) => `<span class="w">${esc(w)}</span>`).join(' ');
+    return $$('.w', el);
+  }
+  function revealLines() {
+    if (!motion || !Split) return;
+    $$('[data-split]').forEach((el) => {
+      const sp = new Split(el, { type: 'lines', mask: 'lines', linesClass: 'line' });
+      G.from(sp.lines, { yPercent: 115, duration: 1.15, ease: 'expo.out', stagger: 0.09, scrollTrigger: { trigger: el, start: 'top 86%' } });
+    });
+  }
+
+  // ── Fit big words to their width ─────────────────────────
+  function natural(el) { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width; }
+  function fitAll() {
+    $$('[data-fit]').forEach((el) => {
+      el.style.fontSize = '100px';
+      const room = el.parentElement.closest('.scene__stage').clientWidth * (narrow() ? 0.9 : 0.94);
+      const w = natural(el);
+      if (w > 0) el.style.fontSize = Math.min(100 * room / w, window.innerHeight * 0.36) + 'px';
+    });
+    const word = $('#story-word');
+    word.style.fontSize = '100px';
+    const ww = natural(word), wr = word.parentElement.clientWidth;
+    if (ww > 0) word.style.fontSize = (100 * wr / ww * 0.985) + 'px';
+    const grow = $('#foot-grow');
+    grow.style.setProperty('--grow-fs', '100px');
+    const gw = natural(grow);
+    if (gw > 0) grow.style.setProperty('--grow-fs', (100 * grow.clientWidth / gw * 0.995) + 'px');
+  }
+
+  // ════════════════════════════════════════════════════════
+  // THE SCENE: hero, then four textures, one pinned stage
+  // ════════════════════════════════════════════════════════
+  const Scene = (() => {
+    const stage = $('#scene');
+    const chapters = (STORE_DATA.chapters || []).map((c) => Object.assign({}, c, { p: byId(c.product) })).filter((c) => c.p);
+    const heroLook = () => (narrow() ? { ax: 0.5, ay: 0.25, lockW: 0.6, len: 0.42 } : { ax: 0.5, ay: 0.2, lockW: 0.27, len: 0.72 });
+    const chapLook = () => (narrow() ? { ax: 0.5, ay: 0.16, lockW: 0.5, len: 0.4 } : { ax: 0.5, ay: 0.12, lockW: 0.28, len: 0.74 });
+    const hair = new Strands($('#hair'), Object.assign({ layout: 'lock', shape: 'dome', texture: 'straight', shade: '#1a1008', interactive: true }, heroLook()));
+    const chapLookFor = (c) => look(c.p, c.shade);
+    let tl = null;
+
+    // chapters markup
+    $('#chap-ghosts').innerHTML = chapters.map((c) => `<span>${esc(c.title)}</span>`).join('');
+    $('#chap-list').innerHTML = chapters.map((c, i) => `<li class="chap__item" data-i="${i}">
+        <div>
+          <p class="chap__num">${ROMAN[i]}.</p>
+          <h2 class="chap__title">${esc(c.title)}</h2>
+          <p class="chap__line">${esc(c.line)}</p>
+        </div>
+        <div class="chap__pick">
+          <small>Wear it as</small>
+          <b>${esc(c.p.name)}</b>
+          <span>${money(c.p.price)}${c.p.colorNames[c.shade] ? ' · ' + esc(c.p.colorNames[c.shade]) : ''}</span>
+          <button class="oval" type="button" data-chapter-open="${i}"><span>See this piece</span></button>
+        </div>
+      </li>`).join('');
+    $('#chap-dots').innerHTML = chapters.map((c, i) => `<button class="chap__dot" type="button" data-dot="${i}" aria-label="${ROMAN[i]}. ${esc(c.title)}"><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="14"/><circle cx="15" cy="15" r="14"/></svg></button>`).join('');
+
+    $('#chap-list').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-chapter-open]');
+      if (!b) return;
+      const c = chapters[Number(b.dataset.chapterOpen)];
+      Detail.open(c.p.id, { colorIndex: c.shade, from: $('#hair') });
+    });
+
+    function staticFallback() {
+      $('#chap').hidden = true;
+      const box = $('#chap-static');
+      box.hidden = false;
+      box.innerHTML = chapters.map((c, i) => `<article style="--tone:${esc(c.bg)};color:${esc(c.ink)}">
+        ${art(c.p, { w: 240, h: 300, ci: c.shade })}
+        <div><p>${ROMAN[i]}.</p><h3>${esc(c.title)}</h3><p>${esc(c.line)}</p><button class="linkbtn" type="button" data-static-open="${i}">See the ${esc(c.p.name)}</button></div>
+      </article>`).join('');
+      box.addEventListener('click', (e) => { const b = e.target.closest('[data-static-open]'); if (b) { const c = chapters[Number(b.dataset.staticOpen)]; Detail.open(c.p.id, { colorIndex: c.shade }); } });
+    }
+
+    function build() {
+      if (!motion || !chapters.length) { staticFallback(); return; }
+      const items = $$('.chap__item'), dots = $$('.chap__dot'), ghosts = $('#chap-ghosts');
+      const n = chapters.length;
+      G.set(items, { autoAlpha: 0, y: 40 });
+      G.set(['.chap__ghost'], { autoAlpha: 0 });
+      tl = G.timeline({
+        defaults: { ease: 'power2.inOut' },
+        scrollTrigger: {
+          trigger: stage, start: 'top top', end: () => '+=' + Math.round(window.innerHeight * (n * 0.95 + 0.7)),
+          pin: true, scrub: 0.9, invalidateOnRefresh: true, anticipatePin: 1,
+          snap: { snapTo: 'labels', inertia: false, duration: { min: 0.35, max: 1 }, delay: 0.12, ease: 'power2.inOut' },
+          onUpdate: (self) => {
+            const t = self.progress * tl.duration();
+            dots.forEach((d, i) => {
+              const f = clamp(t - i, 0, 1);
+              d.querySelector('circle + circle').style.strokeDashoffset = (88 * (1 - f)).toFixed(1);
+              d.setAttribute('aria-current', t >= i + 0.5 && t < i + 1.5 ? 'step' : 'false');
+            });
+          }
+        }
+      });
+      tl.addLabel('hero', 0);
+      const first = chapters[0], s0 = stateOf(chapLookFor(first)), L = chapLook;
+      tl.to('.scene__word--top', { yPercent: -70, opacity: 0, duration: 0.55, ease: 'power2.in' }, 0)
+        .to('.scene__word--bot', { yPercent: 70, opacity: 0, duration: 0.55, ease: 'power2.in' }, 0)
+        .to('.scene__hello, .scene__go, .scene__cue', { y: 30, autoAlpha: 0, duration: 0.35 }, 0)
+        .to(stage, { '--bg': first.bg, '--ink': first.ink, duration: 0.7 }, 0.1)
+        .to(hair.state, Object.assign({}, s0, { ax: () => L().ax, ay: () => L().ay, lockW: () => L().lockW, len: () => Math.min(L().len, chapLookFor(first).len), duration: 1 }), 0)
+        .to('.chap__ghost', { autoAlpha: 1, duration: 0.4 }, 0.45)
+        .to(items[0], { autoAlpha: 1, y: 0, duration: 0.45 }, 0.55)
+        .to(['.chap__dots', '.chap__skip'], { autoAlpha: 1, duration: 0.3 }, 0.55)
+        .addLabel('c0', 1);
+      for (let i = 1; i < n; i++) {
+        const c = chapters[i], lk = chapLookFor(c), at = i;
+        tl.to(items[i - 1], { autoAlpha: 0, y: -40, duration: 0.35, ease: 'power2.in' }, at)
+          .to(ghosts, { yPercent: -100 * i / n, duration: 0.8 }, at)
+          .to(stage, { '--bg': c.bg, '--ink': c.ink, duration: 0.8 }, at)
+          .to(hair.state, Object.assign({}, stateOf(lk), { len: () => Math.min(L().len, lk.len), duration: 0.95 }), at)
+          .to(items[i], { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power2.out' }, at + 0.5)
+          .addLabel('c' + i, at + 1);
+      }
+      tl.to({}, { duration: 0.35 });
+
+      dots.forEach((d, i) => d.addEventListener('click', () => scrollToY(tl.scrollTrigger.labelToScroll('c' + i))));
+      $('#chap-skip').addEventListener('click', () => scrollToEl($('#shop')));
+    }
+
+    function intro() {
+      hair.play();
+      if (!motion) return;
+      // the intro moves letters, inner text and the hair's growth; the scroll scene moves their containers
+      const ch = $$('.scene__word .ch');
+      G.from(ch, { yPercent: 115, opacity: 0, duration: 1.25, ease: 'expo.out', stagger: 0.03 });
+      G.fromTo(hair.state, { grow: 0.02 }, { grow: 1, duration: 2.1, ease: 'power3.out' });
+      G.from('.scene__hello > *, .scene__go > *, .nav__bar', { y: 24, opacity: 0, duration: 0.9, stagger: 0.07, delay: 0.55, ease: 'power3.out', clearProps: 'transform,opacity' });
+    }
+
+    $$('.scene__word').forEach(chars);
+    return { build, intro, hair, toChapter(i) { if (tl) scrollToY(tl.scrollTrigger.labelToScroll('c' + i)); } };
+  })();
+
+  // ════════════════════════════════════════════════════════
+  // SHOWROOM
+  // ════════════════════════════════════════════════════════
   const Shop = (() => {
     const root = $('#shop'), track = $('#stage-track'), stage = $('#stage');
-    const state = { cat: 'all', view: 'stage', sort: 'featured', index: 0, length: null, shade: null, saved: false, list: [] };
+    const state = { cat: 'all', view: 'stage', sort: 'featured', index: 0, saved: false, list: [] };
     const RATIOS = ['4/5', '1/1', '3/4', '5/4', '4/5', '3/4', '1/1'];
-    const WASHES = ['#C0DAC0', '#FFBCC4', '#B8D2D5', '#F1E3B6'];
-    let swapping = 0;
+    const live = new Strands($('#stage-live'), { layout: 'lock', ay: 0.1, lockW: 0.56, len: 0.7, interactive: true, texture: 'body' });
+    let lastGhost = '';
 
-    function pool() {
-      return PRODUCTS.filter((p) =>
-        (!state.length || p.lengths.includes(state.length)) &&
-        (!state.shade || p.colors.some((c) => c.toLowerCase() === state.shade.hex)) &&
-        (!state.saved || Wish.has(p.id)));
-    }
+    function pool() { return PRODUCTS.filter((p) => !state.saved || Wish.has(p.id)); }
     function compute() {
       let list = pool().filter((p) => state.cat === 'all' || p.category === state.cat);
       if (state.sort === 'low') list = list.slice().sort((a, b) => a.price - b.price);
@@ -235,100 +462,88 @@
       state.list = list;
       if (state.index >= list.length) state.index = 0;
     }
-
     function paintFilters() {
-      const all = pool();
-      const saved = Wish.ids.filter((id) => byId(id)).length;
+      const all = pool(), saved = Wish.ids.filter((id) => byId(id)).length;
       let html = CATEGORIES.map(([id, label]) => {
         const n = id === 'all' ? all.length : all.filter((p) => p.category === id).length;
         return `<button type="button" data-cat="${id}" aria-pressed="${state.cat === id && !state.saved}">${label}<span>${n}</span></button>`;
       }).join('');
       if (saved || state.saved) html += `<button type="button" data-saved aria-pressed="${state.saved}">Saved<span>${saved}</span></button>`;
       $('#filters').innerHTML = html;
+    }
+    const flags = (p) => [p.hot && 'Bestseller', p.new && 'New in', p.oldPrice && 'Sale'].filter(Boolean);
 
-      const chips = [];
-      if (state.length) chips.push(`<span class="chipx">${esc(state.length)} length<button type="button" data-clear="length" aria-label="Clear the length filter">${icon('x')}</button></span>`);
-      if (state.shade) chips.push(`<span class="chipx"><i style="background:${esc(state.shade.hex)}"></i>${esc(state.shade.name)}<button type="button" data-clear="shade" aria-label="Clear the shade filter">${icon('x')}</button></span>`);
-      $('#shop-chips').innerHTML = chips.join('');
+    function swapGhost(word) {
+      const el = $('#stage-ghost');
+      if (word === lastGhost) return;
+      lastGhost = word;
+      if (!motion) { el.textContent = word; return; }
+      const old = $$('.ch', el);
+      const run = () => {
+        el.textContent = word;
+        delete el.dataset.chars;
+        const ch = chars(el);
+        G.fromTo(ch, { yPercent: 100, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.8, stagger: 0.025, ease: 'expo.out' });
+      };
+      if (old.length) G.to(old, { yPercent: -100, opacity: 0, duration: 0.35, stagger: 0.012, ease: 'power2.in', onComplete: run });
+      else run();
     }
 
-    function flags(p) {
-      const out = [];
-      if (p.hot) out.push('Bestseller');
-      if (p.new) out.push('New in');
-      if (p.oldPrice) out.push('Sale');
-      return out;
-    }
-
-    function paintStage(rebuild) {
+    function paintStage(rebuild, dir) {
       const list = state.list, empty = !list.length;
       $('#stage-empty').hidden = !empty;
       $('#stage-info').hidden = empty;
+      $('#stage-live').hidden = empty;
       $$('.stage__nav button').forEach((b) => { b.disabled = empty; });
       if (empty) {
         track.innerHTML = '';
-        $('#stage-ghost span').textContent = '';
-        $('#stage-empty').textContent = state.saved ? 'You haven\'t saved any pieces yet. Tap the heart on a piece to keep it here.' : 'No pieces match that yet. Clear a filter to see more.';
+        $('#stage-empty').textContent = state.saved ? 'Nothing saved yet. Tap the heart on a piece to keep it here.' : 'Nothing here yet. Try another filter.';
         $('#shop-count').textContent = '00 / 00';
         return;
       }
       if (rebuild) {
-        track.innerHTML = list.map((p, i) =>
-          `<li class="stage__item media" data-i="${i}" style="--tone:${esc(p.tone)}"><img src="${esc(sized(p.image, 720, 900))}" alt="" loading="lazy" decoding="async"><button type="button" tabindex="-1" aria-label="${esc(p.name)}"></button></li>`).join('');
+        track.innerHTML = list.map((p, i) => `<li class="stage__item${p.image ? ' art--photo' : ''}" data-i="${i}">${pic(p, { w: 360, h: 450 }, ' draggable="false"')}</li>`).join('');
       }
       const p = list[state.index];
       $$('.stage__item', track).forEach((li) => {
         const d = Number(li.dataset.i) - state.index;
         li.dataset.pos = d < 0 ? 'gone' : d > 2 ? 'far' : String(d);
-        li.setAttribute('aria-hidden', d === 0 ? 'false' : 'true');
       });
-
-      // backdrop: cross-fade between two layers
       const tones = $$('.shop__tone', root);
       const next = tones.find((t) => !t.classList.contains('is-on')) || tones[0];
       const cur = tones.find((t) => t !== next);
-      if (cur.style.getPropertyValue('--t') !== p.tone || !cur.classList.contains('is-on')) {
-        next.style.setProperty('--t', p.tone);
-        next.classList.add('is-on');
-        cur.classList.remove('is-on');
-      }
+      next.style.setProperty('--t', p.tone); next.classList.add('is-on'); cur.classList.remove('is-on');
 
-      // ghost word
-      const ghost = $('#stage-ghost span');
-      const word = p.type || p.category;
-      if (ghost.textContent !== word) {
-        ghost.classList.add('is-out');
-        clearTimeout(swapping);
-        swapping = setTimeout(() => { ghost.textContent = word; ghost.classList.remove('is-out'); }, reduced ? 0 : 260);
+      const canvas = $('#stage-live');
+      canvas.hidden = !!p.image;
+      if (!p.image) {
+        live.set(look(p, 0), rebuild ? 0 : 1.1, 'power3.inOut');
+        live.play();
+        // GSAP folds the CSS translate(-50%,-50%) into xPercent/yPercent, so animate around -50
+        if (motion && !rebuild) G.fromTo(canvas, { xPercent: -50 + (dir > 0 ? 18 : -18), yPercent: -50, scale: 0.86 }, { xPercent: -50, yPercent: -50, scale: 1, duration: 1, ease: 'expo.out' });
       }
+      swapGhost(p.type || p.category);
 
       const more = p.colorNames.length - 1;
-      const badges = flags(p).map((f) => `<span class="badge">${f}</span>`).join('');
-      $('#stage-info').innerHTML =
-        `<p class="stage__type">${esc(p.type)}</p>
+      const info = $('#stage-info');
+      info.innerHTML = `<p class="stage__type">${esc(p.type)}</p>
          <h3 class="stage__name">${esc(p.name)}</h3>
          <p class="stage__shade">in ${esc(p.colorNames[0])}${more > 0 ? ` and ${more} more shade${more === 1 ? '' : 's'}` : ''}</p>
-         <p class="stage__price"><span>${money(p.price)}</span>${p.oldPrice ? `<del>${money(p.oldPrice)}</del>` : ''}${badges}</p>`;
-      root.classList.remove('is-swap');
-      void root.offsetWidth;
-      root.classList.add('is-swap');
+         <p class="stage__price"><span>${money(p.price)}</span>${p.oldPrice ? `<del>${money(p.oldPrice)}</del>` : ''}${flags(p).map((f) => `<span class="badge">${f}</span>`).join('')}</p>`;
+      if (motion) G.from(info.children, { y: 26, opacity: 0, duration: 0.8, stagger: 0.06, ease: 'expo.out' });
       $('#shop-count').textContent = `${pad2(state.index + 1)} / ${pad2(list.length)}`;
     }
 
     function columns() { return window.matchMedia('(min-width: 1100px)').matches ? 3 : 2; }
     function paintGrid() {
       const grid = $('#grid'), list = state.list;
-      if (!list.length) {
-        grid.innerHTML = `<p class="grid__none">${state.saved ? 'You haven\'t saved any pieces yet. Tap the heart on a piece to keep it here.' : 'No pieces match that yet. Clear a filter to see more.'}</p>`;
-        return;
-      }
-      const n = columns();
-      const cols = Array.from({ length: n }, () => []);
+      if (!list.length) { grid.innerHTML = `<p class="grid__none">${state.saved ? 'Nothing saved yet. Tap the heart on a piece to keep it here.' : 'Nothing here yet. Try another filter.'}</p>`; return; }
+      const n = columns(), cols = Array.from({ length: n }, () => []);
       list.forEach((p, i) => {
         const saved = Wish.has(p.id);
         cols[i % n].push(`<article class="tile">
           <div class="tile__wrap">
-            <button class="tile__media media" type="button" data-open="${esc(p.id)}" aria-label="View ${esc(p.name)}" style="--tone:${esc(p.tone)};--wash:${WASHES[i % WASHES.length]};--ar:${RATIOS[i % RATIOS.length]}"><img src="${esc(sized(p.image, 800, 1000))}" alt="${esc(p.name)}" loading="lazy" decoding="async"></button>
+            ${art(p, { tag: 'button', cls: 'tile__media', w: 440, h: 550, style: '--ar:' + RATIOS[i % RATIOS.length], attrs: ` type="button" data-open="${esc(p.id)}" aria-label="View ${esc(p.name)}"`, alt: '' })}
             <div class="tile__flags">${flags(p).map((f) => `<span class="badge">${f}</span>`).join('')}</div>
             <button class="tile__save${saved ? ' is-saved' : ''}" type="button" data-save="${esc(p.id)}" aria-pressed="${saved}" aria-label="${saved ? 'Remove from saved' : 'Save'}: ${esc(p.name)}">${icon('heart')}</button>
           </div>
@@ -337,29 +552,26 @@
         </article>`);
       });
       grid.innerHTML = cols.map((c) => `<div class="grid__col">${c.join('')}</div>`).join('');
+      if (motion) G.from($$('.tile', grid), { y: 60, opacity: 0, duration: 1, stagger: 0.05, ease: 'expo.out' });
     }
 
-    function refresh(rebuild) {
-      compute();
-      paintFilters();
-      paintStage(rebuild !== false);
-      if (state.view === 'grid') paintGrid();
-    }
+    function refresh(rebuild) { compute(); paintFilters(); paintStage(rebuild !== false, 0); if (state.view === 'grid') paintGrid(); }
     function go(i) {
       const n = state.list.length;
       if (!n) return;
+      const dir = i > state.index ? 1 : -1;
       state.index = (i + n) % n;
-      paintStage(false);
+      paintStage(false, dir);
     }
     function setView(v) {
       state.view = v;
       root.dataset.view = v;
       $$('[data-view-btn]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.viewBtn === v)));
-      if (v === 'grid') paintGrid(); else paintStage(true);
+      if (v === 'grid') { live.pause(); paintGrid(); } else paintStage(true, 0);
+      if (ST) ST.refresh();
     }
-    function reveal() { root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }); }
+    const openActive = () => { const p = state.list[state.index]; if (p) Detail.open(p.id, { from: p.image ? $(`.stage__item[data-i="${state.index}"]`) : $('#stage-live') }); };
 
-    // events
     $('#filters').addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -368,45 +580,59 @@
       state.index = 0;
       refresh();
     });
-    $('#shop-chips').addEventListener('click', (e) => {
-      const b = e.target.closest('[data-clear]');
-      if (!b) return;
-      state[b.dataset.clear] = null;
-      state.index = 0;
-      refresh();
-    });
     $$('[data-view-btn]').forEach((b) => b.addEventListener('click', () => setView(b.dataset.viewBtn)));
     $('#sort-select').addEventListener('change', (e) => { state.sort = e.target.value; state.index = 0; refresh(); });
     $('#stage-prev').addEventListener('click', () => go(state.index - 1));
     $('#stage-next').addEventListener('click', () => go(state.index + 1));
-    $('#stage-open').addEventListener('click', () => { const p = state.list[state.index]; if (p) Detail.open(p.id); });
+    $('#stage-open').addEventListener('click', openActive);
     stage.addEventListener('keydown', (e) => {
       if (e.target !== stage) return;
       if (e.key === 'ArrowRight') { e.preventDefault(); go(state.index + 1); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); go(state.index - 1); }
-      if (e.key === 'Enter') { const p = state.list[state.index]; if (p) Detail.open(p.id); }
+      if (e.key === 'Enter') openActive();
     });
-    let drag = null, swiped = false;
-    stage.addEventListener('pointerdown', (e) => { if (!e.target.closest('.stage__nav')) drag = { x: e.clientX, y: e.clientY }; swiped = false; });
+    // drag / swipe
+    let drag = null, moved = false;
+    stage.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.stage__nav') || e.button > 0) return;
+      drag = { x: e.clientX, y: e.clientY }; moved = false;
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (Math.abs(dx) > 8) { moved = true; stage.classList.add('is-dragging'); }
+      if (motion && moved) G.to('#stage-live', { x: dx * 0.35, rotate: dx * 0.01, duration: 0.3, overwrite: 'auto' });
+    }, { passive: true });
     window.addEventListener('pointerup', (e) => {
       if (!drag) return;
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
       drag = null;
-      if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy) * 1.4) { swiped = true; go(state.index + (dx < 0 ? 1 : -1)); }
+      stage.classList.remove('is-dragging');
+      if (motion) G.to('#stage-live', { x: 0, rotate: 0, duration: 0.6, ease: 'elastic.out(1,.6)' });
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) go(state.index + (dx < 0 ? 1 : -1));
+      else if (!moved) {
+        const li = e.target.closest && e.target.closest('.stage__item');
+        if (li && Number(li.dataset.i) !== state.index) go(Number(li.dataset.i));
+        else if (e.target.closest && (e.target.closest('#stage-live') || e.target === stage || e.target.closest('.stage__track'))) {
+          const r = $('#stage-live').getBoundingClientRect();
+          if (e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom) openActive();
+        }
+      }
     });
-    window.addEventListener('pointercancel', () => { drag = null; });
-    track.addEventListener('click', (e) => {
-      if (swiped) { swiped = false; return; }
-      const li = e.target.closest('.stage__item');
-      if (!li) return;
-      const i = Number(li.dataset.i);
-      if (i === state.index) Detail.open(state.list[i].id); else go(i);
-    });
+    window.addEventListener('pointercancel', () => { drag = null; stage.classList.remove('is-dragging'); });
+    let wheelLock = 0;
+    stage.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaX) < 30 || Math.abs(e.deltaX) < Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      if (Date.now() < wheelLock) return;
+      wheelLock = Date.now() + 700;
+      go(state.index + (e.deltaX > 0 ? 1 : -1));
+    }, { passive: false });
     $('#grid').addEventListener('click', (e) => {
       const s = e.target.closest('[data-save]');
       if (s) { Wish.toggle(s.dataset.save); return; }
       const o = e.target.closest('[data-open]');
-      if (o) Detail.open(o.dataset.open);
+      if (o) Detail.open(o.dataset.open, { from: o.closest('.tile__wrap') ? $('.tile__media', o.closest('.tile__wrap')) : o });
     });
     let cols = columns();
     window.addEventListener('resize', () => { const c = columns(); if (c !== cols) { cols = c; if (state.view === 'grid') paintGrid(); } });
@@ -414,37 +640,38 @@
     return {
       refresh: () => refresh(true),
       setCategory(cat) { state.cat = CATEGORIES.some((c) => c[0] === cat) ? cat : 'all'; state.saved = false; state.index = 0; refresh(); },
-      setLength(len) { state.length = len; state.cat = 'all'; state.saved = false; state.index = 0; refresh(); setView('grid'); reveal(); },
-      setShade(shade) { state.shade = shade; state.cat = 'all'; state.saved = false; state.index = 0; refresh(); setView('grid'); reveal(); },
-      reveal
+      showProduct(id) { state.cat = 'all'; state.saved = false; compute(); const i = state.list.findIndex((p) => String(p.id) === String(id)); state.index = Math.max(0, i); refresh(); },
+      live
     };
   })();
 
-  // ── Product detail ───────────────────────────────────────
-  const Detail = (() => {
-    const s = { p: null, qty: 1, len: null, ci: 0, img: 0 };
+  // ════════════════════════════════════════════════════════
+  // PRODUCT DETAIL (with live hair that answers your choices)
+  // ════════════════════════════════════════════════════════
+  const landmark = (inch) => { const g = STORE_DATA.lengthGuide || []; return (g.find((l) => inch <= l.upTo) || g[g.length - 1] || { label: '' }).label; };
+  const fallsTo = (p, len) => {
+    const i = inches(len), t = Strands.TEXTURES[p.texture] || Strands.TEXTURES.body;
+    const sits = i * (1 - t.shrink * 0.9);
+    return landmark(sits);
+  };
 
-    function paintImage() {
-      const src = s.p.images[s.img] || s.p.image;
-      const fig = $('.detail__figure');
-      fig.classList.toggle('is-missing', !src);
-      const img = $('#detail-img');
-      img.alt = s.p.name;
-      if (src) img.src = sized(src, 900, 1125); else img.removeAttribute('src');
-      $$('#detail-thumbs button').forEach((b, i) => b.setAttribute('aria-pressed', String(i === s.img)));
-    }
-    function paintChoice() {
+  const Detail = (() => {
+    const s = { p: null, qty: 1, len: null, ci: 0 };
+    const hair = new Strands($('#detail-hair'), { layout: 'lock', ay: 0.15, lockW: 0.42, len: 0.6, interactive: true, texture: 'body' });
+
+    function paintChoice(animate) {
       const p = s.p;
       $('#detail-length-out').textContent = s.len;
       $('#detail-shade-out').textContent = p.colorNames[s.ci];
       $$('#detail-lengths button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.len === s.len)));
       $$('#detail-shades button').forEach((b, i) => b.setAttribute('aria-pressed', String(i === s.ci)));
       $('#detail-qty').textContent = s.qty;
-      const add = $('#detail-add');
-      const out = p.stock === 0;
+      const add = $('#detail-add'), out = p.stock === 0;
       add.disabled = out;
       add.textContent = out ? 'Sold out' : `Add to bag · ${money(p.price * s.qty)}`;
+      $('#detail-falls').textContent = p.image ? '' : `At ${s.len}, it falls to your ${fallsTo(p, s.len)}`;
       $('#detail-ask').href = BS_CONFIG.waLink(`Hi Baddie Strands! I'm interested in the *${p.name}* (${s.len}, ${p.colorNames[s.ci]}). Can you help me?`);
+      if (!p.image) hair.set(look(p, s.ci, s.len), animate ? 0.9 : 0, 'power3.inOut');
     }
     function syncSave() {
       if (!s.p) return;
@@ -458,377 +685,353 @@
       const p = byId(id);
       if (!p) return;
       const o = opts || {};
-      s.p = p; s.qty = 1; s.img = 0;
-      s.len = o.length && p.lengths.includes(o.length) ? o.length : p.lengths[0];
+      s.p = p; s.qty = 1;
+      s.len = o.length && p.lengths.includes(o.length) ? o.length : p.lengths[Math.floor(p.lengths.length / 2)];
       s.ci = clamp(o.colorIndex || 0, 0, p.colors.length - 1);
-
-      const stageEl = $('.detail__stage'), article = $('.detail');
+      const stageEl = $('#detail-stage'), article = $('.detail');
       stageEl.style.setProperty('--t', p.tone);
       article.style.background = `color-mix(in srgb, ${p.tone} 9%, #fff5ec)`;
-      const word = (p.type || p.category).split(' ')[0];
-      const ghost = $('#detail-ghost');
-      ghost.textContent = word;
-      ghost.style.fontSize = `min(23vw, ${Math.round(52 / (Math.max(3, word.length) * 0.72) * 10) / 10}vw)`;
+      $('#detail-ghost').textContent = (p.type || p.category).split(' ')[0];
+      const photo = $('#detail-photo');
+      photo.hidden = !p.image; $('#detail-hair').hidden = !!p.image;
+      if (p.image) { photo.src = p.image; photo.alt = p.name; }
 
-      const status = [];
-      if (p.hot) status.push('Bestseller');
-      if (p.new) status.push('New in');
-      if (p.oldPrice) status.push('On sale');
-      if (p.stock === 0) status.push('Sold out');
-      else if (p.stock != null && p.stock <= 10) status.push(`Only ${p.stock} left`);
+      const status = [p.hot && 'Bestseller', p.new && 'New in', p.oldPrice && 'On sale', p.stock === 0 ? 'Sold out' : p.stock != null && p.stock <= 10 ? `Only ${p.stock} left` : ''].filter(Boolean);
       $('#detail-status').textContent = status.join(' · ');
-
-      let n = 0;
+      let k = 0;
       const name = $('#detail-name');
       name.setAttribute('aria-label', p.name);
-      name.innerHTML = p.name.split(' ').map((w) => `<span class="wd" aria-hidden="true">${Array.from(w).map((ch) => `<span class="l" style="--i:${n++}">${esc(ch)}</span>`).join('')}</span>`).join(' ');
-
+      name.innerHTML = p.name.split(' ').map((w) => `<span class="wd" aria-hidden="true">${Array.from(w).map((ch) => `<span class="l" style="--i:${k++}">${esc(ch)}</span>`).join('')}</span>`).join(' ');
       const lens = p.lengths.length > 1 ? `${p.lengths[0]}–${p.lengths[p.lengths.length - 1]}` : p.lengths[0];
       const spec = [lens, `${p.colors.length} shade${p.colors.length === 1 ? '' : 's'}`];
-      if (p.rating) spec.push(`${p.rating.toFixed(1)} rating${p.reviews ? ` from ${p.reviews} reviews` : ''}`);
+      if (p.rating) spec.push(`${p.rating.toFixed(1)} from ${p.reviews} reviews`);
       $('#detail-spec').textContent = spec.join('  ·  ');
       $('#detail-price').innerHTML = `${money(p.price)}${p.oldPrice ? `<del>${money(p.oldPrice)}</del>` : ''}`;
       $('#detail-desc').textContent = p.description;
       $('.detail__bill').hidden = !p.features.length;
       $('#detail-features').innerHTML = p.features.map((f) => `<li>${esc(f)}</li>`).join('');
-      $('#detail-lengths').innerHTML = p.lengths.map((l) => `<button class="len" type="button" data-len="${esc(l)}">${esc(l)}</button>`).join('');
+      $('#detail-lengths').innerHTML = p.lengths.map((l) => `<button class="len-btn" type="button" data-len="${esc(l)}">${esc(l)}</button>`).join('');
       $('#detail-shades').innerHTML = p.colors.map((c, i) => `<button class="sw" type="button" style="--c:${esc(c)}" aria-label="${esc(p.colorNames[i])}" title="${esc(p.colorNames[i])}"></button>`).join('');
-      $('#detail-thumbs').innerHTML = p.images.length > 1 ? p.images.map((src, i) => `<button class="media" type="button" aria-label="Photo ${i + 1}"><img src="${esc(sized(src, 140, 140))}" alt=""></button>`).join('') : '';
       $('#detail-stock').textContent = p.stock == null ? '' : p.stock === 0 ? 'Out of stock' : `${p.stock} in stock`;
-
       const also = PRODUCTS.filter((x) => x.id !== p.id && x.category === p.category).concat(PRODUCTS.filter((x) => x.id !== p.id && x.category !== p.category)).slice(0, 3);
-      $('#detail-also').innerHTML = also.length ? `<p class="detail__label">You may also like</p><div class="also">${also.map((x) => `<button type="button" data-open="${esc(x.id)}">${media(x.image, 360, 450, '', x.tone)}<b>${esc(x.name)}</b><span>/ ${money(x.price)}</span></button>`).join('')}</div>` : '';
+      $('#detail-also').innerHTML = `<p>You might also love</p><div class="also">${also.map((x) => `<button type="button" data-open="${esc(x.id)}">${art(x, { w: 320, h: 400 })}<b>${esc(x.name)}</b><span>/ ${money(x.price)}</span></button>`).join('')}</div>`;
+      paintChoice(false); syncSave();
+      $('.detail__body').scrollTop = 0; article.scrollTop = 0;
 
-      paintImage(); paintChoice(); syncSave();
-      $('.detail__body').scrollTop = 0;
-      article.scrollTop = 0;
+      const already = Overlay.isOpen('detail');
       Overlay.show('detail');
+      if (!p.image) hair.play();
       try { history.replaceState(null, '', '#p/' + encodeURIComponent(p.id)); } catch (e) { /* file:// */ }
       Stats.productView(p.id);
+      if (!motion) return;
+
+      // the piece grows from where you tapped it into the stage
+      const from = o.from && !already ? o.from.getBoundingClientRect() : null;
+      if (from && from.width > 10) {
+        const to = stageEl.getBoundingClientRect();
+        const ghost = document.createElement('div');
+        ghost.className = 'flip art';
+        ghost.style.cssText = `--tone:${p.tone};left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px`;
+        ghost.innerHTML = `<img src="${esc(p.image || Pics.now(p, { w: 360, h: 450, ci: s.ci }))}" alt="">`;
+        document.body.appendChild(ghost);
+        G.set(['#detail-hair', '#detail-ghost', '#detail-falls'], { opacity: 0 });
+        G.to(ghost, { left: to.left, top: to.top, width: to.width, height: to.height, borderRadius: narrow() ? 20 : 28, duration: 0.9, ease: 'power3.inOut',
+          onComplete: () => { G.to(['#detail-hair', '#detail-ghost', '#detail-falls'], { opacity: 1, duration: 0.35 }); G.to(ghost, { opacity: 0, duration: 0.35, onComplete: () => ghost.remove() }); } });
+      }
+      G.from($$('.l', name), { yPercent: 90, opacity: 0, filter: 'blur(8px)', duration: 0.9, stagger: 0.018, ease: 'expo.out', delay: from ? 0.35 : 0.05 });
+      G.from($$('.detail__body > *:not(.detail__name)'), { y: 24, opacity: 0, duration: 0.7, stagger: 0.04, ease: 'power3.out', delay: from ? 0.45 : 0.1, clearProps: 'transform,opacity' });
     }
 
-    $('#detail-lengths').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { s.len = b.dataset.len; paintChoice(); } });
-    $('#detail-shades').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { s.ci = $$('#detail-shades button').indexOf(b); paintChoice(); } });
-    $('#detail-thumbs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { s.img = $$('#detail-thumbs button').indexOf(b); paintImage(); } });
-    $('#detail-minus').addEventListener('click', () => { s.qty = Math.max(1, s.qty - 1); paintChoice(); });
-    $('#detail-plus').addEventListener('click', () => { const max = s.p.stock == null ? 99 : Math.max(1, s.p.stock); s.qty = Math.min(max, s.qty + 1); paintChoice(); });
-    $('#detail-add').addEventListener('click', () => {
-      Cart.add(s.p, s.qty, s.len, s.p.colorNames[s.ci], true); // the bag opens, so no toast
+    $('#detail-lengths').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { s.len = b.dataset.len; paintChoice(true); } });
+    $('#detail-shades').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { s.ci = $$('#detail-shades button').indexOf(b); paintChoice(true); } });
+    $('#detail-minus').addEventListener('click', () => { s.qty = Math.max(1, s.qty - 1); paintChoice(false); });
+    $('#detail-plus').addEventListener('click', () => { const max = s.p.stock == null ? 99 : Math.max(1, s.p.stock); s.qty = Math.min(max, s.qty + 1); paintChoice(false); });
+    $('#detail-add').addEventListener('click', (e) => {
+      Cart.add(s.p, s.qty, s.len, s.p.colorNames[s.ci], { quiet: true, from: s.p.image ? $('#detail-photo') : $('#detail-stage') });
       Overlay.hide('detail');
-      setTimeout(() => Overlay.show('cart'), reduced ? 0 : 300);
+      setTimeout(() => Overlay.show('cart'), reduced ? 0 : 900);
     });
     $('#detail-save').addEventListener('click', () => Wish.toggle(s.p.id));
     $('#detail-also').addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) open(b.dataset.open); });
     $('#detail').addEventListener('overlay:close', () => {
+      hair.pause();
       if (/^#p\//.test(location.hash)) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* file:// */ } }
     });
     return { open, syncSave };
   })();
 
-  // ── Bestsellers ──────────────────────────────────────────
-  function initWanted() {
-    const list = bestsellers().slice(0, 5), rank = $('#rank'), gauge = $('#gauge');
-    if (!list.length) { $('#bestsellers').hidden = true; return; }
-    function paint(i) {
-      const p = list[i];
-      $$('button', rank).forEach((b, n) => b.setAttribute('aria-current', String(n === i)));
-      const stats = [];
-      if (p.rating) stats.push(`<div><b>${p.rating.toFixed(1)}</b><small>Rating</small></div>`);
-      if (p.reviews) stats.push(`<div><b>${p.reviews}</b><small>Reviews</small></div>`);
-      if (p.stock != null) stats.push(`<div><b>${p.stock}</b><small>In stock</small></div>`);
-      gauge.innerHTML = `<div class="gauge__frame">${media(p.image, 560, 700, p.name, p.tone, 'gauge__pic')}<span class="gauge__glow"></span><span class="gauge__num" aria-hidden="true">${pad2(i + 1)}</span></div>
-        <div class="gauge__info">
-          <div><h3 class="gauge__name">${esc(p.name)}</h3><p class="gauge__price">${esc(p.type)}<b>${money(p.price)}</b>${p.oldPrice ? `<del>${money(p.oldPrice)}</del>` : ''}</p></div>
-          <div class="gauge__stats">${stats.join('')}</div>
-          <button class="gauge__go" type="button" data-open="${esc(p.id)}">View details</button>
-        </div>`;
+  // ════════════════════════════════════════════════════════
+  // THE STYLIST: four questions, the hair changes as you answer
+  // ════════════════════════════════════════════════════════
+  const Stylist = (() => {
+    const cfg = STORE_DATA.stylist || { moves: [], kinds: [] };
+    const box = $('#stylist-q'), log = $('#stylist-log'), sofar = $('#stylist-so-far');
+    const hair = new Strands($('#stylist-hair'), { layout: 'lock', ay: 0.12, lockW: 0.46, len: 0.5, interactive: true, texture: 'straight', shade: '#1a1008' });
+    const lum = (hex) => { const c = Strands.rgb(hex).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    const shades = (() => {
+      const m = new Map();
+      PRODUCTS.forEach((p) => p.colors.forEach((c, i) => { const k = c.toLowerCase(); if (!m.has(k)) m.set(k, { hex: k, name: p.colorNames[i] }); }));
+      return Array.from(m.values()).sort((a, b) => lum(a.hex) - lum(b.hex));
+    })();
+    const dist = (a, b) => { const x = Strands.rgb(a), y = Strands.rgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); };
+    const QUESTIONS = ['How do you want it to move?', 'How long are we going?', 'Now, the colour.', 'What are we shopping for?'];
+    const a = { move: null, len: 18, shade: null, kind: null };
+    let step = 0, played = false;
+
+    function paintSoFar() {
+      const bits = [];
+      if (a.move) bits.push(cfg.moves.find((m) => m.id === a.move).label);
+      if (step > 1 || a.len !== 18) bits.push(a.len + '″');
+      if (a.shade) bits.push(a.shade.name);
+      if (a.kind) bits.push(cfg.kinds.find((k) => k.id === a.kind).label);
+      sofar.innerHTML = bits.map((b) => `<span>${esc(b)}</span>`).join('');
     }
-    rank.innerHTML = list.map((p, i) => `<li><button type="button" data-i="${i}"><span>${esc(p.name)}</span><i>${ROMAN[i]}</i></button></li>`).join('');
-    rank.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) paint(Number(b.dataset.i)); });
-    rank.addEventListener('mouseover', (e) => { const b = e.target.closest('button'); if (b && b.getAttribute('aria-current') !== 'true') paint(Number(b.dataset.i)); });
-    gauge.addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) Detail.open(b.dataset.open); });
-    paint(0);
+    function paintLog() {
+      const rows = [];
+      if (step > 0 && a.move) rows.push([0, cfg.moves.find((m) => m.id === a.move).label]);
+      if (step > 1) rows.push([1, a.len + '″, to your ' + landmark(a.len)]);
+      if (step > 2 && a.shade) rows.push([2, a.shade.name]);
+      if (step > 3 && a.kind) rows.push([3, cfg.kinds.find((k) => k.id === a.kind).label]);
+      log.innerHTML = rows.map(([i, ans]) => `<li><span>${esc(QUESTIONS[i])}</span><b>${esc(ans)}<button type="button" data-redo="${i}">Change</button></b></li>`).join('');
+    }
+    function preview(dur) {
+      const tex = a.move ? cfg.moves.find((m) => m.id === a.move).show : 'straight';
+      const shape = a.kind === 'bundles' ? 'weft' : a.kind === 'extensions' ? 'clip' : 'dome';
+      hair.set({ texture: tex, shade: a.shade ? a.shade.hex : '#1a1008', len: Strands.lenFor(a.len) * 0.92, shape }, dur == null ? 1 : dur, 'power3.inOut');
+    }
+
+    function render() {
+      paintLog(); paintSoFar();
+      const head = `<p class="q__step">${step < 4 ? `Question ${step + 1} of 4` : 'Your crown'}</p>`;
+      if (step === 0) {
+        box.innerHTML = `${head}<h3 class="q__title">${QUESTIONS[0]}</h3>
+          <div class="opts" role="radiogroup" aria-label="${QUESTIONS[0]}">${cfg.moves.map((m) => `<button class="optile optile--pic" type="button" role="radio" aria-checked="${a.move === m.id}" data-move="${m.id}">${pic({ id: 'tx-' + m.show, texture: m.show, colors: ['#1a1008'], category: 'wigs', lengths: ['16"'], tone: '#6F0A3A' }, { w: 160, h: 200 })}<b>${esc(m.label)}</b></button>`).join('')}</div>`;
+      } else if (step === 1) {
+        const chips = [12, 16, 20, 24, 28];
+        box.innerHTML = `${head}<h3 class="q__title">${QUESTIONS[1]}</h3>
+          <div class="len">
+            <div class="len__read"><span class="len__num" id="len-num">${a.len}″</span><span class="len__land" id="len-land">to your ${esc(landmark(a.len))}</span></div>
+            <label class="visually-hidden" for="len-range">Length in inches</label>
+            <input type="range" id="len-range" min="8" max="30" step="2" value="${a.len}" aria-valuetext="${a.len} inches, to your ${esc(landmark(a.len))}">
+            <div class="len__chips">${chips.map((c) => `<button class="chipbtn" type="button" data-len="${c}" aria-pressed="${a.len === c}">${c}″</button>`).join('')}</div>
+          </div>
+          <button class="bar q__next" type="button" data-next>That's my length</button>`;
+      } else if (step === 2) {
+        box.innerHTML = `${head}<h3 class="q__title">${QUESTIONS[2]}</h3>
+          <p class="q__help" id="shade-name">${a.shade ? esc(a.shade.name) : 'Tap a shade to try it on.'}</p>
+          <div class="swatches" role="radiogroup" aria-label="Shade">${shades.map((sh, i) => `<button class="swatch" type="button" role="radio" style="--c:${esc(sh.hex)}" data-shade="${i}" aria-checked="${!!a.shade && a.shade.hex === sh.hex}" aria-label="${esc(sh.name)}" title="${esc(sh.name)}"></button>`).join('')}</div>`;
+      } else if (step === 3) {
+        box.innerHTML = `${head}<h3 class="q__title">${QUESTIONS[3]}</h3>
+          <div class="opts" role="radiogroup" aria-label="${QUESTIONS[3]}">${cfg.kinds.map((k) => `<button class="optile" type="button" role="radio" aria-checked="${a.kind === k.id}" data-kind="${k.id}"><b>${esc(k.label)}</b></button>`).join('')}</div>`;
+      } else {
+        const res = match();
+        box.innerHTML = `${head}<h3 class="q__title">${res.close ? 'Here\'s the closest we have' : 'Here\'s your crown'}</h3>
+          <div class="results">${res.picks.map((r, i) => `<article class="result">
+            ${art(r.p, { w: 240, h: 300, ci: r.ci, inches: inches(r.len), attrs: ` data-result="${i}"` })}
+            <div class="result__body">
+              <p class="result__tag">${i === 0 ? 'Best match' : 'Also lovely'}</p>
+              <h4 class="result__name">${esc(r.p.name)}</h4>
+              <p class="result__why">${esc(r.why)}</p>
+              <div class="result__row"><b>${money(r.p.price)}</b><button class="result__add" type="button" data-add="${i}">Add ${esc(r.len)}, ${esc(r.p.colorNames[r.ci])}</button><button class="linkbtn" type="button" data-see="${i}">See details</button></div>
+            </div></article>`).join('')}</div>
+          <button class="linkbtn q__again" type="button" data-again>Start again</button>`;
+        box.results = res.picks;
+      }
+      if (motion) G.fromTo(box.children, { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, stagger: 0.05, ease: 'expo.out' });
+      const first = $('[aria-checked="true"]', box) || $('.optile, .swatch, #len-range', box);
+      return first;
+    }
+    function go(n, focus) {
+      const run = () => { step = n; const f = render(); if (focus && f) f.focus({ preventScroll: true }); };
+      if (motion && box.children.length) G.to(box.children, { y: -18, opacity: 0, duration: 0.25, stagger: 0.02, ease: 'power2.in', onComplete: run });
+      else run();
+    }
+
+    function match() {
+      const mv = cfg.moves.find((m) => m.id === a.move) || cfg.moves[0];
+      const scored = PRODUCTS.filter((p) => p.stock !== 0).map((p) => {
+        let sc = p.rating / 10, why = [];
+        if (mv.textures.includes(p.texture)) { sc += 6; why.push(mv.label.toLowerCase()); }
+        if (a.kind && a.kind !== 'any' && p.category === a.kind) sc += 4;
+        let ci = 0, best = 1e9;
+        p.colors.forEach((c, i) => { const d = dist(c, a.shade ? a.shade.hex : '#1a1008'); if (d < best) { best = d; ci = i; } });
+        if (best < 8) { sc += 3; why.push('comes in ' + p.colorNames[ci]); } else sc += Math.max(0, 2 - best / 60);
+        const want = a.len, lens = p.lengths.map(inches);
+        let li = 0, bd = 1e9;
+        lens.forEach((v, i) => { if (Math.abs(v - want) < bd) { bd = Math.abs(v - want); li = i; } });
+        if (bd === 0) { sc += 2; why.push(`offered at ${want}″`); } else sc -= bd * 0.15;
+        return { p, sc, ci, len: p.lengths[li], why: why.length ? 'Matches: ' + why.join(', ') + '.' : 'Our closest piece to what you described.', hit: mv.textures.includes(p.texture) };
+      }).sort((x, y) => y.sc - x.sc);
+      return { picks: scored.slice(0, 3), close: !scored.length || !scored[0].hit };
+    }
+
+    box.addEventListener('click', (e) => {
+      const mv = e.target.closest('[data-move]');
+      if (mv) { a.move = mv.dataset.move; $$('[data-move]', box).forEach((b) => b.setAttribute('aria-checked', String(b === mv))); preview(); paintSoFar(); setTimeout(() => go(1, true), reduced ? 0 : 520); return; }
+      const lc = e.target.closest('[data-len]');
+      if (lc) { a.len = Number(lc.dataset.len); syncLen(); return; }
+      if (e.target.closest('[data-next]')) { go(2, true); return; }
+      const sh = e.target.closest('[data-shade]');
+      if (sh) { a.shade = shades[Number(sh.dataset.shade)]; $$('[data-shade]', box).forEach((b) => b.setAttribute('aria-checked', String(b === sh))); $('#shade-name').textContent = a.shade.name; preview(); paintSoFar(); setTimeout(() => go(3, true), reduced ? 0 : 650); return; }
+      const kd = e.target.closest('[data-kind]');
+      if (kd) { a.kind = kd.dataset.kind; $$('[data-kind]', box).forEach((b) => b.setAttribute('aria-checked', String(b === kd))); preview(); setTimeout(() => go(4, true), reduced ? 0 : 450); return; }
+      const add = e.target.closest('[data-add]');
+      if (add) { const r = box.results[Number(add.dataset.add)]; Cart.add(r.p, 1, r.len, r.p.colorNames[r.ci], { from: add.closest('.result').querySelector('.art') }); return; }
+      const see = e.target.closest('[data-see],[data-result]');
+      if (see) { const i = Number(see.dataset.see != null ? see.dataset.see : see.dataset.result); const r = box.results[i]; Detail.open(r.p.id, { length: r.len, colorIndex: r.ci, from: see.closest('.result').querySelector('.art') }); return; }
+      if (e.target.closest('[data-again]')) { a.move = null; a.len = 18; a.shade = null; a.kind = null; preview(); go(0, true); }
+    });
+    box.addEventListener('input', (e) => { if (e.target.id === 'len-range') { a.len = Number(e.target.value); syncLen(); } });
+    box.addEventListener('keydown', (e) => {
+      if (!/^Arrow/.test(e.key)) return;
+      const group = e.target.closest('[role="radiogroup"]');
+      if (!group) return;
+      const items = $$('[role="radio"]', group), cur = items.indexOf(document.activeElement);
+      if (cur < 0) return;
+      e.preventDefault();
+      items[(cur + (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+    });
+    function syncLen() {
+      const r = $('#len-range');
+      if (r) { r.value = a.len; r.setAttribute('aria-valuetext', `${a.len} inches, to your ${landmark(a.len)}`); }
+      const nEl = $('#len-num'); if (nEl) nEl.textContent = a.len + '″';
+      const lEl = $('#len-land'); if (lEl) lEl.textContent = 'to your ' + landmark(a.len);
+      $$('[data-len]', box).forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.len) === a.len)));
+      preview(0.6); paintSoFar();
+    }
+    log.addEventListener('click', (e) => { const b = e.target.closest('[data-redo]'); if (b) go(Number(b.dataset.redo), true); });
+
+    render();
+    if (ST && motion) ST.create({ trigger: '#stylist', start: 'top 70%', onEnter: () => { if (!played) { played = true; hair.set({ texture: 'body' }, 1.4); setTimeout(() => hair.set({ texture: 'straight' }, 1.2), 1500); } } });
+    hair.play();
+    return {};
+  })();
+
+  // ════════════════════════════════════════════════════════
+  // STORY: the dot drops a single strand down the page
+  // ════════════════════════════════════════════════════════
+  function initStory() {
+    $$('[data-founded]').forEach((n) => { n.textContent = BS_CONFIG.founded; });
+    const word = $('#story-word'), dot = $('#story-dot'), svg = $('#story-strand'), path = $('#story-path'), story = $('#story');
+    const blur = $$('[data-blur]');
+    if (!motion) return;
+    // characters of the wordmark come into focus
+    const letters = [];
+    Array.from(word.childNodes).forEach((nd) => {
+      if (nd.nodeType === 3) { const span = document.createElement('span'); span.innerHTML = Array.from(nd.textContent).map((c) => `<span class="ch">${esc(c)}</span>`).join(''); word.replaceChild(span, nd); letters.push(...$$('.ch', span)); }
+      else letters.push(nd);
+    });
+    G.fromTo(letters, { opacity: 0.08, filter: 'blur(14px)', yPercent: 12 }, { opacity: 1, filter: 'blur(0px)', yPercent: 0, stagger: 0.06, ease: 'none', scrollTrigger: { trigger: story, start: 'top 80%', end: 'top 15%', scrub: 0.6 } });
+    blur.forEach((p) => {
+      const ws = words(p);
+      G.fromTo(ws, { opacity: 0.12, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0px)', stagger: 0.05, ease: 'none', scrollTrigger: { trigger: p, start: 'top 85%', end: 'bottom 55%', scrub: 0.5 } });
+    });
+    // the strand
+    function draw() {
+      if (narrow()) return;
+      const r = story.getBoundingClientRect(), d = dot.getBoundingClientRect(), txt = $('.story__text').getBoundingClientRect();
+      const W = r.width, H = r.height;
+      svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      const x = d.left + d.width / 2 - r.left, y = d.bottom - r.top - d.height * 0.15;
+      const yEnd = txt.bottom - r.top + 40, span = yEnd - y, sway = W * 0.035;
+      let dd = `M ${x} ${y}`;
+      const segs = 6;
+      for (let i = 1; i <= segs; i++) {
+        const y1 = y + span * (i - 0.5) / segs, y2 = y + span * i / segs, sx = (i % 2 ? 1 : -1) * sway * (1 - i / (segs + 2));
+        dd += ` Q ${x + sx} ${y1} ${x + sx * 0.15} ${y2}`;
+      }
+      path.setAttribute('d', dd);
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+      if (draw.st) draw.st.kill();
+      draw.st = G.fromTo(path, { strokeDashoffset: len }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { trigger: story, start: 'top 30%', end: 'bottom 70%', scrub: 0.4 } });
+    }
+    draw.go = draw;
+    window.addEventListener('resize', () => setTimeout(draw, 120));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw); else draw();
   }
 
-  // ── Reviews ──────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════
+  // REVIEWS
+  // ════════════════════════════════════════════════════════
   function initVoices() {
     const list = STORE_DATA.testimonials || [], quote = $('#voice-quote'), picker = $('#voice-picker');
     if (!list.length) { $('#reviews').hidden = true; return; }
-    function paint(i) {
+    let i = 0, timer = null, bar = null, inView = false, hover = false;
+    function paint(n, user) {
+      i = (n + list.length) % list.length;
       const t = list[i];
       const stars = Array.from({ length: clamp(t.stars || 0, 0, 5) }, () => icon('star')).join('');
       quote.innerHTML = `<p>“${esc(t.body)}”</p><footer>${stars ? `<span class="stars" role="img" aria-label="${t.stars} out of 5 stars">${stars}</span>` : ''}<b>${esc(t.name)}</b><span>${esc(t.location || '')}</span></footer>`;
-      $$('button', picker).forEach((b, n) => b.setAttribute('aria-pressed', String(n === i)));
+      $$('button', picker).forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
+      if (motion) {
+        const ws = words($('p', quote));
+        G.from(ws, { y: 18, opacity: 0, filter: 'blur(4px)', duration: 0.7, stagger: 0.012, ease: 'power3.out' });
+      }
+      run();
     }
-    picker.innerHTML = list.map((t, i) => `<button type="button" data-i="${i}" aria-label="Review from ${esc(t.name)}"><small>${pad2(i + 1)}</small>${esc(t.avatar || t.name.charAt(0))}</button>`).join('');
-    picker.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) paint(Number(b.dataset.i)); });
-    picker.addEventListener('keydown', (e) => {
-      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-      const btns = $$('button', picker), cur = btns.indexOf(document.activeElement);
-      if (cur < 0) return;
-      const nx = (cur + (e.key === 'ArrowRight' ? 1 : -1) + btns.length) % btns.length;
-      btns[nx].focus(); paint(nx);
-    });
+    function run() {
+      if (bar) bar.kill();
+      $$('button i', picker).forEach((x) => { x.style.transform = 'scaleX(0)'; });
+      if (!motion || !inView || hover) return;
+      const el = $$('button i', picker)[i];
+      bar = G.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: 7, ease: 'none', onComplete: () => paint(i + 1) });
+    }
+    picker.innerHTML = list.map((t, k) => `<button type="button" aria-label="Review from ${esc(t.name)}">${esc(t.avatar || t.name.charAt(0))}<i aria-hidden="true"></i></button>`).join('');
+    picker.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) paint($$('button', picker).indexOf(b), true); });
+    const stageEl = $('.voices__stage');
+    stageEl.addEventListener('pointerenter', () => { hover = true; run(); });
+    stageEl.addEventListener('pointerleave', () => { hover = false; run(); });
+    let sx = null;
+    stageEl.addEventListener('pointerdown', (e) => { sx = e.clientX; });
+    stageEl.addEventListener('pointerup', (e) => { if (sx != null && Math.abs(e.clientX - sx) > 60) paint(i + (e.clientX < sx ? 1 : -1), true); sx = null; });
+    if (ST && motion) ST.create({ trigger: '#reviews', start: 'top 70%', end: 'bottom 30%', onToggle: (self) => { inView = self.isActive; run(); } });
     paint(0);
   }
 
-  // ── Length guide ─────────────────────────────────────────
-  function initLength() {
-    const guide = STORE_DATA.lengthGuide, svg = $('#length-svg'), range = $('#length-range');
-    const IN = 13, TOP = 26, CX = 150, RULER = 322;
-    const y = (inches) => TOP + inches * IN;
-    let texture = guide.textures[0];
-    const half = (v) => { const r = Math.round(v * 2) / 2; return (Number.isInteger(r) ? r : Math.floor(r) + '½') + '"'; };
-
-    function hair(len, tex) {
-      const top = 92, end = Math.max(y(len), top + 14), spread = Math.min(40, 10 + len * 1.15);
-      const amp = tex === 'wavy' ? 4.2 : tex === 'curly' ? 6 : 0, period = tex === 'curly' ? 17 : 36;
-      const right = [], left = [];
-      for (let yy = top; yy <= end; yy += 4) {
-        const t = (yy - top) / Math.max(1, end - top);
-        const wob = amp ? Math.sin(((yy - top) / period) * Math.PI * 2) * amp * Math.min(1, t * 3) : 0;
-        const x = 45 + spread * Math.pow(t, 0.8);
-        right.push(`${(CX + x + wob).toFixed(1)} ${yy.toFixed(1)}`);
-        left.push(`${(CX - x - wob).toFixed(1)} ${yy.toFixed(1)}`);
-      }
-      const edge = 45 + spread;
-      const dip = tex === 'curly' ? 16 : tex === 'wavy' ? 12 : 9;
-      return `M ${CX - 45} ${top} C ${CX - 47} 40 ${CX - 30} 14 ${CX} 14 C ${CX + 30} 14 ${CX + 47} 40 ${CX + 45} ${top} L ${right.join(' L ')} Q ${CX + edge * 0.5} ${end + dip} ${CX} ${end + dip * 0.7} Q ${CX - edge * 0.5} ${end + dip} ${left[left.length - 1]} L ${left.reverse().join(' L ')} Z`;
-    }
-
-    const ticks = [];
-    for (let i = 8; i <= 30; i++) {
-      const even = i % 2 === 0;
-      ticks.push(`<line class="lg-tick" x1="${RULER}" y1="${y(i)}" x2="${RULER + (even ? 12 : 6)}" y2="${y(i)}"/>`);
-      if (even) ticks.push(`<text class="lg-num" x="${RULER + 18}" y="${y(i) + 4}">${i}</text>`);
-    }
-    const body = 'M 135 136 L 135 150 C 135 164 112 166 88 172 C 66 178 56 190 58 206 C 60 222 72 228 74 240 C 80 280 92 300 92 332 C 92 366 68 378 66 406 L 68 452 L 232 452 L 234 406 C 232 378 208 366 208 332 C 208 300 220 280 226 240 C 228 228 240 222 242 206 C 244 190 234 178 212 172 C 188 166 165 164 165 150 L 165 136 Z';
-    svg.insertAdjacentHTML('beforeend',
-      `<path class="lg-body" d="${body}"/><ellipse class="lg-body" cx="${CX}" cy="83" rx="37" ry="56"/>
-       <path class="lg-ghost" id="lg-ghost" d=""/><path class="lg-hair" id="lg-hair" d=""/>
-       <line class="lg-tick" x1="${RULER}" y1="${y(8)}" x2="${RULER}" y2="${y(30)}"/>${ticks.join('')}
-       <g id="lg-ghost-mark"><line class="lg-mark lg-mark--ghost" id="lg-gline" x1="0" x2="${RULER}" y1="0" y2="0"/><text class="lg-lab lg-lab--ghost" id="lg-glab" x="${RULER - 6}" text-anchor="end"></text></g>
-       <line class="lg-mark" id="lg-line" x1="0" x2="${RULER}" y1="0" y2="0"/><circle class="lg-dot" id="lg-dot" cx="${RULER}" r="5"/><text class="lg-lab" id="lg-lab" x="${RULER - 6}" text-anchor="end"></text>`);
-
-    $('#textures').innerHTML = guide.textures.map((t) => `<button type="button" data-tex="${t.id}" aria-pressed="${t === texture}">${esc(t.label)}${icon('diamond')}</button>`).join('');
-
+  // ════════════════════════════════════════════════════════
+  // ANSWERS
+  // ════════════════════════════════════════════════════════
+  function initAnswers() {
+    const faq = STORE_DATA.faq || [], box = $('#faq'), tabs = $('#faq-tabs');
+    const table = (rows) => `<span class="faq__rows">${rows.map((z) => `${esc(z.zone)}: ${esc(z.time.toLowerCase())}, ${esc(z.price)}.`).join(' ')}</span>`;
+    const answer = (a) => {
+      if (a === '@delivery-local') return `${table(DELIVERY.local)} You'll see your exact fee at checkout once you pick your state.`;
+      if (a === '@delivery-intl') return `Yes. ${table(DELIVERY.international)} It's tracked, packed discreetly, and we handle the customs paperwork.`;
+      return esc(a);
+    };
+    const groups = ['All'].concat(Array.from(new Set(faq.map((f) => f.group))));
+    let group = 'All';
+    tabs.innerHTML = groups.map((g) => `<button type="button" data-group="${esc(g)}" aria-pressed="${g === group}">${esc(g)}</button>`).join('');
     function paint() {
-      const len = Number(range.value), label = len + '"';
-      const sits = len * (1 - texture.sitsShorter);
-      const land = (guide.landmarks.find((l) => sits <= l.upTo) || guide.landmarks[guide.landmarks.length - 1]).label;
-      const spread = 45 + Math.min(40, 10 + sits * 1.15);
-      $('#lg-hair').setAttribute('d', hair(sits, texture.id));
-      const yy = y(sits);
-      $('#lg-line').setAttribute('x1', CX + spread + 4); $('#lg-line').setAttribute('y1', yy); $('#lg-line').setAttribute('y2', yy);
-      $('#lg-dot').setAttribute('cy', yy);
-      const lab = $('#lg-lab');
-      lab.setAttribute('y', yy - 7);
-      lab.textContent = texture.sitsShorter ? 'Sits here' : label;
-      const ghost = texture.sitsShorter > 0;
-      $('#lg-ghost-mark').style.display = ghost ? '' : 'none';
-      $('#lg-ghost').setAttribute('d', ghost ? hair(len, 'straight') : '');
-      if (ghost) {
-        const gy = y(len), gs = 45 + Math.min(40, 10 + len * 1.15);
-        $('#lg-gline').setAttribute('x1', CX + gs + 4); $('#lg-gline').setAttribute('y1', gy); $('#lg-gline').setAttribute('y2', gy);
-        const gl = $('#lg-glab'); gl.setAttribute('y', gy + 17); gl.textContent = label + ' stretched';
-      }
-      $('#length-num').textContent = len;
-      $('#length-out').textContent = label;
-      $('#length-land').textContent = land;
-      $('#length-note').textContent = ghost
-        ? `A ${label} ${texture.label.toLowerCase()} unit sits about where ${half(sits)} of straight hair would.`
-        : 'Straight hair hangs at its full measured length.';
-      $('#length-desc').textContent = `A ${label} ${texture.label.toLowerCase()} unit falls to about the ${land.toLowerCase()}.`;
-      range.setAttribute('aria-valuetext', `${len} inches, ${land}`);
-      const n = PRODUCTS.filter((p) => p.lengths.includes(label)).length, btn = $('#length-shop');
-      btn.disabled = !n;
-      btn.textContent = n ? `Shop ${label} pieces (${n})` : `No ${label} pieces right now`;
-      btn.dataset.len = label;
+      const list = faq.filter((f) => group === 'All' || f.group === group);
+      box.innerHTML = list.map((f, i) => `<div class="faq__item">
+        <h3><button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-${i}"><span>${esc(f.q)}</span><span class="faq__box">${icon('plus')}</span></button></h3>
+        <div class="faq__a" id="faq-${i}" role="region"><p>${answer(f.a)}</p></div></div>`).join('');
+      if (motion) G.from($$('.faq__item', box), { y: 30, opacity: 0, duration: 0.7, stagger: 0.04, ease: 'expo.out' });
+      if (ST) ST.refresh();
     }
-    range.addEventListener('input', paint);
-    $('#textures').addEventListener('click', (e) => {
-      const b = e.target.closest('button');
+    tabs.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-group]');
       if (!b) return;
-      texture = guide.textures.find((t) => t.id === b.dataset.tex) || texture;
-      $$('#textures button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      group = b.dataset.group;
+      $$('button', tabs).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
       paint();
     });
-    $('#length-shop').addEventListener('click', (e) => Shop.setLength(e.currentTarget.dataset.len));
+    box.addEventListener('click', (e) => {
+      const q = e.target.closest('.faq__q');
+      if (!q) return;
+      const item = q.closest('.faq__item'), panel = $('.faq__a', item), opening = !item.classList.contains('is-open');
+      item.classList.toggle('is-open', opening);
+      q.setAttribute('aria-expanded', String(opening));
+      if (motion) G.to(panel, { height: opening ? 'auto' : 0, duration: 0.6, ease: 'power3.inOut', onComplete: () => ST.refresh() });
+      else panel.style.height = opening ? 'auto' : '0px';
+    });
     paint();
   }
 
-  // ── Shade scale ──────────────────────────────────────────
-  function initShade() {
-    const lum = (hex) => {
-      const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
-      if (!m) return 0;
-      const n = parseInt(m[1], 16), ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
-      return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
-    };
-    const map = new Map();
-    PRODUCTS.forEach((p) => p.colors.forEach((c, i) => {
-      const hex = String(c).toLowerCase();
-      if (!map.has(hex)) map.set(hex, { hex, names: [], items: [] });
-      const s = map.get(hex);
-      if (!s.names.includes(p.colorNames[i])) s.names.push(p.colorNames[i]);
-      s.items.push({ p, i });
-    }));
-    const shades = Array.from(map.values()).sort((a, b) => lum(a.hex) - lum(b.hex));
-    if (!shades.length) { $('#shade').hidden = true; return; }
-    const range = $('#shade-range'), scale = $('#shade-scale');
-    range.max = shades.length - 1;
-    range.style.setProperty('--n', shades.length);
-    scale.innerHTML = shades.map((s, i) => `<button type="button" data-i="${i}" style="--c:${esc(s.hex)}" aria-label="${esc(s.names[0])}" title="${esc(s.names[0])}"></button>`).join('');
-
-    function paint(i) {
-      const s = shades[i], card = $('#shade-card'), n = s.items.length;
-      card.style.setProperty('--sw', s.hex);
-      card.classList.toggle('is-light', lum(s.hex) > 0.36);
-      card.innerHTML = `<small>Shade ${i + 1} of ${shades.length}</small><b>${esc(s.names[0])}</b><span class="tag">In ${n} piece${n === 1 ? '' : 's'}</span>`;
-      $$('button', scale).forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
-      range.value = i;
-      range.setAttribute('aria-valuetext', s.names[0]);
-      const rows = [];
-      if (s.names.length > 1) rows.push(`<dt>Also listed as</dt><dd>${s.names.slice(1).map(esc).join(', ')}</dd>`);
-      rows.push(`<dt>Comes in</dt><dd>${s.items.map((x) => `<button class="linkbtn" type="button" data-open="${esc(x.p.id)}" data-ci="${x.i}">${esc(x.p.name)}</button>`).join('')}</dd>`);
-      rows.push(`<dt>Shop</dt><dd><button class="btn btn--line" type="button" data-shade="${i}">See every piece in ${esc(s.names[0])}</button></dd>`);
-      $('#shade-specs').innerHTML = rows.join('');
-    }
-    scale.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) paint(Number(b.dataset.i)); });
-    range.addEventListener('input', () => paint(Number(range.value)));
-    $('#shade-specs').addEventListener('click', (e) => {
-      const o = e.target.closest('[data-open]');
-      if (o) { Detail.open(o.dataset.open, { colorIndex: Number(o.dataset.ci) }); return; }
-      const sh = e.target.closest('[data-shade]');
-      if (sh) { const s = shades[Number(sh.dataset.shade)]; Shop.setShade({ hex: s.hex, name: s.names[0] }); }
-    });
-    paint(0);
-  }
-
-  // ── Story ────────────────────────────────────────────────
-  function initStory() {
-    const m = STORE_DATA.media || {};
-    $('#story-img').src = sized(m.story, 900, 1125);
-    $('#promise-img').src = sized(m.promise, 900, 1125);
-    $('#promise-list').innerHTML = (STORE_DATA.promise || []).map((x) => `<li><h3>${esc(x.title)}</h3><p>${esc(x.body)}</p></li>`).join('');
-    $$('[data-founded]').forEach((n) => { n.textContent = BS_CONFIG.founded; });
-
-    const story = $('#story'), thread = $('#story-thread'), dot = $('#story-dot');
-    function place() {
-      const s = story.getBoundingClientRect(), d = dot.getBoundingClientRect();
-      thread.style.setProperty('--thread-x', (d.left + d.width / 2 - s.left) + 'px');
-      thread.style.top = (d.bottom - s.top - d.height * 0.14) + 'px';
-    }
-    function progress() {
-      const r = thread.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > window.innerHeight) return;
-      thread.style.setProperty('--p', clamp((window.innerHeight * 0.72 - r.top) / Math.max(1, r.height), 0, 1).toFixed(4));
-    }
-    place(); progress();
-    window.addEventListener('resize', () => { place(); progress(); });
-    window.addEventListener('scroll', progress, { passive: true });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { place(); progress(); });
-  }
-
-  // ── Knowledge: basics and care ───────────────────────────
-  function act(go) {
-    if (!go) return;
-    if (go === 'quiz') { Quiz.open(); return; }
-    if (go.indexOf('shop:') === 0) { Shop.setCategory(go.slice(5)); Shop.reveal(); return; }
-    const el = $(go);
-    if (el) el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
-  }
-  function initBasics() {
-    const list = (STORE_DATA.knowledge && STORE_DATA.knowledge.basics) || [], box = $('#chapters');
-    $('#basics-img').src = sized((STORE_DATA.media || {}).basics, 1800);
-    box.innerHTML = list.map((c, i) => `<div class="chapter">
-      <h3><button class="chapter__row" type="button" aria-expanded="false" aria-controls="chapter-${i}"><span class="chapter__num">${ROMAN[i] || i + 1}.</span><span class="chapter__title">${esc(c.title)}</span><span class="chapter__plus">${icon('plus')}</span></button></h3>
-      <div class="chapter__panel" id="chapter-${i}"><div><p>${esc(c.body)}</p>${c.action ? `<button class="linkbtn" type="button" data-go="${esc(c.action.go)}">${esc(c.action.label)}</button>` : ''}</div></div>
-    </div>`).join('');
-    box.addEventListener('click', (e) => {
-      const go = e.target.closest('[data-go]');
-      if (go) { act(go.dataset.go); return; }
-      const row = e.target.closest('.chapter__row');
-      if (!row) return;
-      const ch = row.closest('.chapter'), willOpen = !ch.classList.contains('is-open');
-      $$('.chapter', box).forEach((x) => { x.classList.remove('is-open'); $('.chapter__row', x).setAttribute('aria-expanded', 'false'); });
-      if (willOpen) { ch.classList.add('is-open'); row.setAttribute('aria-expanded', 'true'); }
-    });
-  }
-  function initCare() {
-    const care = (STORE_DATA.knowledge && STORE_DATA.knowledge.care) || {}, topics = Object.keys(care);
-    if (!topics.length) { $('#care').hidden = true; return; }
-    const tabs = $('#care-tabs'), pics = (STORE_DATA.media || {}).care || {};
-    tabs.innerHTML = topics.map((t, i) => `<button type="button" role="tab" data-topic="${esc(t)}" aria-selected="${i === 0}" aria-controls="care-steps">${esc(t)}</button>`).join('');
-    function paint(topic) {
-      const steps = care[topic] || [];
-      $$('button', tabs).forEach((b) => b.setAttribute('aria-selected', String(b.dataset.topic === topic)));
-      $('#care-steps').innerHTML = steps.map((s, i) => `<li><p class="steps__num" aria-hidden="true">${pad2(i + 1)}</p><p class="steps__of">Step ${i + 1} of ${steps.length}</p><h3>${esc(s.title)}</h3><p>${esc(s.body)}</p></li>`).join('');
-      const fig = $('.care__figure'), img = $('#care-img');
-      fig.classList.remove('is-missing');
-      if (pics[topic]) img.src = sized(pics[topic], 900, 1125); else { img.removeAttribute('src'); fig.classList.add('is-missing'); }
-      $('#care-cap').textContent = topic;
-    }
-    tabs.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) paint(b.dataset.topic); });
-    paint(topics[0]);
-  }
-
-  // ── Delivery timeline ────────────────────────────────────
-  function initDelivery() {
-    const days = ['Today'].concat(Array.from({ length: 14 }, (_, i) => String(i + 1)));
-    const row = (z, far) => {
-      const d = Array.isArray(z.days) ? z.days : null;
-      let bar = '';
-      if (d) bar = d[1] === 0 ? '<span class="year__bar year__bar--dot" style="--a:1;--b:2"></span>' : `<span class="year__bar${far ? ' year__bar--far' : ''}" style="--a:${clamp(d[0], 0, 14) + 1};--b:${clamp(d[1], 0, 14) + 2}"></span>`;
-      return `<div class="year__row" role="listitem"><span class="year__zone">${esc(z.zone)}</span><span class="year__lane" aria-hidden="true">${bar}</span><span class="year__price">${esc(z.price)}<small>${esc(z.time)}</small></span></div>`;
-    };
-    $('#year').innerHTML =
-      `<div class="year__head" aria-hidden="true"><span></span><span class="year__days">${days.map((d) => `<span>${d}</span>`).join('')}</span><span></span></div>
-       <p class="year__group">Nigeria</p><div role="list">${DELIVERY.local.map((z) => row(z, false)).join('')}</div>
-       <p class="year__group">International, in business days</p><div role="list">${DELIVERY.international.map((z) => row(z, true)).join('')}</div>`;
-  }
-
-  // ── Lookbook wall ────────────────────────────────────────
-  function initWall() {
-    const ratios = ['4/5', '1/1', '5/4', '3/4', '4/3', '4/5'];
-    const pics = PRODUCTS.filter((p) => p.image);
-    if (!pics.length) { $('#lookbook').hidden = true; return; }
-    const row = (list, shift) => {
-      const cells = list.map((p, i) => `<span class="media" style="--tone:${esc(p.tone)};--ar:${ratios[(i + shift) % ratios.length]}"><img src="${esc(sized(p.image, 700, 760))}" alt="" loading="lazy" decoding="async"></span>`).join('');
-      return `<div class="wall__row">${cells}${cells}</div>`;
-    };
-    const half = Math.ceil(pics.length / 2);
-    const a = pics.slice(0, half), b = pics.slice(half).concat(pics.slice(0, Math.max(0, half - (pics.length - half))));
-    $('#wall-rows').innerHTML = row(a.length < 4 ? a.concat(a) : a, 0) + row((b.length < 4 ? b.concat(b) : b).reverse(), 3);
-  }
-
-  // ── Words that brighten as you scroll ────────────────────
-  function initReveal() {
-    const blocks = $$('[data-reveal-words]');
-    blocks.forEach((el) => {
-      const words = el.textContent.trim().split(/\s+/);
-      el.innerHTML = words.map((w) => `<span class="w">${esc(w)}</span>`).join(' ');
-      el.words = $$('.w', el);
-    });
-    if (reduced) { blocks.forEach((el) => el.words.forEach((w) => w.classList.add('is-in'))); return; }
-    let queued = false;
-    function run() {
-      queued = false;
-      const vh = window.innerHeight;
-      blocks.forEach((el) => {
-        const r = el.getBoundingClientRect();
-        if (r.bottom < -40 || r.top > vh + 40) return;
-        const p = clamp((vh * 0.88 - r.top) / (vh * 0.5 + r.height * 0.6), 0, 1);
-        const n = Math.round(p * el.words.length);
-        el.words.forEach((w, i) => w.classList.toggle('is-in', i < n));
-      });
-    }
-    window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(run); } }, { passive: true });
-    window.addEventListener('resize', run);
-    run();
-  }
-
-  // ── Contact, custom orders, newsletter ───────────────────
+  // ── Contact, ask, newsletter ─────────────────────────────
   const validEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
   function subscribe(email) {
     const v = String(email || '').trim().toLowerCase();
@@ -841,20 +1044,16 @@
   }
   function initContact() {
     const c = BS_CONFIG;
-    $$('[data-wa-link]').forEach((a) => { a.href = c.waLink(); });
-    $$('[data-mail-link]').forEach((a) => { a.href = 'mailto:' + c.email; });
-    $$('[data-ig-link]').forEach((a) => {
-      a.href = 'https://www.instagram.com/' + c.instagram;
-      if (!a.children.length && a.textContent.trim().charAt(0) === '@') a.textContent = '@' + c.instagram;
-    });
+    $$('[data-wa-link]').forEach((x) => { x.href = c.waLink(); });
+    $$('[data-mail-link]').forEach((x) => { x.href = 'mailto:' + c.email; });
+    $$('[data-ig-link]').forEach((x) => { x.href = 'https://www.instagram.com/' + c.instagram; });
     $$('[data-wa-text]').forEach((n) => { n.textContent = c.whatsappDisplay; });
     $$('[data-mail-text]').forEach((n) => { n.textContent = c.email; });
     $$('[data-ig-text]').forEach((n) => { n.textContent = '@' + c.instagram; });
     $$('[data-year]').forEach((n) => { n.textContent = new Date().getFullYear(); });
 
-    // custom order line with a typed-out placeholder
     const input = $('#ask-input');
-    const ideas = ['24" bone straight in honey blonde', '13×6 frontal, deep wave, 22"', 'Kinky coily bundles, 16"', 'A blunt bob in jet black, 12"'];
+    const ideas = ['24″ bone straight in honey blonde', '13×6 frontal, deep wave, 22″', 'Kinky coily bundles, 16″', 'A blunt bob in jet black, 12″'];
     if (reduced) input.placeholder = ideas[0];
     else {
       let idea = 0, pos = 0, dir = 1;
@@ -872,45 +1071,22 @@
       e.preventDefault();
       const want = input.value.trim();
       if (!want) { input.focus(); toast('Tell us what you want', 'Type the length, texture and shade you\'re after.'); return; }
-      window.open(c.waLink(`Hi Baddie Strands! I'm looking for: ${want}\n\nIs this something you can get for me?`), '_blank', 'noopener');
+      window.open(c.waLink(`Hi Baddie Strands! I'm looking for: ${want}\n\nCan you get this for me?`), '_blank', 'noopener');
       toast('Opening WhatsApp', 'Send the message there and we\'ll reply within 2 hours.');
       input.value = '';
     });
-
-    $('#contact-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const f = e.target, d = new FormData(f), err = $('#contact-error');
-      const name = String(d.get('name') || '').trim(), email = String(d.get('email') || '').trim(), msg = String(d.get('message') || '').trim();
-      const problem = !name ? 'Add your name so we know who to reply to.' : !validEmail(email) ? 'Add a valid email address.' : !msg ? 'Write a short message first.' : '';
-      err.hidden = !problem;
-      err.textContent = problem;
-      if (problem) { (!name ? f.elements.name : !validEmail(email) ? f.elements.email : f.elements.message).focus(); return; }
-      window.open(c.waLink(`Hi Baddie Strands!\n\nName: ${name}\nEmail: ${email}\nSubject: ${d.get('subject')}\n\nMessage:\n${msg}`), '_blank', 'noopener');
-      toast('Opening WhatsApp', 'Send the message there and we\'ll reply within 2 hours.');
-      f.reset();
-    });
-
     $('#newsletter-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const f = e.target, note = $('#newsletter-note'), res = subscribe(f.elements.email.value);
-      note.className = 'circle__note ' + (res === 'bad' ? 'is-err' : 'is-ok');
-      note.textContent = res === 'bad' ? 'That email doesn\'t look right. Check it and try again.' : res === 'dup' ? 'You\'re already in the inner circle.' : 'Subscribed. Welcome to the inner circle.';
+      note.className = 'foot__note ' + (res === 'bad' ? 'is-err' : 'is-ok');
+      note.textContent = res === 'bad' ? 'That email doesn\'t look right. Check it and try again.' : res === 'dup' ? 'You\'re already in the inner circle.' : 'You\'re in. Welcome to the inner circle.';
       if (res !== 'bad') f.reset(); else f.elements.email.focus();
-    });
-    $('#promo-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const f = e.target, res = subscribe(f.elements.email.value);
-      if (res === 'bad') { toast('Check your email', 'That address doesn\'t look right.'); f.elements.email.focus(); return; }
-      toast(res === 'dup' ? 'Already subscribed' : 'Subscribed', res === 'dup' ? 'You\'re already in the inner circle.' : 'Welcome to the inner circle.');
-      f.reset();
     });
   }
 
-  // ── Opening hours and the Abuja clock ────────────────────
   function initClock() {
     const c = BS_CONFIG, tz = c.timeZone || 'Africa/Lagos';
     const hour = (h) => (h % 12 || 12) + (h < 12 ? 'am' : 'pm');
-    $('#hours-list').innerHTML = c.hours.map((h) => `<dt>${esc(h.label)}</dt><dd>${hour(h.open)} to ${hour(h.close)}</dd>`).join('');
     let timeFmt, partFmt;
     try {
       timeFmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
@@ -923,59 +1099,49 @@
       const hr = Number((parts.find((p) => p.type === 'hour') || {}).value) % 24;
       const slot = c.hours.find((h) => h.days.includes(day));
       const open = !!slot && hr >= slot.open && hr < slot.close;
-      let text = 'We\'re open now';
+      let text = 'We\'re online now';
       if (!open) {
         let next = slot && hr < slot.open ? slot : null, when = 'today';
         for (let i = 1; !next && i <= 7; i++) { next = c.hours.find((h) => h.days.includes((day + i) % 7)); when = i === 1 ? 'tomorrow' : 'soon'; }
-        text = next ? `Closed. Back ${when} at ${hour(next.open)}` : 'Closed right now';
+        text = next ? `We're back ${when} at ${hour(next.open)}, Abuja time` : 'We\'re offline right now';
       }
       $('#clock').textContent = timeFmt.format(now).replace(/\s?(am|pm)$/i, (m) => ' ' + m.trim().toUpperCase());
       $('#clock-state').textContent = text;
-      const state = $('#hours-state');
-      state.textContent = text;
-      state.classList.toggle('is-open', open);
+      const st = $('#hours-state');
+      st.textContent = text;
+      st.classList.toggle('is-open', open);
     }
     tick();
     setInterval(() => { if (!document.hidden) tick(); }, 1000);
   }
 
-  // ── Type that is fitted to its container ─────────────────
-  function initFit() {
-    const grow = $('#foot-grow'), text = grow.textContent.trim(), letters = Array.from(text);
-    const last = letters.length - 1;
+  // ── The footer's growing words ───────────────────────────
+  function initGrow() {
+    const grow = $('#foot-grow'), text = grow.textContent.trim(), letters = Array.from(text), last = letters.length - 1;
     grow.innerHTML = letters.map((ch, i) => `<span aria-hidden="true" style="--k:${(1 + (i / last) * 1.3).toFixed(3)}">${ch === ' ' ? ' ' : esc(ch)}</span>`).join('');
-    const word = $('.story__word');
-    function natural(el) { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width; }
-    function fit() {
-      grow.style.setProperty('--grow-fs', '100px');
-      const gw = natural(grow), room = grow.clientWidth;
-      if (gw > 0) grow.style.setProperty('--grow-fs', (100 * room / gw * 0.995).toFixed(2) + 'px');
-      word.style.fontSize = '100px';
-      const ww = natural(word), wr = word.parentElement.clientWidth;
-      if (ww > 0) word.style.fontSize = (100 * wr / ww * 0.985).toFixed(2) + 'px';
-    }
-    fit();
-    window.addEventListener('resize', fit);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    if (!motion) return;
+    const spans = $$('span', grow);
+    G.fromTo(spans, { scaleY: 0.08 }, { scaleY: (i) => 1 + (i / last) * 1.3, ease: 'none', stagger: 0.04, scrollTrigger: { trigger: grow, start: 'top bottom', end: 'bottom bottom', scrub: 0.6 } });
   }
 
   // ── Search ───────────────────────────────────────────────
   function initSearch() {
     const input = $('#search-input'), out = $('#search-results');
-    const hit = (p) => `<button class="hit" type="button" data-open="${esc(p.id)}">${media(p.image, 160, 160, '', p.tone)}<span><b>${esc(p.name)}</b><small>${esc(p.type)} · ${money(p.price)}</small></span></button>`;
+    const hit = (p) => `<button class="hit" type="button" data-open="${esc(p.id)}">${art(p, { w: 128, h: 160 })}<span><b>${esc(p.name)}</b><small>${esc(p.type)} · ${money(p.price)}</small></span></button>`;
     function paint() {
       const q = input.value.trim().toLowerCase();
       if (!q) { out.innerHTML = `<p>Popular right now</p>${bestsellers().slice(0, 4).map(hit).join('')}`; return; }
-      const found = PRODUCTS.filter((p) => [p.name, p.type, p.category, p.colorNames.join(' '), p.features.join(' ')].join(' ').toLowerCase().includes(q));
-      out.innerHTML = found.length ? found.map(hit).join('') : `<p>Nothing matches “${esc(input.value.trim())}”. Try a texture, a length or a shade, or ask us for a custom order.</p>`;
+      const found = PRODUCTS.filter((p) => [p.name, p.type, p.category, p.texture, p.colorNames.join(' '), p.features.join(' ')].join(' ').toLowerCase().includes(q));
+      out.innerHTML = found.length ? found.map(hit).join('') : `<p>Nothing matches “${esc(input.value.trim())}”. Try a texture, a length or a shade, or ask us for it below.</p>`;
     }
     let t = 0;
     input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(paint, 140); });
     out.addEventListener('click', (e) => {
       const b = e.target.closest('[data-open]');
       if (!b) return;
+      const from = $('.art', b);
       Overlay.hide('search');
-      setTimeout(() => Detail.open(b.dataset.open), reduced ? 0 : 200);
+      setTimeout(() => Detail.open(b.dataset.open, { from }), reduced ? 0 : 60);
     });
     const open = () => { input.value = ''; paint(); Overlay.show('search', '#search-input'); };
     $('#search-btn').addEventListener('click', open);
@@ -986,131 +1152,57 @@
     });
   }
 
-  // ── Quiz ─────────────────────────────────────────────────
-  const Quiz = (() => {
-    const body = $('#quiz-body'), foot = $('#quiz-foot'), tag = $('#quiz-tag');
-    const Q = STORE_DATA.quiz || [];
-    let step = -1, answers = [];
-
-    function match() {
-      const life = answers[0], time = answers[1], tex = answers[2], prio = answers[3], budget = answers[4];
-      const cap = [50000, 80000, 120000, Infinity][budget];
-      const texture = [/straight/i, /body wave|loose wave|water wave|wavy/i, /curly|deep wave|bob/i, /coily|kinky|4c|afro/i][tex];
-      const score = (p) => {
-        const head = p.name + ' ' + p.type, all = head + ' ' + p.description + ' ' + p.features.join(' ');
-        let s = p.rating / 10;
-        if (texture && texture.test(head)) s += 5;
-        if (prio === 0 && /hd|undetectable|lace/i.test(all)) s += 2;
-        if (prio === 1 && /200%|volume|full|double weft/i.test(all)) s += 2;
-        if (prio === 2 && /reusable|built to last|zero shedding|low shedding|heat resistant/i.test(all)) s += 2;
-        if (prio === 3 && /easy|beginner|glueless|pre-styled|no heat/i.test(all)) s += 2;
-        if (life === 0 && /glueless|ponytail|protective|no heat|secure/i.test(all)) s += 1.5;
-        if (life === 1 && /straight|sleek|closure|bob/i.test(all)) s += 1.5;
-        if (life === 2 && /frontal|ombre|colour|volume|drama/i.test(all)) s += 1.5;
-        if (life === 3 && /u-part|clip|easy|protective/i.test(all)) s += 1.5;
-        if (time === 0 && /glueless|60-second|pre-styled|clip|beginner|easy/i.test(all)) s += 1.5;
-        if (time >= 2 && /can be (curled|heat styled|bleached)|versatile/i.test(all)) s += 1;
-        return s;
-      };
-      const inStock = PRODUCTS.filter((p) => p.stock !== 0);
-      let pool = inStock.filter((p) => p.price <= (cap == null ? Infinity : cap)), stretched = false;
-      if (!pool.length) { pool = inStock.slice().sort((a, b) => a.price - b.price).slice(0, 3); stretched = true; }
-      const picks = pool.map((p) => ({ p, s: score(p) })).sort((a, b) => b.s - a.s || b.p.reviews - a.p.reviews).slice(0, 2).map((x) => x.p);
-      return { picks, stretched };
-    }
-
-    function paint() {
-      if (step === -1) {
-        const lead = bestsellers()[0] || PRODUCTS[0];
-        tag.textContent = 'Take the quiz';
-        body.innerHTML = `<h2 class="card__title" id="quiz-head">Find your crown</h2><p class="card__sub">${Q.length} quick questions about your life, your style and your budget. We'll match you to the hair that fits.</p>${lead ? media(lead.image, 400, 540, '', lead.tone, 'card__pic', 'div') : ''}`;
-        foot.innerHTML = '<button class="bar" type="button" data-act="next">Start now</button>';
-        return;
-      }
-      if (step < Q.length) {
-        const q = Q[step], chosen = answers[step];
-        tag.textContent = `Step ${step + 1} of ${Q.length}`;
-        body.innerHTML = `<h2 class="card__title" id="quiz-head">${esc(q.q)}</h2><p class="card__sub">Select one option below</p>
-          <div class="opts" role="radiogroup" aria-labelledby="quiz-head">${q.options.map((o, i) => {
-            const parts = String(o).split(' — ');
-            return `<button class="optile" type="button" role="radio" aria-checked="${chosen === i}" data-i="${i}"><b>${esc(parts[0])}</b>${parts[1] ? `<small>${esc(parts[1])}</small>` : ''}</button>`;
-          }).join('')}</div>`;
-        foot.innerHTML = `<button class="bar" type="button" data-act="next"${chosen == null ? ' disabled' : ''}>${step === Q.length - 1 ? 'See my matches' : 'Continue'}</button><p class="card__links"><button class="linkbtn" type="button" data-act="back">Back to previous</button></p>`;
-        return;
-      }
-      const res = match();
-      const ls = ['active', 'professional', 'social', 'relaxed'][answers[0]] || 'versatile';
-      const tx = ['sleek straight', 'natural wavy', 'bouncy curly', 'authentic coily'][answers[2]] || 'beautiful';
-      tag.textContent = 'Your perfect match';
-      body.innerHTML = `<h2 class="card__title" id="quiz-head">We found your crown</h2>
-        <p class="card__sub">${res.stretched ? 'Nothing sits inside that budget right now, so here are our closest pieces.' : `For your ${ls} lifestyle, these are your ${tx} matches.`}</p>
-        <div class="matches">${res.picks.map((p, i) => `<button class="match" type="button" data-open="${esc(p.id)}">${media(p.image, 380, 475, '', p.tone)}<i>${i === 0 ? 'Best match' : 'Also great'}</i><b>${esc(p.name)}</b><span>${money(p.price)}</span></button>`).join('')}</div>`;
-      foot.innerHTML = '<button class="bar" type="button" data-act="browse">Browse the collection</button><p class="card__links"><button class="linkbtn" type="button" data-act="again">Retake the quiz</button></p>';
-    }
-
-    body.addEventListener('click', (e) => {
-      const o = e.target.closest('.optile');
-      if (o) {
-        answers[step] = Number(o.dataset.i);
-        $$('.optile', body).forEach((b) => b.setAttribute('aria-checked', String(b === o)));
-        const next = $('[data-act="next"]', foot);
-        if (next) next.disabled = false;
-        return;
-      }
-      const m = e.target.closest('[data-open]');
-      if (m) { Overlay.hide('quiz-sheet'); setTimeout(() => Detail.open(m.dataset.open), reduced ? 0 : 220); }
-    });
-    body.addEventListener('keydown', (e) => {
-      if (!/^Arrow/.test(e.key)) return;
-      const tiles = $$('.optile', body), cur = tiles.indexOf(document.activeElement);
-      if (cur < 0) return;
-      e.preventDefault();
-      const nx = (cur + (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1) + tiles.length) % tiles.length;
-      tiles[nx].focus();
-    });
-    foot.addEventListener('click', (e) => {
-      const b = e.target.closest('[data-act]');
-      if (!b) return;
-      const a = b.dataset.act;
-      if (a === 'next') { if (step >= 0 && answers[step] == null) return; step++; }
-      if (a === 'back') step--;
-      if (a === 'again') { step = 0; answers = []; }
-      if (a === 'browse') { Overlay.hide('quiz-sheet'); Shop.setCategory('all'); Shop.reveal(); return; }
-      paint();
-      body.scrollTop = 0;
-      const focus = $('.optile[aria-checked="true"]', body) || $('.optile', body) || $('.bar', foot);
-      if (focus) focus.focus({ preventScroll: true });
-    });
-    return { open() { step = -1; answers = []; paint(); Overlay.show('quiz-sheet', '.bar'); } };
-  })();
-
   // ── Navigation ───────────────────────────────────────────
   function initNav() {
     const nav = $('#nav'), btn = $('#menu-btn'), panel = $('#menu-panel');
-    const set = (open) => { nav.classList.toggle('is-open', open); panel.hidden = !open; btn.setAttribute('aria-expanded', String(open)); btn.setAttribute('aria-label', open ? 'Close menu' : 'Menu'); };
+    const set = (open) => {
+      nav.classList.toggle('is-open', open);
+      panel.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+      if (open) { nav.classList.remove('is-tucked'); if (motion) G.from(panel.children, { y: -12, opacity: 0, duration: 0.5, stagger: 0.05, ease: 'power3.out' }); }
+    };
     btn.addEventListener('click', () => set(panel.hidden));
     panel.addEventListener('click', (e) => { if (e.target.closest('a,button')) set(false); });
     document.addEventListener('click', (e) => { if (!panel.hidden && !nav.contains(e.target)) set(false); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden && !Overlay.any()) { set(false); btn.focus(); } });
     $('#bag-btn').addEventListener('click', () => { set(false); Overlay.show('cart'); });
 
+    // tuck the pill away while scrolling down, bring it back on the way up
+    let lastY = 0;
+    const onScroll = (y) => {
+      if (!panel.hidden) return;
+      nav.classList.toggle('is-tucked', y > lastY + 2 && y > 240);
+      if (y < lastY - 2 || y < 240) nav.classList.remove('is-tucked');
+      lastY = y;
+    };
+    if (lenis) lenis.on('scroll', (l) => onScroll(l.scroll));
+    else window.addEventListener('scroll', () => onScroll(window.scrollY), { passive: true });
+    nav.addEventListener('focusin', () => nav.classList.remove('is-tucked'));
+
     document.addEventListener('click', (e) => {
-      const quiz = e.target.closest('[data-open-quiz]');
-      if (quiz) { e.preventDefault(); Quiz.open(); return; }
       const auth = e.target.closest('[data-open-auth]');
       if (auth && window.BSCheckout) { e.preventDefault(); window.BSCheckout.openAuth(); return; }
       const cat = e.target.closest('[data-shop-filter]');
-      if (cat) { Shop.setCategory(cat.dataset.shopFilter); if (cat.tagName !== 'A') Shop.reveal(); }
+      if (cat) Shop.setCategory(cat.dataset.shopFilter);
+      const ch = e.target.closest('[data-chapter]');
+      if (ch) { e.preventDefault(); Scene.toChapter(Number(ch.dataset.chapter)); return; }
+      const a = e.target.closest('a[href^="#"]');
+      if (a && !e.defaultPrevented) {
+        const id = a.getAttribute('href');
+        if (id.length > 1) {
+          const el = document.querySelector(id);
+          if (el) { e.preventDefault(); if (Overlay.any()) $$('.overlay.is-open').forEach((o) => Overlay.hide(o)); scrollToEl(el); }
+        }
+      }
     });
   }
 
-  // ── Bag events ───────────────────────────────────────────
   function initCart() {
     $('#cart-items').addEventListener('click', (e) => {
       const line = e.target.closest('.line');
       if (!line) return;
-      const key = line.dataset.key;
-      const st = e.target.closest('[data-step]');
+      const key = line.dataset.key, st = e.target.closest('[data-step]');
       if (st) { Cart.step(key, Number(st.dataset.step)); return; }
       if (e.target.closest('[data-remove]')) Cart.remove(key);
     });
@@ -1121,37 +1213,33 @@
     Cart.paint();
   }
 
-  // ── Hero ─────────────────────────────────────────────────
-  function initHero() {
-    $('#hero-img').src = sized((STORE_DATA.media || {}).hero, 1000, 1500);
-    const pick = bestsellers()[0], promo = $('#promo');
-    let hidden = false;
-    try { hidden = sessionStorage.getItem('bs_promo_off') === '1'; } catch (e) { /* ignore */ }
-    if (hidden) { promo.hidden = true; return; }
-    if (pick) {
-      $('#promo-pick').innerHTML = `${media(pick.image, 200, 200, '', pick.tone)}<div><p><small>${pick.hot ? 'Bestseller' : 'Featured'}</small><b>${esc(pick.name)}</b></p><span>${money(pick.price)}<button class="linkbtn" type="button" data-open="${esc(pick.id)}">View</button></span></div>`;
-      $('#promo-pick').addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) Detail.open(b.dataset.open); });
-    }
-    $('#promo-close').addEventListener('click', () => { promo.hidden = true; try { sessionStorage.setItem('bs_promo_off', '1'); } catch (e) { /* ignore */ } });
-  }
-
-  // ── Opening counter ──────────────────────────────────────
-  function initLoader() {
+  // ── Loader: a curtain of hair that parts ─────────────────
+  function initLoader(done) {
     const el = $('#loader');
-    if (!el) return;
     let seen = false;
     try { seen = sessionStorage.getItem('bs_seen') === '1'; sessionStorage.setItem('bs_seen', '1'); } catch (e) { /* ignore */ }
-    if (seen || reduced) { el.remove(); return; }
-    const num = $('#loader-num'), t0 = performance.now(), dur = 1250;
-    (function tick(now) {
-      const p = clamp((now - t0) / dur, 0, 1);
-      num.textContent = Math.round((1 - Math.pow(1 - p, 3)) * 100);
-      if (p < 1) { requestAnimationFrame(tick); return; }
-      setTimeout(() => { el.classList.add('is-done'); setTimeout(() => el.remove(), 1000); }, 220);
-    })(t0);
+    if (!el || seen || !motion) { if (el) el.remove(); done(); return; }
+    if (lenis) lenis.stop();
+    const hair = new Strands($('#loader-hair'), { layout: 'curtain', texture: 'straight', shade: '#1a1008', len: 0.02, auto: false, interactive: true });
+    hair.play();
+    const num = $('#loader-num'), st = { p: 0 };
+    let opened = false;
+    const count = G.to(st, { p: 100, duration: 2.1, ease: 'power2.inOut', onUpdate: () => { num.textContent = Math.round(st.p); hair.state.len = 0.02 + st.p / 100 * 0.74; }, onComplete: open });
+    function open() {
+      if (opened) return;
+      opened = true;
+      count.kill(); num.textContent = '100'; hair.state.len = Math.max(hair.state.len, 0.6);
+      G.timeline({ onComplete: () => { hair.destroy(); el.remove(); if (lenis) lenis.start(); } })
+        .to('.loader__count, .loader__line, .loader__brand, .loader__from, .loader__skip', { y: 40, opacity: 0, duration: 0.45, stagger: 0.04, ease: 'power2.in' })
+        .to(hair.state, { gap: 1.05, duration: 1.35, ease: 'power3.inOut' }, 0.15)
+        .to(el, { backgroundColor: 'rgba(246,226,211,0)', duration: 0.5 }, 0.55)
+        .add(done, 0.6)
+        .to(el, { opacity: 0, duration: 0.3 }, 1.25);
+    }
+    $('#loader-skip').addEventListener('click', open);
+    el.addEventListener('click', (e) => { if (e.target === el || e.target.id === 'loader-hair') { /* let them comb */ } });
   }
 
-  // ── Notice when this browser is showing admin edits ──────
   function initPreviewNotice() {
     if (!usingEdits) return;
     const chip = document.createElement('div');
@@ -1162,34 +1250,30 @@
   }
 
   // ── Shared with checkout.js ──────────────────────────────
-  window.BS = { $, $$, esc, money, store, toast, Overlay, Cart, validEmail, reduced, openProduct: (id, o) => Detail.open(id, o) };
+  window.BS = { $, $$, esc, money, store, toast, Overlay, Cart, validEmail, reduced, lenis, scene: Scene, openProduct: (id, o) => Detail.open(id, o) };
   window.showToast = toast;
 
   // ── Start ────────────────────────────────────────────────
-  initLoader();
   initNav();
-  initHero();
-  Shop.refresh();
-  initWanted();
-  initVoices();
-  initLength();
-  initShade();
-  const pair = bestsellers().slice(1, 3);
-  $('#quiz-pair').innerHTML = pair.map((p) => media(p.image, 520, 700, '', p.tone)).join('');
-  initFit();
-  initStory();
-  initBasics();
-  initCare();
-  initDelivery();
-  initWall();
+  initCursor();
   initContact();
   initClock();
-  initReveal();
+  initGrow();
+  initStory();
+  initVoices();
+  initAnswers();
   initSearch();
   initCart();
+  Shop.refresh();
   initPreviewNotice();
+  fitAll();
+  Scene.build();
+  let w0 = window.innerWidth;
+  window.addEventListener('resize', () => { fitAll(); if (Math.abs(window.innerWidth - w0) > 60) { w0 = window.innerWidth; if (ST) ST.refresh(); } });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitAll(); revealLines(); if (ST) ST.refresh(); }); else revealLines();
+  initLoader(() => { Scene.intro(); setTimeout(Pics.start, motion ? 1400 : 0); });
   Stats.pageView();
 
   const deep = /^#p\/(.+)$/.exec(location.hash);
-  if (deep) setTimeout(() => Detail.open(decodeURIComponent(deep[1])), 400);
+  if (deep) setTimeout(() => Detail.open(decodeURIComponent(deep[1])), 600);
 })();

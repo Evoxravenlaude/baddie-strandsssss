@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Baddie Strands | Luxury hair, from Abuja to the world</title>
-  <meta name="description" content="Baddie Strands is a Nigerian-owned luxury hair brand. 100% virgin human hair wigs, bundles and extensions with HD lace. Same-day delivery in Abuja, nationwide and worldwide shipping.">
+  <title>Baddie Strands | Your hair, your crown</title>
+  <meta name="description" content="Baddie Strands is a Nigerian-owned luxury hair brand from Abuja. 100% virgin human hair wigs, bundles and extensions, with same-day delivery in Abuja and shipping worldwide.">
   <meta name="theme-color" content="#F6E2D3">
   <meta property="og:title" content="Baddie Strands | Your hair, your crown">
-  <meta property="og:description" content="100% virgin human hair wigs, bundles and extensions. Born in Abuja, delivered worldwide.">
+  <meta property="og:description" content="100% virgin human hair, born in Abuja and sent to wherever you are.">
   <meta property="og:type" content="website">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%236F0A3A'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='34' fill='%23F6E2D3'%3EBs%3C/text%3E%3C/svg%3E">
   <link rel="preload" href="assets/fonts/alumni-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
-  <script>try{if(sessionStorage.getItem("bs_seen")==="1")document.documentElement.classList.add("no-loader")}catch(e){}</script>
+  <script>try{if(sessionStorage.getItem("bs_seen")==="1")document.documentElement.classList.add("no-loader")}catch(e){}document.documentElement.classList.add("js")</script>
 </head>
 <body>
 
@@ -43,18 +43,21 @@
     <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 5.500A2.500 2.500 0 0 1 7.500 3H19v15H7.500A2.500 2.500 0 0 0 5 20.500v-15Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M5 20.500A2.500 2.500 0 0 1 7.500 18H19v3H7.500" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
     <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3c.6 4.700 2.300 6.400 7 7-4.700.6-6.400 2.300-7 7-.6-4.700-2.300-6.400-7-7 4.700-.6 6.400-2.300 7-7Z" fill="none" stroke="currentColor" stroke-width="1.600" stroke-linejoin="round"/><path d="M19 16.500v4M17 18.500h4" fill="none" stroke="currentColor" stroke-width="1.600" stroke-linecap="round"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.500 4.500 4.500L19 7.500" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-drag" viewBox="0 0 24 24"><path d="M8 7 3 12l5 5M16 7l5 5-5 5M3 12h18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.700"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="1.700" stroke-linecap="round"/></symbol>
   </defs>
 </svg>
 
-<!-- Loader -->
+<div class="cursor" id="cursor" aria-hidden="true"><span class="cursor__ring"><b class="cursor__label"></b></span><span class="cursor__dot"></span></div>
+
+<!-- Loader: a curtain of hair that parts when we're ready -->
 <div class="loader" id="loader" aria-hidden="true">
-  <div class="loader__big">Crowning<br><span id="loader-num">0</span>%</div>
-  <div class="loader__meta">
-    <span>Luxury hair</span>
-    <span>Born in<br>Abuja</span>
-    <span class="loader__word">Baddie Strands</span>
-  </div>
+  <canvas class="loader__hair" id="loader-hair"></canvas>
+  <p class="loader__count"><span id="loader-num">0</span>%</p>
+  <p class="loader__line">Laying the strands</p>
+  <p class="loader__brand">Baddie Strands</p>
+  <p class="loader__from">Abuja, to wherever you are</p>
+  <button class="loader__skip" type="button" id="loader-skip" tabindex="-1">Skip</button>
 </div>
 
 <div class="frame" aria-hidden="true"></div>
@@ -62,7 +65,7 @@
 <!-- Navigation -->
 <header class="nav" id="nav">
   <div class="nav__bar">
-    <a class="nav__mark" href="#top" aria-label="Baddie Strands, back to top"><span>Bs</span></a>
+    <a class="nav__mark" href="#top" aria-label="Baddie Strands, back to the top"><span>Bs</span></a>
     <a class="nav__word" href="#top" tabindex="-1" aria-hidden="true">Baddie Strands</a>
     <div class="nav__tools">
       <button class="nav__btn nav__btn--menu" id="menu-btn" type="button" aria-expanded="false" aria-controls="menu-panel" aria-label="Menu"><svg class="ico"><use href="#i-grid"/></svg></button>
@@ -72,15 +75,12 @@
     </div>
   </div>
   <nav class="nav__panel" id="menu-panel" aria-label="Main" hidden>
-    <a class="menu-row" href="#shop"><span>Shop</span><span class="menu-row__go"><svg class="ico"><use href="#i-right"/></svg></span></a>
+    <a class="menu-row" href="#shop"><span>Shop everything</span><span class="menu-row__go"><svg class="ico"><use href="#i-right"/></svg></span></a>
     <div class="menu-grid">
-      <a class="menu-tile" href="#bestsellers"><span class="menu-tile__ico"><svg class="ico"><use href="#i-star"/></svg></span>Bestsellers</a>
-      <a class="menu-tile" href="#knowledge"><span class="menu-tile__ico"><svg class="ico"><use href="#i-book"/></svg></span>Hair knowledge</a>
-      <button class="menu-tile" type="button" data-open-quiz><span class="menu-tile__ico"><svg class="ico"><use href="#i-spark"/></svg></span>Find your match</button>
-      <a class="menu-tile" href="#contact"><span class="menu-tile__ico"><svg class="ico"><use href="#i-mail"/></svg></span>Contact</a>
-    </div>
-    <div class="menu-links">
-      <a href="#length">Length guide</a><a href="#shade">Shades</a><a href="#delivery">Delivery</a><a href="#story">Our story</a>
+      <a class="menu-tile" href="#stylist"><span class="menu-tile__ico"><svg class="ico"><use href="#i-spark"/></svg></span>Find my crown</a>
+      <a class="menu-tile" href="#top" data-chapter="0"><span class="menu-tile__ico"><svg class="ico"><use href="#i-star"/></svg></span>The four textures</a>
+      <a class="menu-tile" href="#answers"><span class="menu-tile__ico"><svg class="ico"><use href="#i-book"/></svg></span>Ask us anything</a>
+      <a class="menu-tile" href="#ask"><span class="menu-tile__ico"><svg class="ico"><use href="#i-chat"/></svg></span>Talk to us</a>
     </div>
     <div class="menu-foot">
       <span id="auth-zone"><button class="linkbtn" type="button" data-open-auth>Sign in</button></span>
@@ -91,58 +91,43 @@
 
 <main id="main">
 
-  <!-- HERO -->
-  <section class="hero" id="top">
-    <p class="tag hero__tag">Your hair, your crown</p>
-    <h1 class="hero__title">
-      <span class="hero__line"><span>Hair that</span> <span>speaks</span></span>
-      <span class="hero__line"><span>before</span> <span>you do</span></span>
-    </h1>
-    <div class="hero__row">
-      <div class="hero__lede">
-        <p>100% virgin human hair and HD lace that vanishes on your skin. Sent from Abuja to the world.</p>
-        <div class="hero__cta">
-          <a class="btn btn--solid" href="#shop">Shop the collection <span class="btn__dot"><svg class="ico"><use href="#i-arrow"/></svg></span></a>
-          <button class="btn btn--line" type="button" data-open-quiz>Find your match</button>
-        </div>
-        <ul class="hero__meta">
-          <li><b>500+</b> happy queens</li>
-          <li><b>4.9</b> average rating</li>
-          <li><b>36</b> states delivered</li>
-        </ul>
+  <!-- INTRO + THE FOUR TEXTURES (one pinned scene) -->
+  <section class="scene" id="top" aria-label="Baddie Strands">
+    <div class="scene__stage" id="scene">
+      <h1 class="scene__title">
+        <span class="scene__word scene__word--top" data-fit>Your hair,</span>
+        <span class="scene__word scene__word--bot" data-fit>your crown.</span>
+      </h1>
+      <canvas class="scene__hair" id="hair" aria-hidden="true"></canvas>
+
+      <div class="scene__hello">
+        <p class="scene__hi">Hey queen. <em class="only-fine">Run your cursor through it.</em><em class="only-touch">Swipe through it.</em></p>
+        <p>100% virgin human hair, sent from Abuja to wherever you are.</p>
       </div>
-      <figure class="hero__figure media" style="--tone:#7A1E46">
-        <img id="hero-img" alt="A model wearing a long Baddie Strands wig" width="900" height="1200" fetchpriority="high">
-        <span class="hero__scroll" aria-hidden="true">Start to scroll <svg class="ico"><use href="#i-down"/></svg></span>
-      </figure>
-      <aside class="promo" id="promo" aria-label="Featured">
-        <button class="promo__close" type="button" id="promo-close" aria-label="Hide this card"><svg class="ico"><use href="#i-x"/></svg></button>
-        <div class="promo__pick" id="promo-pick"></div>
-        <form class="promo__join" id="promo-form" novalidate>
-          <label for="promo-email">Join the inner circle for drops and member-only deals</label>
-          <div class="promo__field">
-            <input id="promo-email" type="email" name="email" placeholder="Your email address" autocomplete="email" required>
-            <button type="submit">Join</button>
-          </div>
-        </form>
-      </aside>
+      <div class="scene__go">
+        <a class="btn btn--solid" href="#stylist" data-magnet>Find my crown <span class="btn__dot"><svg class="ico"><use href="#i-arrow"/></svg></span></a>
+        <a class="btn btn--line" href="#shop">Just let me shop</a>
+      </div>
+      <p class="scene__cue" aria-hidden="true">Start to scroll <svg class="ico"><use href="#i-down"/></svg></p>
+
+      <div class="chap" id="chap">
+        <div class="chap__ghost" aria-hidden="true"><div class="chap__ghosts" id="chap-ghosts"></div></div>
+        <ol class="chap__list" id="chap-list"></ol>
+        <div class="chap__dots" id="chap-dots" role="group" aria-label="The four textures"></div>
+        <button class="chap__skip" type="button" id="chap-skip">Skip to the shop</button>
+      </div>
     </div>
+    <div class="chap-static" id="chap-static" hidden></div>
   </section>
 
-  <!-- MANIFESTO -->
-  <section class="manifesto" id="manifesto">
-    <p class="manifesto__text" data-reveal-words>Baddie Strands began with one mission: give Nigerian women the quality of hair they deserve, without compromise.</p>
-    <a class="btn btn--block" href="#story">Read our story</a>
-  </section>
-
-  <!-- SHOP: showroom + grid -->
+  <!-- SHOWROOM -->
   <section class="shop" id="shop" data-view="stage" aria-labelledby="shop-title">
     <div class="shop__bg" aria-hidden="true"><span class="shop__tone is-on"></span><span class="shop__tone"></span></div>
     <header class="shop__bar">
       <h2 class="visually-hidden" id="shop-title">The collection</h2>
       <div class="filters" id="filters" role="group" aria-label="Filter by category"></div>
       <div class="shop__tools">
-        <label class="sorter" id="sorter">
+        <label class="sorter">
           <span>Sort</span>
           <select id="sort-select" aria-label="Sort pieces">
             <option value="featured">Featured</option>
@@ -155,269 +140,123 @@
           <button type="button" data-view-btn="stage" aria-pressed="true">Showroom</button>
           <button type="button" data-view-btn="grid" aria-pressed="false">Grid</button>
         </div>
-        <div class="shop__count" id="shop-count" aria-live="polite">01 / 12</div>
+        <p class="shop__count" id="shop-count" aria-live="polite">01 / 12</p>
       </div>
     </header>
     <div class="shop__chips" id="shop-chips"></div>
 
-    <div class="stage" id="stage" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Showroom. Use the left and right arrow keys to browse.">
-      <div class="stage__ghost" id="stage-ghost" aria-hidden="true"><span></span></div>
+    <div class="stage" id="stage" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Showroom. Use the arrow keys or drag to browse." data-cursor="Drag">
+      <div class="stage__ghost" aria-hidden="true"><span id="stage-ghost"></span></div>
       <ul class="stage__track" id="stage-track"></ul>
+      <canvas class="stage__live" id="stage-live" aria-hidden="true"></canvas>
       <div class="stage__info" id="stage-info" aria-live="polite"></div>
       <div class="stage__nav">
         <button class="round" type="button" id="stage-prev" aria-label="Previous piece"><svg class="ico"><use href="#i-left"/></svg></button>
         <button class="round" type="button" id="stage-next" aria-label="Next piece"><svg class="ico"><use href="#i-right"/></svg></button>
-        <button class="btn btn--white" type="button" id="stage-open">Discover <svg class="ico"><use href="#i-right"/></svg></button>
+        <button class="btn btn--white" type="button" id="stage-open">See this piece <svg class="ico"><use href="#i-right"/></svg></button>
       </div>
       <p class="stage__empty" id="stage-empty" hidden></p>
     </div>
-
     <div class="grid" id="grid"></div>
   </section>
 
-  <!-- BESTSELLERS -->
-  <section class="wanted" id="bestsellers" aria-labelledby="wanted-title">
-    <svg class="wanted__orbits" viewBox="0 0 1200 700" preserveAspectRatio="none" aria-hidden="true">
-      <ellipse cx="600" cy="120" rx="760" ry="330"/><ellipse cx="600" cy="640" rx="620" ry="260"/><ellipse cx="240" cy="360" rx="420" ry="520"/>
-    </svg>
-    <h2 class="wanted__title" id="wanted-title">Most wanted</h2>
-    <p class="wanted__sub">Our bestsellers, ranked by the number of reviews.</p>
-    <div class="wanted__body">
-      <ol class="rank" id="rank"></ol>
-      <div class="gauge" id="gauge"></div>
-    </div>
-    <a class="oval" href="#shop" data-shop-filter="all">Shop the collection</a>
-  </section>
-
-  <!-- REVIEWS -->
-  <section class="voices" id="reviews" aria-labelledby="voices-title">
-    <header class="voices__head">
-      <p class="eyebrow">What queens say</p>
-      <h2 id="voices-title">Real women. Real results.</h2>
+  <!-- STYLIST -->
+  <section class="stylist" id="stylist" aria-labelledby="stylist-title">
+    <header class="stylist__head">
+      <p class="tag">Find your crown</p>
+      <h2 id="stylist-title" data-split>Let's find your crown</h2>
+      <p class="stylist__sub">Four questions. We style the hair as you answer.</p>
     </header>
-    <div class="voices__stage">
-      <blockquote class="voices__quote" id="voice-quote" aria-live="polite"></blockquote>
-      <div class="voices__picker" id="voice-picker" role="group" aria-label="Choose a review"></div>
+    <div class="stylist__body">
+      <figure class="stylist__preview" id="stylist-preview">
+        <canvas id="stylist-hair" aria-hidden="true"></canvas>
+        <figcaption class="stylist__so-far" id="stylist-so-far" aria-live="polite"></figcaption>
+      </figure>
+      <div class="stylist__talk" id="stylist-talk">
+        <ol class="stylist__log" id="stylist-log" aria-label="Your answers so far"></ol>
+        <div class="stylist__q" id="stylist-q"></div>
+      </div>
     </div>
-  </section>
-
-  <!-- LENGTH GUIDE -->
-  <section class="length" id="length" aria-labelledby="length-title">
-    <div class="length__copy">
-      <h2 id="length-title">How long is <span id="length-num">20</span> inches?</h2>
-      <p>Hair is measured in its straightened state, so texture changes where it lands. Slide to a length, pick a texture, and see where it sits.</p>
-      <label class="slider" for="length-range">
-        <span class="slider__label">Length <b id="length-out">20"</b></span>
-        <input id="length-range" type="range" min="8" max="30" step="2" value="20">
-        <span class="slider__ends"><span>8"</span><span>30"</span></span>
-      </label>
-      <button class="btn btn--line" type="button" id="length-shop">Shop 20" pieces</button>
-    </div>
-    <div class="length__figure">
-      <svg id="length-svg" viewBox="0 0 400 470" role="img" aria-labelledby="length-desc">
-        <desc id="length-desc"></desc>
-      </svg>
-    </div>
-    <div class="length__side">
-      <div class="textures" id="textures" role="group" aria-label="Texture"></div>
-      <p class="length__read"><span id="length-land">Mid-back</span><small id="length-note"></small></p>
-    </div>
-    <p class="length__foot">Approximate, on a 5 ft 5 in frame. Every unit and every texture sits a little differently.</p>
-  </section>
-
-  <!-- SHADE SCALE -->
-  <section class="shade" id="shade" aria-labelledby="shade-title">
-    <div class="shade__card" id="shade-card"></div>
-    <div class="shade__body">
-      <p class="eyebrow">Find your shade</p>
-      <h2 id="shade-title">From jet to platinum</h2>
-      <p class="shade__lede">Every shade we carry, darkest to lightest. Slide along to compare, then see which pieces come in it.</p>
-      <div class="scale" id="shade-scale" role="group" aria-label="Shade scale"></div>
-      <label class="visually-hidden" for="shade-range">Shade, from darkest to lightest</label>
-      <input class="scale__range" id="shade-range" type="range" min="0" max="8" step="1" value="0">
-      <dl class="specs" id="shade-specs"></dl>
-    </div>
-  </section>
-
-  <!-- QUIZ BAND -->
-  <section class="quizband" id="quiz" aria-labelledby="quiz-title">
-    <h2 id="quiz-title">Find your perfect match</h2>
-    <p>Answer five quick questions and we'll pick the hair that fits your life and your budget.</p>
-    <button class="btn btn--block" type="button" data-open-quiz>Take the quiz</button>
-    <div class="quizband__pair" id="quiz-pair" aria-hidden="true"></div>
   </section>
 
   <!-- STORY -->
   <section class="story" id="story" aria-labelledby="story-title">
     <div class="story__top">
       <p class="story__est">Est. <span data-founded>2020</span></p>
-      <p class="story__word" aria-hidden="true">baddie<span class="story__dot" id="story-dot">.</span>strands</p>
+      <p class="story__word" id="story-word" aria-hidden="true">baddie<span class="story__dot" id="story-dot">.</span>strands</p>
       <div class="story__under"><span>Luxury hair</span><span>Abuja, Nigeria</span></div>
     </div>
-    <div class="story__thread" id="story-thread" aria-hidden="true"><span></span></div>
-
+    <svg class="story__strand" id="story-strand" aria-hidden="true" preserveAspectRatio="none"><path id="story-path" d=""/></svg>
     <div class="story__cols">
-      <div class="story__left">
-        <p class="paren">(our story)</p>
-        <figure class="story__figure media" style="--tone:#6F0A3A"><img id="story-img" alt="Close view of a Baddie Strands unit" loading="lazy" width="800" height="1000"></figure>
+      <p class="paren">(our story)</p>
+      <div class="story__text">
+        <h2 id="story-title" data-split>Born in Abuja. Built for every queen.</h2>
+        <p data-blur>We started with one mission: give Nigerian women the quality of hair they deserve, without compromise. Every strand is virgin, ethically handled, and built to last.</p>
+        <p data-blur>Whether you're in Wuse or Wimbledon, it arrives the same way: wrapped with care, and ready to wear.</p>
+        <a class="btn btn--line btn--light" href="#ask">Talk to us <svg class="ico"><use href="#i-out"/></svg></a>
       </div>
-      <div class="story__right">
-        <h2 id="story-title">Born in Abuja. Built for every queen.</h2>
-        <p data-reveal-words>Baddie Strands began with one mission: give Nigerian women access to the quality of hair they deserve, without compromise. We source directly from the finest suppliers, ensuring every strand is 100% virgin, ethically handled, and built to last.</p>
-        <p data-reveal-words>We are a proudly Nigerian business, and our reach is worldwide. Whether you're in Wuse or Wimbledon, we bring the same uncompromising quality to your door.</p>
-        <p class="story__places">Nigeria / United Kingdom / United States / Ghana / and more</p>
-        <a class="btn btn--line btn--out" href="#contact">Talk to us <svg class="ico"><use href="#i-out"/></svg></a>
-      </div>
-    </div>
-
-    <div class="promise" id="promise">
-      <div class="promise__left">
-        <p class="paren">(what goes into every strand)</p>
-        <figure class="promise__figure media" style="--tone:#2B3A55"><img id="promise-img" alt="Sleek straight hair with a mirror shine" loading="lazy" width="900" height="1100"></figure>
-      </div>
-      <ul class="promise__list" id="promise-list"></ul>
     </div>
   </section>
 
-  <!-- KNOWLEDGE: BASICS -->
-  <section class="basics" id="knowledge" aria-labelledby="basics-title">
-    <div class="basics__bg media" aria-hidden="true"><img id="basics-img" alt="" loading="lazy"></div>
-    <header class="basics__head">
-      <h2 class="basics__mark" id="basics-title">Hair knowledge</h2>
-      <p class="basics__tag">Six things to know<br>before you buy</p>
-      <ul class="index" aria-label="In this section">
-        <li class="is-on"><a href="#knowledge">Hair basics</a></li>
-        <li><a href="#care">Care guide</a></li>
-        <li><a href="#length">Length guide</a></li>
-        <li><a href="#shade">Shades</a></li>
-      </ul>
+  <!-- REVIEWS -->
+  <section class="voices" id="reviews" aria-labelledby="voices-title">
+    <h2 class="voices__title" id="voices-title">The queens have spoken</h2>
+    <div class="voices__stage" data-cursor="Drag">
+      <blockquote class="voices__quote" id="voice-quote" aria-live="polite"></blockquote>
+      <div class="voices__picker" id="voice-picker" role="group" aria-label="Choose a review"></div>
+    </div>
+  </section>
+
+  <!-- ANSWERS -->
+  <section class="answers" id="answers" aria-labelledby="answers-title">
+    <header class="answers__head">
+      <h2 id="answers-title" data-split>Ask us anything</h2>
+      <div class="bars" id="faq-tabs" role="group" aria-label="Topics"></div>
     </header>
-    <p class="basics__say" data-reveal-words>An educated woman makes better choices. Here is what matters when you pick a unit:</p>
-    <div class="chapters" id="chapters"></div>
+    <div class="faq" id="faq"></div>
   </section>
 
-  <!-- KNOWLEDGE: CARE -->
-  <section class="care" id="care" aria-labelledby="care-title">
-    <header class="care__head">
-      <div>
-        <p class="eyebrow">Care guide</p>
-        <h2 id="care-title">Keep it looking new</h2>
-      </div>
-      <p>Four routines, from wash day to bedtime. A unit doesn't get natural oils from a scalp, so the moisture has to come from you.</p>
-    </header>
-    <div class="bars" id="care-tabs" role="tablist" aria-label="Care routines"></div>
-    <div class="care__body">
-      <ol class="steps" id="care-steps"></ol>
-      <figure class="care__figure media" style="--tone:#A6652F"><img id="care-img" alt="" loading="lazy" width="900" height="1100"><figcaption id="care-cap"></figcaption></figure>
-    </div>
-  </section>
-
-  <!-- DELIVERY -->
-  <section class="delivery" id="delivery" aria-labelledby="delivery-title">
-    <header class="delivery__head">
-      <div>
-        <p class="eyebrow">Delivery</p>
-        <h2 id="delivery-title">We deliver everywhere</h2>
-      </div>
-      <p>Same-day in Abuja, nationwide across all 36 states, and tracked shipping to the UK, USA, Europe and across Africa. International orders travel in discreet packaging with the customs paperwork handled on our end.</p>
-    </header>
-    <div class="year" id="year"></div>
-    <p class="delivery__foot">Fees for Nigerian states are confirmed at checkout once you choose your state.</p>
-  </section>
-
-  <!-- LOOKBOOK WALL -->
-  <section class="wall" id="lookbook" aria-labelledby="wall-title">
-    <div class="wall__rows" id="wall-rows" aria-hidden="true"></div>
-    <h2 class="wall__word" id="wall-title">Your hair, your crown</h2>
-    <p class="wall__sub">Follow the crown</p>
-    <p class="wall__note"><svg class="ico"><use href="#i-diamond"/></svg> See more looks on Instagram <a data-ig-link href="#" target="_blank" rel="noopener">@the_baddie_strands</a></p>
-    <div class="wall__social">
-      <span>Follow us</span>
-      <a class="round round--light" data-ig-link href="#" target="_blank" rel="noopener" aria-label="Instagram"><svg class="ico"><use href="#i-insta"/></svg></a>
-      <a class="round round--light" data-wa-link href="#" target="_blank" rel="noopener" aria-label="WhatsApp"><svg class="ico"><use href="#i-chat"/></svg></a>
-    </div>
-  </section>
-
-  <!-- CONTACT + CUSTOM ORDERS -->
-  <section class="ask" id="contact" aria-labelledby="ask-title">
-    <div class="ask__find">
-      <h2 id="ask-title">Can't find it?<br>Ask for it.</h2>
-      <form class="ask__line" id="ask-form" novalidate>
-        <label class="visually-hidden" for="ask-input">Describe the hair you're looking for</label>
-        <input id="ask-input" type="text" name="want" autocomplete="off" placeholder="" data-typewriter>
-        <button type="submit" aria-label="Send your request on WhatsApp"><svg class="ico"><use href="#i-arrow"/></svg></button>
-      </form>
-      <p class="ask__lines">Custom orders are welcome.<br>Tell us the length, texture and shade.<br>We reply within 2 hours.</p>
-    </div>
-
-    <div class="ask__cols">
-      <div class="ask__reach">
-        <p class="paren">(talk to us)</p>
-        <ul class="reach">
-          <li><a data-wa-link href="#" target="_blank" rel="noopener"><span class="reach__ico"><svg class="ico"><use href="#i-chat"/></svg></span><span><small>WhatsApp</small><b data-wa-text>+234 703 324 7980</b></span></a></li>
-          <li><a data-mail-link href="#"><span class="reach__ico"><svg class="ico"><use href="#i-mail"/></svg></span><span><small>Email</small><b data-mail-text>baddiestrands@gmail.com</b></span></a></li>
-          <li><a data-ig-link href="#" target="_blank" rel="noopener"><span class="reach__ico"><svg class="ico"><use href="#i-insta"/></svg></span><span><small>Instagram</small><b data-ig-text>@the_baddie_strands</b></span></a></li>
-        </ul>
-        <div class="hours">
-          <p class="hours__state" id="hours-state"></p>
-          <dl id="hours-list"></dl>
-          <p class="hours__note">West Africa Time. WhatsApp is monitored for urgent orders.</p>
-        </div>
-      </div>
-
-      <form class="ask__form" id="contact-form" novalidate>
-        <p class="paren">(send a message)</p>
-        <div class="field-row">
-          <label class="field"><span>Full name</span><input type="text" name="name" autocomplete="name" required></label>
-          <label class="field"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
-        </div>
-        <label class="field"><span>Subject</span>
-          <select name="subject">
-            <option>Product enquiry</option><option>Order status</option><option>Custom order</option><option>Delivery info</option><option>Returns and exchange</option><option>Other</option>
-          </select>
-        </label>
-        <label class="field"><span>Message</span><textarea name="message" rows="4" required></textarea></label>
-        <p class="form-error" id="contact-error" role="alert" hidden></p>
-        <button class="oval oval--solid" type="submit">Send on WhatsApp</button>
-      </form>
-    </div>
-  </section>
-
-  <!-- NEWSLETTER -->
-  <section class="circle" id="newsletter" aria-labelledby="circle-title">
-    <div class="circle__panel">
-      <div class="circle__copy">
-        <p class="eyebrow">Stay in the loop</p>
-        <h2 id="circle-title">Join the <em>inner circle</em></h2>
-        <p>Exclusive drops, styling tips, and member-only deals. No spam, ever.</p>
-      </div>
-      <form class="circle__form" id="newsletter-form" novalidate>
-        <label class="field field--box"><span>Email*</span><input type="email" name="email" placeholder="e.g. amara@email.com" autocomplete="email" required></label>
-        <button class="btn btn--honey" type="submit">Subscribe</button>
-        <p class="circle__note" id="newsletter-note">Unsubscribe anytime.</p>
-      </form>
-    </div>
+  <!-- ASK FOR IT -->
+  <section class="ask" id="ask" aria-labelledby="ask-title">
+    <h2 id="ask-title">Can't find it?<br>Ask for it.</h2>
+    <form class="ask__line" id="ask-form" novalidate>
+      <label class="visually-hidden" for="ask-input">Describe the hair you're looking for</label>
+      <input id="ask-input" type="text" name="want" autocomplete="off" placeholder="">
+      <button type="submit" aria-label="Send your request on WhatsApp"><svg class="ico"><use href="#i-arrow"/></svg></button>
+    </form>
+    <p class="ask__lines">Tell us the length, texture and shade.<br>We reply within 2 hours.</p>
+    <ul class="reach">
+      <li><a data-wa-link href="#" target="_blank" rel="noopener"><svg class="ico"><use href="#i-chat"/></svg><span data-wa-text>+234 703 324 7980</span></a></li>
+      <li><a data-mail-link href="#"><svg class="ico"><use href="#i-mail"/></svg><span data-mail-text>baddiestrands@gmail.com</span></a></li>
+      <li><a data-ig-link href="#" target="_blank" rel="noopener"><svg class="ico"><use href="#i-insta"/></svg><span data-ig-text>@the_baddie_strands</span></a></li>
+    </ul>
+    <p class="hours" id="hours-state"></p>
   </section>
 </main>
 
 <!-- FOOTER -->
-<footer class="foot">
+<footer class="foot" id="foot">
   <div class="foot__top">
-    <a class="foot__mark" href="#top">Baddie Strands</a>
+    <form class="foot__join" id="newsletter-form" novalidate>
+      <p class="foot__join-title">Join the inner circle</p>
+      <p class="foot__join-sub">New drops and member-only deals. No spam, ever.</p>
+      <div class="ask__line ask__line--dark">
+        <label class="visually-hidden" for="join-email">Email address</label>
+        <input id="join-email" type="email" name="email" placeholder="Your email address" autocomplete="email" required>
+        <button type="submit" aria-label="Join"><svg class="ico"><use href="#i-arrow"/></svg></button>
+      </div>
+      <p class="foot__note" id="newsletter-note" aria-live="polite"></p>
+    </form>
     <nav class="foot__cols" aria-label="Footer">
-      <div><h3>Shop</h3><a href="#shop" data-shop-filter="all">All pieces</a><a href="#shop" data-shop-filter="wigs">Wigs</a><a href="#shop" data-shop-filter="bundles">Bundles</a><a href="#shop" data-shop-filter="extensions">Extensions</a><a href="#quiz" data-open-quiz>Hair quiz</a></div>
-      <div><h3>Learn</h3><a href="#knowledge">Hair basics</a><a href="#care">Care guide</a><a href="#length">Length guide</a><a href="#delivery">Delivery</a></div>
-      <div><h3>Talk</h3><a data-wa-link href="#" target="_blank" rel="noopener">WhatsApp</a><a data-mail-link href="#">Email</a><a data-ig-link href="#" target="_blank" rel="noopener">Instagram</a><a href="#contact">Contact</a></div>
+      <div><h3>Shop</h3><a href="#shop" data-shop-filter="all">All pieces</a><a href="#shop" data-shop-filter="wigs">Wigs</a><a href="#shop" data-shop-filter="bundles">Bundles</a><a href="#shop" data-shop-filter="extensions">Extensions</a></div>
+      <div><h3>Help</h3><a href="#stylist">Find my crown</a><a href="#answers">Delivery</a><a href="#answers">Hair care</a><a href="#ask">Custom orders</a></div>
+      <div><h3>Talk</h3><a data-wa-link href="#" target="_blank" rel="noopener">WhatsApp</a><a data-mail-link href="#">Email</a><a data-ig-link href="#" target="_blank" rel="noopener">Instagram</a></div>
     </nav>
-    <div class="foot__clock">
-      <span>Abuja</span>
-      <time id="clock">--:--:--</time>
-      <small id="clock-state"></small>
-    </div>
+    <div class="foot__clock"><span>Abuja</span><time id="clock">--:--:--</time><small id="clock-state"></small></div>
   </div>
   <p class="foot__grow" id="foot-grow" role="img" aria-label="Wear the crown">Wear the crown</p>
   <div class="foot__base">
-    <span>© <span data-year>2026</span> Baddie Strands / All rights reserved / Made with love in Abuja, Nigeria</span>
+    <span>© <span data-year>2026</span> Baddie Strands. Made with love in Abuja, Nigeria.</span>
     <a href="admin.html">Admin</a>
   </div>
 </footer>
@@ -425,12 +264,13 @@
 <!-- PRODUCT DETAIL -->
 <div class="overlay overlay--detail" id="detail" hidden>
   <div class="overlay__scrim" data-close></div>
-  <article class="detail" role="dialog" aria-modal="true" aria-labelledby="detail-name" tabindex="-1">
+  <article class="detail" role="dialog" aria-modal="true" aria-labelledby="detail-name" tabindex="-1" data-lenis-prevent>
     <button class="round round--close" type="button" data-close aria-label="Close"><svg class="ico"><use href="#i-x"/></svg></button>
-    <div class="detail__stage">
+    <div class="detail__stage" id="detail-stage" data-cursor="Comb">
       <div class="detail__ghost" id="detail-ghost" aria-hidden="true"></div>
-      <figure class="detail__figure media"><img id="detail-img" alt=""></figure>
-      <div class="detail__thumbs" id="detail-thumbs"></div>
+      <canvas class="detail__hair" id="detail-hair" aria-hidden="true"></canvas>
+      <img class="detail__photo" id="detail-photo" alt="" hidden>
+      <p class="detail__falls" id="detail-falls" aria-live="polite"></p>
     </div>
     <div class="detail__body">
       <p class="detail__status" id="detail-status"></p>
@@ -438,12 +278,6 @@
       <p class="detail__spec" id="detail-spec"></p>
       <p class="detail__price" id="detail-price"></p>
       <p class="detail__desc" id="detail-desc"></p>
-
-      <div class="detail__bill">
-        <p class="detail__label">The construction</p>
-        <ul class="chips" id="detail-features"></ul>
-      </div>
-
       <fieldset class="opt">
         <legend>Length <b id="detail-length-out"></b></legend>
         <div class="opt__row" id="detail-lengths"></div>
@@ -461,13 +295,15 @@
         </div>
         <span class="opt__stock" id="detail-stock"></span>
       </div>
-
       <button class="bar" type="button" id="detail-add">Add to bag</button>
       <div class="detail__more">
         <button class="linkbtn" type="button" id="detail-save"><svg class="ico"><use href="#i-heart"/></svg><span>Save for later</span></button>
         <a class="linkbtn" id="detail-ask" href="#" target="_blank" rel="noopener"><svg class="ico"><use href="#i-chat"/></svg><span>Ask about this piece</span></a>
       </div>
-
+      <details class="detail__bill">
+        <summary>What's in it</summary>
+        <ul class="chips" id="detail-features"></ul>
+      </details>
       <div class="detail__also" id="detail-also"></div>
     </div>
   </article>
@@ -476,7 +312,7 @@
 <!-- BAG -->
 <div class="overlay overlay--side" id="cart" hidden>
   <div class="overlay__scrim" data-close></div>
-  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title" tabindex="-1">
+  <aside class="drawer" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="cart-title" tabindex="-1">
     <header class="drawer__head">
       <h2 id="cart-title">Your bag <span id="cart-n"></span></h2>
       <button class="round round--close" type="button" data-close aria-label="Close bag"><svg class="ico"><use href="#i-x"/></svg></button>
@@ -493,7 +329,7 @@
 <!-- SEARCH -->
 <div class="overlay overlay--search" id="search" hidden>
   <div class="overlay__scrim" data-close></div>
-  <div class="search" role="dialog" aria-modal="true" aria-label="Search the shop" tabindex="-1">
+  <div class="search" data-lenis-prevent role="dialog" aria-modal="true" aria-label="Search the shop" tabindex="-1">
     <button class="round round--close" type="button" data-close aria-label="Close search"><svg class="ico"><use href="#i-x"/></svg></button>
     <p class="search__title">Find it</p>
     <div class="ask__line ask__line--search">
@@ -504,21 +340,10 @@
   </div>
 </div>
 
-<!-- QUIZ -->
-<div class="overlay overlay--card" id="quiz-sheet" hidden>
-  <div class="overlay__scrim" data-close></div>
-  <div class="card" role="dialog" aria-modal="true" aria-labelledby="quiz-head" tabindex="-1">
-    <p class="tag card__tag" id="quiz-tag">Take the quiz</p>
-    <button class="round round--close" type="button" data-close aria-label="Close quiz"><svg class="ico"><use href="#i-x"/></svg></button>
-    <div class="card__body" id="quiz-body"></div>
-    <div class="card__foot" id="quiz-foot"></div>
-  </div>
-</div>
-
 <!-- SIGN IN -->
 <div class="overlay overlay--card" id="auth" hidden>
   <div class="overlay__scrim" data-close></div>
-  <div class="card" role="dialog" aria-modal="true" aria-labelledby="auth-heading" tabindex="-1">
+  <div class="card" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="auth-heading" tabindex="-1">
     <p class="tag card__tag" id="auth-tag">Sign in</p>
     <button class="round round--close" type="button" data-close aria-label="Close"><svg class="ico"><use href="#i-x"/></svg></button>
     <div class="card__body">
@@ -554,7 +379,7 @@
 <!-- CHECKOUT -->
 <div class="overlay overlay--card" id="checkout" hidden>
   <div class="overlay__scrim" data-close></div>
-  <div class="card card--wide" role="dialog" aria-modal="true" aria-labelledby="co-title" tabindex="-1">
+  <div class="card card--wide" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="co-title" tabindex="-1">
     <p class="tag card__tag" id="co-tag">Step 1 of 3</p>
     <button class="round round--close" type="button" data-close aria-label="Close checkout"><svg class="ico"><use href="#i-x"/></svg></button>
     <div class="card__body">
@@ -620,8 +445,14 @@
 <!-- TOAST -->
 <div class="toast" id="toast" role="status" aria-live="polite"><b></b><span></span></div>
 
+
+<script src="assets/vendor/gsap.min.js" defer></script>
+<script src="assets/vendor/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/SplitText.min.js" defer></script>
+<script src="assets/vendor/lenis.min.js" defer></script>
 <script src="config.js" defer></script>
 <script src="data.js" defer></script>
+<script src="strands.js" defer></script>
 <script src="app.js" defer></script>
 <script src="checkout.js" defer></script>
 </body>
