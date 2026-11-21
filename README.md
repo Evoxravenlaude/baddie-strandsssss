@@ -1,161 +1,52 @@
-# Baddie Strands: shop and admin
+# Baddie Strands — minimal pink & black rebuild
 
-Two websites that share one database:
+Static site (no build step). Upload this whole folder to Vercel, or open `index.html` locally.
 
-| Folder | What it is | Who uses it |
-|---|---|---|
-| `shop/` | The online shop: home, shop, product pages, hair knowledge and care guide, hair quiz, delivery, checkout, order tracking, about, help, contact | Customers |
-| `admin/` | The dashboard: orders, products, customers, messages, discount codes, delivery fees, website text, settings | You and your team |
-| `supabase/` | Two files that set up the database | Run once |
-
-The admin dashboard is a separate website with its own address. The shop doesn't link to it, and search engines are told not to list it.
-
-Both are plain HTML, CSS and JavaScript with no build step.
-
-## Try it straight away (demo mode)
-
-Until the database is connected, both sites run in **demo mode**:
-
-- The shop works fully, with sample products. Orders, messages and newsletter sign-ups are saved in that visitor's browser only.
-- The dashboard opens with any email and password and shows a month of sample orders, so you can try every button. Changes stay in that browser.
-
-To preview on your computer, run `npx serve shop` and `npx serve admin` from this folder and open the addresses they print.
-
-## Going live
-
-You need a free Supabase account and your Vercel account. Allow about 20 minutes.
-
-### 1. Make the database
-
-1. Go to **supabase.com** and create a project. Choose the region closest to your customers (London or Frankfurt work well for Nigeria). Save the database password somewhere safe.
-2. Open **SQL Editor** and press **New query**.
-3. Open `supabase/1-setup.sql` in a text editor. Near the bottom, change `baddiestrands@gmail.com` on the line marked **YOUR ADMIN EMAIL** to the email you'll sign in with. Copy the whole file, paste it into Supabase and press **Run**. You should see "Success".
-4. Optional: to start with the twelve products from the old site, do the same with `supabase/2-sample-products.sql`. You can edit or delete them in the dashboard afterwards.
-
-### 2. Make your sign-in
-
-1. In Supabase, open **Authentication**, then **Users**, then **Add user**, then **Create new user**. Use the same email as in step 1.3 and choose a password. Tick **Auto confirm user**.
-2. Still in **Authentication**, open **Sign In / Providers** and switch off **Allow new users to sign up**. Only people you add can then get in.
-3. Open **Authentication**, **URL Configuration**. Set **Site URL** to your dashboard's address (step 4), and add the same address under **Redirect URLs**. This is where "forgot password" emails send people back to.
-
-### 3. Connect both sites
-
-1. In Supabase, open **Project Settings**, then **API** (or **Data API**). Copy the **Project URL** and the **anon public** key.
-2. Paste them into `shop/config.js` **and** `admin/config.js`:
-   ```js
-   supabaseUrl: 'https://abcdefgh.supabase.co',
-   supabaseKey: 'eyJhbGciOi...'
-   ```
-   The anon key is meant to be public. The database's security rules decide what it can do. **Never** paste the `service_role` key anywhere in these files.
-3. In `admin/config.js`, set `shopUrl` to your shop's address.
-
-### 4. Publish on Vercel
-
-Publish each folder as its own Vercel project.
-
-- **Shop:** in your existing `baddie-strands` project, replace the files with the contents of `shop/` (or set the project's **Root Directory** to `shop` if this whole folder is in your GitHub repo). It stays at `baddie-strands.vercel.app`.
-- **Dashboard:** create a new Vercel project from the same repo with **Root Directory** set to `admin`, and name it something like `baddie-strands-admin`. Its address becomes `baddie-strands-admin.vercel.app`. You can give it a private name if you'd rather not have it guessed; sign-in protects it either way.
-
-### 5. Switch on payments
-
-Sign in to the dashboard and open **Settings**:
-
-- **Card payments:** paste your Paystack **public** key (`pk_live_...`). Card payments then appear at checkout.
-- **Bank transfer:** enter the bank, account name and 10-digit account number. Transfer then appears at checkout, with the details shown after the order.
-- **WhatsApp:** leave "Let customers finish on WhatsApp" on if you want that option too.
-
-Then check your phone number, email, Instagram and opening hours on the same page. **Delivery fees** and **Website text** have their own pages.
-
-## Running the shop day to day
-
-Everything is in the dashboard. The **How to** page inside it covers the common jobs in plain words. In short:
-
-- **Today** lists what needs you (orders to confirm, payments to check, low stock, unread messages), your sales, and your best sellers.
-- **Orders**: open an order and the box at the top tells you the next step, with one button for it: mark as paid, confirm, start packing, mark as sent, mark as delivered. Each step is recorded and shown to the customer on her tracking page. There are buttons to WhatsApp her a ready-written update, copy the address for your rider, and print a packing slip. **Record a sale** adds orders from Instagram, WhatsApp or in person so your figures and stock stay right.
-- **Products**: add and edit pieces, upload photos (they're resized for you), set a different price per length, add shades, count stock, and hide or show pieces. Stock can be changed straight from the list with − and +.
-- **Customers**: everyone who has ordered, what they've spent, and your newsletter list. Both can be downloaded as spreadsheets.
-- **Messages** from the contact page, with reply buttons.
-- **Discount codes**: percent or naira off, with optional minimum spend, use limit and end date. The form says in a sentence what the code will do.
-- Press **Ctrl K** (or tap the search bar) to jump to any order, product or page.
-- In **Settings**, **Turn on alerts** gives you a pop-up on your computer when an order comes in while the dashboard is open.
-
-### Card payments are confirmed by you
-
-When a customer pays by card, the order shows **Check payment**. Open it, press **Open Paystack**, find the reference, and press **It's there: mark as paid**. The website can't see inside your Paystack account, so this short check is what stops a fake "I paid" from getting through. Automatic confirmation needs a small server function on Supabase; it's a good next step once the shop is busy.
-
-### Photos
-
-Four sample pieces already use your own photos (the burgundy bone straight, the ginger body wave, the black bob and the deep wave). They live in `assets/img/products/` in both sites. Every other piece shows a clean drawing of its texture in its first shade until you add a photo in **Products**. Portrait photos on a plain or dark background look best. Use photos of your own units: the drawings are better than a stock photo of someone else's hair.
-
-### The home page words
-
-In **Website text** you can change the top bar, the three numbers in the card beside the headline (500+ happy queens, 4.9★ average rating, 36 states delivered), the messages in the moving pink strip, the reviews, and the Help questions. The numbers came from the old site: keep them true. Your TikTok name is in **Settings** next to Instagram.
-
-## Good to know
-
-- **Prices can't be tampered with.** The database works out every order's prices, discounts, delivery fee and stock itself. What the browser sends is only which pieces, lengths and shades.
-- **Who can see what.** Shoppers can read products and settings, place orders, look up their own order with its number and email, send messages and join the newsletter. Only emails on your admin list can see orders, customers, messages and codes. Add or remove team members in **Settings**, **Team**, and create their sign-in in Supabase.
-- **Order emails aren't sent yet.** Customers see their order number and a tracking link on screen, and WhatsApp orders open a chat with you. New orders appear on the dashboard (with alerts if you turn them on). Sending emails automatically needs an email service connected to Supabase.
-- **Sample content.** The reviews and the three home page numbers came from the old site. Replace them with real ones in **Website text**.
-- **Demo data never mixes with real data.** Once the keys are in `config.js`, the sites use only the database.
-
-## What's in each folder
+## Files
 
 ```
-shop/
-  index.html        Home
-  shop.html         All products, with filters and sorting
-  product.html      One product (product.html?p=its-web-address)
-  checkout.html     Three-step checkout and the thank-you screen
-  track.html        Order tracking
-  knowledge.html    Hair basics and the care guide
-  quiz.html         Five-question hair quiz with picks from your products
-  delivery.html     Fees for every state, and worldwide shipping
-  about.html, help.html, contact.html, 404.html
-  config.js         Your two Supabase values
-  assets/css/site.css
-  assets/js/site.js     Header, bag, search, footer, product cards
-  assets/js/pages.js    What each page does
-  assets/js/db.js       Reading and saving (shared with the admin)
-  assets/js/art.js      The texture drawings (shared with the admin)
-  assets/js/seed.js     Demo-mode sample data
-  assets/fonts/         Cormorant Garamond, Jost, Dancing Script, Playfair Display italic, hosted with the site
-  assets/img/           Hero and story photos; product photos in products/
-  assets/vendor/supabase.js
-admin/
-  index.html, config.js
-  assets/css/admin.css
-  assets/js/admin.js    The whole dashboard
-  (plus copies of db.js, art.js, seed.js, fonts and supabase.js)
-supabase/
-  1-setup.sql            Tables, security rules and order functions
-  2-sample-products.sql  Optional starting products and reviews
+index.html          ← the shop (one page, all sections)
+styles.css          ← design: colours, type, layout (pink + black only)
+app.js              ← cart, quiz, search, checkout, sign-in, Paystack
+data.js             ← products, prices, care guide, reviews, quiz, delivery fees
+supabase-setup.js   ← paste your Supabase URL + anon key here
+supabase-schema.sql ← run once in Supabase → SQL Editor
+admin.html/.css     ← order dashboard (unchanged)
+assets/             ← logo, banner, packaging photos + video
 ```
 
-`db.js`, `art.js` and `seed.js` are identical in both sites. If you change one, copy it to the other.
+## Brand assets (assets/)
 
-## Design notes
-
-Her brand colours are pink and black, taken from her Instagram: the bubblegum pink behind her profile picture (#FF99AE) on near-black, with the blush paper of her policy cards (#FCE6EC) for a few light panels. The logo is set in Dancing Script, the closest open font to the handwritten "Baddie Strands" on her posts. The dark, quiet feel of the original site stays: Cormorant Garamond for headings and prices, Jost for text, and Playfair Display italic for "Your Hair, Your Crown".
-
-The site is kept minimal, but each part borrows one pattern from the reference sites:
-
-| Part | Borrowed from |
+| File | Used for |
 |---|---|
-| Header that floats as a pill; the phone menu opens into tiles | patike.ch |
-| Giant headline with the photo rising through it, and a card in the corner | dialedcoffee.com |
-| Ghost word behind the product photo, feature tags, a product name whose letters sharpen in | brocksbushes.moonshiners.co.uk |
-| Oval buttons with a circled arrow, the length ruler on each product | lofliballs.com |
-| Care steps with outlined numerals, delivery as a timeline | nettiesbees.com |
-| Drifting photos with "Your Hair, Your Crown" blended over them | ruthgriffioen.art |
-| Staggered shop grid, names between bars, a dot under the chosen filter | pistacchioecaffe.it |
-| Quiz answers as big tiles with a full-width bar, the footer wordmark that grows as you reach it | carnilove.ashfall.studio |
-| Labels in brackets, live Abuja time in the header and footer | concretaceramiche.it |
-| Hair basics as numbered chapters that open with a plus | arcteryx.com System_0 |
-| Bestsellers ranked with outlined numerals | enigmascult.com |
+| `logo-pink.png` / `logo.png` | Nav, loader, footer wordmark (traced from the box lettering) |
+| `logo-black.png` | Footer wordmark in Pink mode |
+| `banner.jpg` | Hero banner (body-wave unit on pink) |
+| `packaging.mp4` + `packaging-poster.jpg` | "The Baddie experience" section (silent loop) |
+| `packaging-1/2/3.jpg` | Footer tiles |
 
-Pages fade into each other in browsers that support it, and a product's picture glides from the grid into its page. With "reduce motion" switched on, the motion is turned off and the normal cursor stays.
+To swap the banner or logo, replace the file with the same name. A missing logo falls back to a script wordmark; a missing banner falls back to a pink typographic panel.
 
-The dashboard uses the same pink and black, kept plain and readable, and always pairs a status colour with a word so nothing depends on colour alone.
+## Product photos
 
-Fonts: Cormorant Garamond by Christian Thalmann, Jost by Owen Earl (indestructible type*), Playfair Display by Claus Eggers Sørensen, Dancing Script by Impallari Type, all SIL Open Font License; a one-character naira subset of Archivo by Omnibus-Type, SIL Open Font License. Supabase JS library: MIT License.
+Each product's `image` in `data.js` can be a filename (e.g. `"assets/products/bone-straight.jpg"`) or a full URL. Until a photo exists the card shows a branded logo tile. Several products still point at Unsplash stock photos from the original build — replace them with real product shots before launch.
+
+## Go-live checklist
+
+1. `supabase-setup.js` — add Project URL + anon key (until then the site runs in **demo mode**: no sign-in, orders saved only in the visitor's browser, a small pink notice bottom-left).
+2. `app.js` → `BS_CONFIG` — Paystack live public key and the real Access Bank account number.
+3. Replace stock product photos in `data.js`.
+
+## Design references used
+
+- Patike — floating pill nav with grid menu tiles; product stage with ghost type, category chips with counts, `01 / 12` counter
+- Concreta Ceramiche — giant full-width wordmark, split labels, thin centre rule, large rounded image
+- Dialed — percentage loader with huge grotesk type; flush product grid with name + size + price
+- Brocksbushes — scroll-lit statement text; giant ghost word behind the product
+- Nettie's Bees — overline rules, italic serif marquee, sticky numbered steps with progress bars, mode toggle (Pink mode)
+- Arc'teryx System Ø — black cinematic quiz with chapter index and top progress line
+- Enigma — wide italic display caps, oval outline buttons sitting on a full-width rule, circle arcs
+- Carnilove — huge condensed caps, boxed tag, flag-shaped labels
+- Ruth Griffioen — footer with corner image tiles, centred wordmark, diamond bullet, round social buttons
+- LoFli — single accent on dark, rounded image frames
+- Pistacchio e Caffè — pill category filters
