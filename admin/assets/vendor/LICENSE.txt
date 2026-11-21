@@ -1,1 +1,0 @@
-supabase.js: Supabase JS client 2.119.2, MIT License, https://github.com/supabase/supabase-js
