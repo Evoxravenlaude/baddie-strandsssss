@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Baddie Strands — Shop dashboard</title>
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" type="image/png" href="logo-nav.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital@0;1&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script defer src="config.js"></script>
+  <script defer src="starter-products.js"></script>
+  <script defer src="admin.js"></script>
+</head>
+<body>
+
+<!-- ═════════ SIGN IN ═════════ -->
+<section class="login" id="login">
+  <div class="login-card">
+    <img src="logo-pink.png" alt="Baddie Strands" class="login-logo" width="1200" height="167">
+    <p class="eyebrow">Shop dashboard</p>
+    <div id="login-live">
+      <h1>Sign in</h1>
+      <p class="muted">Enter the shop email. We’ll send a 6-digit code — no password to remember.</p>
+      <div class="login-step" id="ls-email">
+        <input class="input" type="email" id="l-email" placeholder="baddiestrands@gmail.com" autocomplete="email" aria-label="Email">
+        <button class="btn pink full" id="l-send">Send code</button>
+      </div>
+      <div class="login-step" id="ls-code" hidden>
+        <div class="otp" id="l-otp"></div>
+        <button class="btn pink full" id="l-verify">Sign in</button>
+        <button class="link" id="l-back">Use a different email</button>
+      </div>
+      <p class="status" id="l-status" role="status"></p>
+    </div>
+    <div id="login-demo" hidden>
+      <h1>Not connected yet</h1>
+      <p class="muted">The dashboard isn’t linked to the shop’s database yet. You can look around with sample orders and products — nothing you change will be saved.</p>
+      <button class="btn pink full" id="l-demo">Open with sample data</button>
+      <p class="muted small">To connect: add the Supabase details in <b>config.js</b>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ APP ═════════ -->
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <img src="logo-pink.png" alt="Baddie Strands" class="side-logo" width="1200" height="167">
+    <p class="side-sub">Shop dashboard</p>
+    <nav class="side-nav" id="side-nav" aria-label="Dashboard">
+      <button data-view="overview" class="on"><span class="ico">◐</span>Overview</button>
+      <button data-view="orders"><span class="ico">▤</span>Orders <b class="pill-count" id="nav-pending" hidden></b></button>
+      <button data-view="products"><span class="ico">◇</span>Products</button>
+      <button data-view="subscribers"><span class="ico">✉</span>Subscribers</button>
+      <button data-view="help"><span class="ico">?</span>Help</button>
+    </nav>
+    <div class="side-foot">
+      <a id="shop-link" target="_blank" rel="noopener">View shop ↗</a>
+      <button id="sign-out">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="demo-note" id="demo-note" hidden>Sample data — changes here aren’t saved.</div>
+
+    <!-- OVERVIEW -->
+    <section class="view" id="v-overview">
+      <header class="v-head"><div><p class="eyebrow" id="today"></p><h1 id="greet">Good day</h1></div></header>
+      <div class="stats" id="stats"></div>
+      <div class="two-col">
+        <div class="panel">
+          <h2>Needs your attention</h2>
+          <div id="attention"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Latest orders</h2><button class="link" data-goto="orders">See all</button></div>
+          <div id="recent"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="view" id="v-orders" hidden>
+      <header class="v-head">
+        <div><p class="eyebrow">Orders</p><h1>Orders</h1></div>
+        <div class="v-actions"><button class="btn oval" id="export-orders">Download list</button></div>
+      </header>
+      <div class="toolbar">
+        <div class="chips" id="order-filters"></div>
+        <input class="input search" id="order-search" placeholder="Search name, phone or order no." aria-label="Search orders">
+      </div>
+      <div class="list" id="orders-list"></div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section class="view" id="v-products" hidden>
+      <header class="v-head">
+        <div><p class="eyebrow">Products</p><h1>Products</h1></div>
+        <div class="v-actions"><button class="btn pink" id="add-product">+ Add product</button></div>
+      </header>
+      <div class="import" id="import-box" hidden>
+        <p><b>Your shop has no products yet.</b> Load the starter catalogue (12 products from the old site) and edit from there.</p>
+        <button class="btn pink" id="import-starter">Load starter products</button>
+      </div>
+      <div class="toolbar"><div class="chips" id="product-filters"></div><input class="input search" id="product-search" placeholder="Search products" aria-label="Search products"></div>
+      <div class="p-grid" id="products-grid"></div>
+    </section>
+
+    <!-- SUBSCRIBERS -->
+    <section class="view" id="v-subscribers" hidden>
+      <header class="v-head">
+        <div><p class="eyebrow">Newsletter</p><h1>Subscribers</h1></div>
+        <div class="v-actions"><button class="btn oval" id="copy-emails">Copy all emails</button><button class="btn oval" id="export-subs">Download list</button></div>
+      </header>
+      <div class="list" id="subs-list"></div>
+    </section>
+
+    <!-- HELP -->
+    <section class="view" id="v-help" hidden>
+      <header class="v-head"><div><p class="eyebrow">Help</p><h1>How this works</h1></div></header>
+      <div class="help">
+        <details open><summary>A new order comes in</summary>
+          <p>It shows on <b>Overview</b> and in <b>Orders</b>. Card payments arrive already marked <b>Paid · preparing</b>. Bank transfers arrive as <b>Waiting for payment</b> — check your Access Bank app, and once the money is there, open the order and tap <b>Paid · preparing</b>.</p></details>
+        <details><summary>Sending an order out</summary>
+          <p>When the rider picks it up, tap <b>Out for delivery</b>. When the customer has it, tap <b>Delivered</b>. Use the WhatsApp button on the order to message the customer in one tap.</p></details>
+        <details><summary>Adding or changing a product</summary>
+          <p>Go to <b>Products</b> → <b>+ Add product</b>, or tap any product to edit it. Add a photo, name, price, lengths and colours, then <b>Save</b>. It appears on the shop straight away (shoppers may need to refresh).</p></details>
+        <details><summary>Hiding a product that’s sold out</summary>
+          <p>Switch <b>On shop</b> off on the product card. It stays here so you can switch it back on when it’s restocked. Or set stock to 0 — the shop then shows “Sold out”.</p></details>
+        <details><summary>Sales and discounts</summary>
+          <p>Edit the product and put the old price in <b>Was (optional)</b>. The shop shows it crossed out next to the new price.</p></details>
+        <details><summary>Who can see this dashboard?</summary>
+          <p>Only the shop email in config.js can sign in. Anyone else is turned away, and the database refuses to show them orders or customers.</p></details>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ═════════ ORDER DRAWER ═════════ -->
+<aside class="drawer" id="order-drawer" role="dialog" aria-modal="true" aria-labelledby="od-title">
+  <div class="drawer-head"><div><p class="eyebrow" id="od-date"></p><h2 id="od-title">Order</h2></div><button class="round" data-close aria-label="Close">×</button></div>
+  <div class="drawer-body" id="od-body"></div>
+</aside>
+
+<!-- ═════════ PRODUCT DRAWER ═════════ -->
+<aside class="drawer wide" id="product-drawer" role="dialog" aria-modal="true" aria-labelledby="pd-title">
+  <div class="drawer-head"><div><p class="eyebrow">Product</p><h2 id="pd-title">Add product</h2></div><button class="round" data-close aria-label="Close">×</button></div>
+  <form class="drawer-body form" id="pd-form" novalidate>
+    <div class="photo-row">
+      <div class="photo" id="pd-photo"><span>No photo</span></div>
+      <div>
+        <label class="btn oval file-btn">Choose photo<input type="file" id="pd-file" accept="image/*" hidden></label>
+        <p class="muted small">A clear photo on a plain background works best. We shrink it automatically so the shop stays fast.</p>
+      </div>
+    </div>
+    <label>Name<input class="input" id="pd-name" required placeholder="e.g. Bone Straight Silky Wig"></label>
+    <div class="grid2">
+      <label>Kind of product<input class="input" id="pd-type" placeholder="e.g. Frontal wig"></label>
+      <label>Section on shop<select class="input" id="pd-category"><option value="wigs">Wigs</option><option value="bundles">Bundles</option><option value="extensions">Extensions</option></select></label>
+      <label>Price (₦)<input class="input" id="pd-price" inputmode="numeric" required placeholder="85000"></label>
+      <label>Was (optional)<input class="input" id="pd-old" inputmode="numeric" placeholder="110000"></label>
+      <label>In stock<input class="input" id="pd-stock" inputmode="numeric" placeholder="10"></label>
+      <label>Label<select class="input" id="pd-badge"><option value="">None</option><option value="hot">Bestseller</option><option value="new">New in</option></select></label>
+    </div>
+    <label>Lengths <span class="hint">separate with commas</span><input class="input" id="pd-lengths" placeholder='14", 16", 18", 20"'></label>
+    <div class="colours">
+      <span class="lab">Colours</span>
+      <div id="pd-colors"></div>
+      <button type="button" class="link" id="pd-add-color">+ Add colour</button>
+    </div>
+    <label>Description<textarea class="input" id="pd-desc" rows="3" placeholder="Two or three sentences shoppers will read."></textarea></label>
+    <label>Highlights <span class="hint">one per line</span><textarea class="input" id="pd-features" rows="4" placeholder="HD lace&#10;180% density"></textarea></label>
+    <label class="toggle-row"><input type="checkbox" id="pd-visible" checked><span class="switch"></span>Show on shop</label>
+    <p class="status" id="pd-status" role="status"></p>
+    <div class="form-foot">
+      <button type="button" class="link danger" id="pd-delete">Delete product</button>
+      <div class="confirm" id="pd-confirm" hidden><span>Delete for good?</span><button type="button" class="btn oval small" id="pd-no">Keep</button><button type="button" class="btn pink small" id="pd-yes">Delete</button></div>
+      <button type="submit" class="btn pink" id="pd-save">Save</button>
+    </div>
+  </form>
+</aside>
+
+<div class="scrim" id="scrim"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
