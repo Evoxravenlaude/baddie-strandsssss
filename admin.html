@@ -229,12 +229,14 @@
       <label class="field"><span>Name*</span><input type="text" name="name" required></label>
       <label class="field"><span>Type*</span><input type="text" name="type" placeholder="e.g. Closure Wig" required></label>
       <label class="field"><span>Category*</span><select name="category"><option value="wigs">Wigs</option><option value="bundles">Bundles</option><option value="extensions">Extensions</option></select></label>
+      <label class="field"><span>Texture (draws the hair when there's no photo)</span><select name="texture"><option value="bone">Bone straight</option><option value="straight">Straight</option><option value="body">Body wave</option><option value="loose">Loose wave</option><option value="water">Water wave</option><option value="deep">Deep wave</option><option value="curly">Curly</option><option value="coily">Kinky coily</option></select></label>
       <label class="field"><span>Stock</span><input type="number" name="stock" min="0" value="10"></label>
       <label class="field"><span>Price (₦)*</span><input type="number" name="price" min="0" required></label>
       <label class="field"><span>Was (₦), if on sale</span><input type="number" name="oldPrice" min="0"></label>
     </div>
     <label class="field"><span>Lengths, separated by commas</span><input type="text" name="lengths" placeholder='12", 14", 16", 18", 20"'></label>
-    <label class="field"><span>Photo: a file name in the site folder, or a full https:// link</span><input type="text" name="image"></label>
+    <label class="field"><span>Shades, one per line: name, then colour code</span><textarea name="shades" rows="3" placeholder="Natural Black #1a1008&#10;Honey Blonde #c8a165"></textarea></label>
+    <label class="field"><span>Photo (optional): a file name in the site folder, or a full https:// link. Leave empty to show the drawn hair.</span><input type="text" name="image"></label>
     <label class="field"><span>Description*</span><textarea name="description" rows="3" required></textarea></label>
     <label class="field"><span>Features, one per line</span><textarea name="features" rows="3"></textarea></label>
     <div class="ticks">
@@ -275,6 +277,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <script src="config.js" defer></script>
 <script src="data.js" defer></script>
+<script src="strands.js" defer></script>
 <script src="admin.js" defer></script>
 </body>
 </html>

@@ -233,7 +233,7 @@ const ADMIN = {
     $('#pm-grid').innerHTML = list.length ? list.map((p) => {
       const low = Number(p.stock) <= 5;
       return `<article class="pm-card">
-        <div class="pm-card__img">${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : ''}</div>
+        <div class="pm-card__img${p.image ? '' : ' is-drawn'}">${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : window.Strands ? `<img src="${esc(window.Strands.thumb(p, { w: 300, h: 300, bg: false }))}" alt="">` : ''}</div>
         <div class="pm-card__body"><b>${esc(p.name)}</b><span>${esc(p.type)} · ${money(p.price)}${p.oldPrice ? ' (was ' + money(p.oldPrice) + ')' : ''}</span>
           <div>${p.stock == null ? '' : `<span class="badge badge--${low ? 'warn' : 'ok'}">${Number(p.stock)} in stock</span>`} ${p.hot ? '<span class="badge badge--info">Bestseller</span>' : ''} ${p.new ? '<span class="badge badge--info">New in</span>' : ''}</div>
         </div>
@@ -259,6 +259,8 @@ const ADMIN = {
       f.elements.image.value = p.image || ''; f.elements.description.value = p.description || '';
       f.elements.lengths.value = (p.lengths || []).join(', '); f.elements.features.value = (p.features || []).join('\n');
       f.elements.hot.checked = !!p.hot; f.elements.newIn.checked = !!p.new;
+      f.elements.texture.value = p.texture || 'body';
+      f.elements.shades.value = (p.colors || []).map((c, i) => `${(p.colorNames || [])[i] || 'Shade ' + (i + 1)} ${c}`).join('\n');
     }
     $('#pm-modal').hidden = false;
     f.elements.name.focus();
@@ -275,12 +277,16 @@ const ADMIN = {
     const features = f.elements.features.value.split('\n').map((s) => s.trim()).filter(Boolean);
     const image = f.elements.image.value.trim();
     const old = Number(f.elements.oldPrice.value);
+    const shades = f.elements.shades.value.split('\n').map((l) => /^(.*?)[\s,:-]*(#[0-9a-f]{6})\s*$/i.exec(l.trim())).filter(Boolean).map((m) => ({ name: m[1].trim() || 'Shade', hex: m[2].toLowerCase() }));
+    if (f.elements.shades.value.trim() && !shades.length) { err.hidden = false; err.textContent = 'Write each shade as a name then a colour code, like Natural Black #1a1008.'; return; }
     const data = {
       name, type, category: f.elements.category.value, price,
       oldPrice: old > price ? old : null,
       stock: f.elements.stock.value === '' ? null : Math.max(0, Number(f.elements.stock.value)),
-      image, description, hot: f.elements.hot.checked, new: f.elements.newIn.checked
+      image, description, hot: f.elements.hot.checked, new: f.elements.newIn.checked,
+      texture: f.elements.texture.value
     };
+    if (shades.length) { data.colors = shades.map((x) => x.hex); data.colorNames = shades.map((x) => x.name); }
     if (S.editing) {
       const i = S.products.findIndex((p) => String(p.id) === String(S.editing.id));
       const merged = Object.assign({}, S.editing, data);
