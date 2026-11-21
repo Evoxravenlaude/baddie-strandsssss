@@ -35,41 +35,24 @@
     const featured = all.filter((p) => p.featured);
     const best = (featured.length ? featured : all).slice(0, 8);
 
-    // featured piece, changing every few seconds
-    const feat = best.slice(0, 4), box = $('[data-feature-pics]'), link = $('[data-feature]');
-    if (feat.length) {
-      box.innerHTML = feat.map((p, i) => pics(p, { alt: '', eager: i === 0 }).replace('<img', `<img data-i="${i}"`)).join('');
-      let i = 0, anim = null;
-      const show = (n) => {
-        i = (n + feat.length) % feat.length;
-        const p = feat[i];
-        $$('img', box).forEach((im) => im.classList.toggle('is-on', Number(im.dataset.i) === i));
-        $('[data-feature-name]').textContent = p.name;
-        $('[data-feature-price]').innerHTML = priceText(p);
-        link.href = `product.html?p=${encodeURIComponent(p.slug)}`;
-        link.dataset.card = p.slug;
-        link.setAttribute('aria-label', `${p.name}, ${S.texName(p.texture).toLowerCase()}`);
-        if (anim) anim.cancel();
-        if (!reduced && feat.length > 1) {
-          anim = $('[data-feature-bar]').animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 5200, easing: 'linear' });
-          anim.onfinish = () => show(i + 1);
-        }
-      };
-      link.addEventListener('pointerenter', () => anim && anim.pause());
-      link.addEventListener('pointerleave', () => anim && anim.play());
-      document.addEventListener('visibilitychange', () => { if (anim) { if (document.hidden) anim.pause(); else anim.play(); } });
-      show(0);
-    } else link.hidden = true;
+    // stats panel and the gold ticker, both editable in the admin
+    const stats = (s.stats || []).filter((x) => x && x.value);
+    $('[data-stats]').innerHTML = stats.map((x) => `<div><b>${esc(x.value)}</b><span>${esc(x.label || '')}</span></div>`).join('');
+    $('[data-stats]').hidden = !stats.length;
+    const tick = (s.ticker || []).filter(Boolean);
+    const run = $('[data-ticker]');
+    if (tick.length) { const one = tick.map((t) => `<span>${esc(t)}</span>`).join(''); run.innerHTML = one + one; }
+    else run.parentElement.hidden = true;
 
     // textures
     const tex = S.TEXTURES.map(([id, name]) => ({ id, name, list: all.filter((p) => p.texture === id) })).filter((t) => t.list.length);
     const nav = $('[data-textures]');
-    nav.innerHTML = tex.map((t) => `<a href="shop.html?texture=${t.id}" data-tex="${t.id}"><span class="tex__thumb" aria-hidden="true"><span class="pic">${pics(t.list[0], { alt: '' })}</span></span><span class="tex__name">${esc(t.name)}</span><span class="tex__n">${t.list.length} piece${t.list.length === 1 ? '' : 's'}</span></a>`).join('');
+    nav.innerHTML = tex.map((t, i) => `<a href="shop.html?texture=${t.id}" data-tex="${t.id}"><span class="tex__i" aria-hidden="true">${['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii'][i] || ''}.</span><span class="tex__thumb" aria-hidden="true"><span class="pic">${pics(t.list[0], { alt: '' })}</span></span><span class="tex__name">${esc(t.name)}</span><span class="tex__n">${t.list.length} piece${t.list.length === 1 ? '' : 's'}</span></a>`).join('');
     if (fine && !reduced) {
       const peek = $('[data-peek]'), pic = $('[data-peek-pic]');
       let tx = 0, ty = 0, x = 0, y = 0, raf = 0, on = false;
       const loop = () => { x += (tx - x) * 0.18; y += (ty - y) * 0.18; peek.style.left = x + 'px'; peek.style.top = y + 'px'; raf = on || Math.abs(tx - x) > 0.5 ? requestAnimationFrame(loop) : 0; };
-      nav.addEventListener('pointermove', (e) => { tx = e.clientX + 150; ty = e.clientY; if (!raf) raf = requestAnimationFrame(loop); });
+      nav.addEventListener('pointermove', (e) => { tx = Math.min(window.innerWidth - 130, e.clientX + 170); ty = e.clientY; if (!raf) raf = requestAnimationFrame(loop); });
       nav.addEventListener('pointerover', (e) => {
         const a = e.target.closest('[data-tex]');
         if (!a) return;
@@ -84,39 +67,27 @@
     // bestsellers row
     const row = $('[data-best]');
     row.innerHTML = best.map(card).join('');
-    initRow(row);
+    initRow(row, $('[data-row-prev]'), $('[data-row-next]'));
 
-    // reviews
+    // reviews, as a row of cards
     const reviews = (s.reviews || []).filter((r) => r && r.text);
     const vs = $('[data-voices]');
     if (!reviews.length) vs.hidden = true;
     else {
-      let i = 0, timer = 0;
-      const q = $('[data-voice-q]'), by = $('[data-voice-by]');
-      const show = (n) => {
-        i = (n + reviews.length) % reviews.length;
-        const r = reviews[i];
-        q.innerHTML = '“' + esc(r.text).split(' ').map((w) => `<span class="w">${w}</span>`).join(' ') + '”';
-        by.innerHTML = `${esc(r.name)}${r.place ? ` <span>, ${esc(r.place)}</span>` : ''}${r.stars ? ` <span aria-label="${r.stars} out of 5 stars">${'★'.repeat(Math.min(5, r.stars))}</span>` : ''}`;
-        $('[data-voice-n]').textContent = `${i + 1} / ${reviews.length}`;
-        if (!reduced) $$('.w', q).forEach((w, k) => w.animate([{ opacity: 0, transform: 'translateY(.4em)' }, { opacity: 1, transform: 'none' }], { duration: 600, delay: k * 18, easing: 'cubic-bezier(.2,.7,.1,1)', fill: 'backwards' }));
-        clearTimeout(timer);
-        if (!reduced) timer = setTimeout(() => { if (!document.hidden && !vs.matches(':hover')) show(i + 1); else show(i); }, 8000);
-      };
-      $('[data-voice-prev]').addEventListener('click', () => show(i - 1));
-      $('[data-voice-next]').addEventListener('click', () => show(i + 1));
-      show(0);
+      const vt = $('[data-voice-track]');
+      vt.innerHTML = reviews.map((r) => `<figure class="voice"><blockquote>${esc(r.text)}</blockquote><footer><i aria-hidden="true">${esc((r.name || '?').trim().charAt(0))}</i><span><b>${esc(r.name || '')}</b><span>${esc(r.place || '')}</span></span>${r.stars ? `<em style="margin-left:auto" aria-label="${r.stars} out of 5 stars">${'★'.repeat(Math.min(5, r.stars))}</em>` : ''}</footer></figure>`).join('');
+      initRow(vt, $('[data-voice-prev]'), $('[data-voice-next]'));
     }
 
     // just in
     const fresh = all.filter((p) => p.is_new);
     $('[data-new]').innerHTML = (fresh.length ? fresh : all.slice().sort((a, b) => (a.created_at < b.created_at ? 1 : -1))).slice(0, 4).map(card).join('');
+    S.reveal();
   }
 
   // drag + arrow buttons for a horizontal row
-  function initRow(track) {
-    const prev = $('[data-row-prev]'), next = $('[data-row-next]');
-    const step = () => (track.firstElementChild ? track.firstElementChild.getBoundingClientRect().width + 20 : 300) * (window.innerWidth < 700 ? 1 : 2);
+  function initRow(track, prev, next) {
+    const step = () => (track.firstElementChild ? track.firstElementChild.getBoundingClientRect().width + 2 : 300) * (window.innerWidth < 700 ? 1 : 2);
     const sync = () => { prev.disabled = track.scrollLeft < 4; next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4; };
     prev.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: reduced ? 'auto' : 'smooth' }));
     next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: reduced ? 'auto' : 'smooth' }));
@@ -191,7 +162,6 @@
       if (st.tex) q.set('texture', st.tex);
       if (st.sort !== 'featured') q.set('sort', st.sort);
       history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : ''));
-      $$('[data-nav]').forEach((a) => { if (a.dataset.nav === st.cat) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     }
     document.querySelector('.filters').addEventListener('click', (e) => {
       const c = e.target.closest('[data-cat]'), t = e.target.closest('[data-tx]');
@@ -624,7 +594,7 @@
     const faq = (s.faq || []).filter((f) => f && f.q);
     const groups = Array.from(new Set(faq.map((f) => f.group || 'Questions')));
     const slug = (g) => 'q-' + DB.slugify(g);
-    $('[data-faq-nav]').innerHTML = groups.map((g) => `<a href="#${slug(g)}">${esc(g)}</a>`).join('') + '<a href="#delivery">Delivery fees</a>';
+    $('[data-faq-nav]').innerHTML = groups.map((g) => `<a href="#${slug(g)}">${esc(g)}</a>`).join('') + '<a href="delivery.html">Delivery fees</a>';
     const box = $('[data-faq]'), qIn = $('[data-faq-q]');
     const mark = (text, words) => { let t = esc(text); words.forEach((w) => { if (w.length > 1) t = t.replace(new RegExp(`(${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'), '<mark>$1</mark>'); }); return t; };
     function paint() {
@@ -640,14 +610,6 @@
     }
     qIn.addEventListener('input', paint);
     paint();
-    // fees
-    const d = s.delivery || {};
-    $('[data-fees-note]').textContent = `Anywhere not listed: ${money(d.default_fee || 3500)}, ${String(d.default_days || '2 to 4 days').toLowerCase()}.${Number(d.free_over) > 0 ? ` Free delivery on orders of ${money(d.free_over)} or more.` : ''} Shipping abroad is quoted on WhatsApp.`;
-    const rows = states(s).map((n) => [n, d.fees[n], DB.deliveryDays(s, n)]);
-    const tb = $('[data-fees]'), fq = $('[data-fee-q]');
-    const paintFees = () => { const q = fq.value.trim().toLowerCase(); tb.innerHTML = rows.filter((r) => !q || r[0].toLowerCase().includes(q)).map((r) => `<tr><td>${esc(r[0])}</td><td>${money(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('') || '<tr><td colspan="3" class="muted">No state matches that.</td></tr>'; };
-    fq.addEventListener('input', paintFees);
-    paintFees();
     if (location.hash) { const t = document.querySelector(location.hash); if (t) setTimeout(() => t.scrollIntoView(), 50); }
   }
 
@@ -672,13 +634,168 @@
     });
   }
 
-  async function about() {
-    try {
-      const { products } = await S.ready;
-      const p = products.find((x) => x.images && x.images.length) || products.find((x) => x.featured) || products[0];
-      if (p) $('[data-about-pic]').innerHTML = pics(p, { alt: '' });
-    } catch (e) { /* the text still reads fine */ }
+  // ══════════════════════════════════════════════════════
+  // HAIR KNOWLEDGE
+  // ══════════════════════════════════════════════════════
+  const CARE = {
+    Washing: [
+      ['Detangle before washing', 'Always detangle from the tips up to the roots with a wide-tooth comb or your fingers. Starting at the root causes breakage and matting.'],
+      ['Use sulphate-free shampoo', 'Sulphates strip natural oils. Use a moisturising, sulphate-free shampoo, slightly diluted in warm water for an even, gentle cleanse.'],
+      ['Wash in downward strokes', 'Work the shampoo gently downward, with the direction of the cuticle. Scrubbing in circles causes frizz and tangles.'],
+      ['Deep condition every wash', 'Apply a rich conditioner from mid-length to ends and leave it 15 to 30 minutes under a plastic cap. A unit gets no natural oils from a scalp, so it needs this moisture.'],
+      ['Rinse with cool water', 'Finish with a cool rinse. Cold water closes the cuticle, seals in moisture and brings back the shine.'],
+      ['Air-dry or use low heat', 'Pat with a microfibre towel, never rub. Air-dry on a wig stand, or use the lowest heat with a diffuser.']
+    ],
+    Styling: [
+      ['Always use heat protectant', 'Even on heat-friendly hair, spray a thermal protectant before any heat. It keeps the hair strong and makes it last much longer.'],
+      ['Flat iron at the right heat', 'Fine or coloured hair: 150 to 180°C. Thick, coarse hair: up to 220°C. Never go above 230°C.'],
+      ['Curl, then set with cool air', 'Let each curl cool in your hand before you let go, then hit it with cool air to lock it in for the day.'],
+      ['Avoid alcohol-based products', 'Many sprays and gels contain drying alcohols. If ethanol or isopropyl alcohol is near the top of the label, leave it on the shelf.']
+    ],
+    Storage: [
+      ['Keep it on a wig stand', 'A stand holds the shape of the cap and stops the hair being crushed or tangled.'],
+      ['Silk or satin bags', 'For travel or long storage, use a silk or satin bag. Cotton pulls out moisture and causes frizz.'],
+      ['Detangle before storing', 'Never put a unit away tangled. Tangles get worse with time and harder to remove.'],
+      ['Keep out of direct sun', 'UV fades colour and weakens the hair. Store it away from windows, and use a UV-protect spray if you’ll be in the sun for long.']
+    ],
+    Maintenance: [
+      ['Refresh with a water spray', 'Between washes, spritz lightly with water and scrunch to revive curls or waves. Add a little leave-in or serum for shine.'],
+      ['Moisturise weekly', 'Use the LOC method: liquid (water), then oil (argan, jojoba or castor), then cream (shea butter or leave-in).'],
+      ['Trim the ends every 3 months', 'Heat and handling cause split ends even on human hair. A small trim keeps the ends bouncy and tangle-free.'],
+      ['Sleep on silk or satin', 'Cotton pillowcases cause friction and frizz. Use a silk or satin pillowcase, or a silk bonnet.']
+    ]
+  };
+  function knowledge() {
+    const tabs = $$('[data-ktab]');
+    const setTab = (id, focus) => {
+      tabs.forEach((t) => { const on = t.dataset.ktab === id; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; if (on && focus) t.focus(); });
+      $$('[data-kpanel]').forEach((p) => { p.hidden = p.dataset.kpanel !== id; });
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => { setTab(t.dataset.ktab); history.replaceState(null, '', t.dataset.ktab === 'care' ? '#care' : location.pathname); }));
+    $('[role="tablist"]').addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const i = tabs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+      setTab(tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length].dataset.ktab, true);
+    });
+    // care guide: topics down the side, tips on the right
+    const nav = $('[data-guide-nav]'), panel = $('[data-guide-panel]');
+    const topics = Object.keys(CARE);
+    nav.innerHTML = topics.map((t, i) => `<button type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-topic="${t}" aria-controls="guide-panel">${t}</button>`).join('');
+    panel.id = 'guide-panel'; panel.setAttribute('role', 'tabpanel');
+    const show = (t, focus) => {
+      $$('[data-topic]', nav).forEach((b) => { const on = b.dataset.topic === t; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; if (on && focus) b.focus(); });
+      panel.setAttribute('aria-label', t);
+      panel.innerHTML = CARE[t].map((x, i) => `<div class="guide__item"><span aria-hidden="true">${i + 1}</span><div><h3>${esc(x[0])}</h3><p>${esc(x[1])}</p></div></div>`).join('');
+      if (!reduced) $$('.guide__item', panel).forEach((el, k) => el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 450, delay: k * 50, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
+    };
+    nav.addEventListener('click', (e) => { const b = e.target.closest('[data-topic]'); if (b) show(b.dataset.topic); });
+    nav.addEventListener('keydown', (e) => {
+      if (!/^Arrow(Up|Down|Left|Right)$/.test(e.key)) return;
+      e.preventDefault();
+      const i = topics.indexOf($('[aria-selected="true"]', nav).dataset.topic);
+      show(topics[(i + (/Down|Right/.test(e.key) ? 1 : -1) + topics.length) % topics.length], true);
+    });
+    show(topics[0]);
+    if (location.hash === '#care') setTab('care');
   }
 
-  ({ home, shop, product, checkout, track, help, contact, about })[page]?.();
+  // ══════════════════════════════════════════════════════
+  // HAIR QUIZ
+  // ══════════════════════════════════════════════════════
+  const QUIZ = [
+    { q: 'What’s your lifestyle like?', o: ['Very active: gym, sports, outdoors', 'Office life: sleek and professional', 'Social butterfly: events and parties', 'Home first: comfort above all'] },
+    { q: 'How much time do you have to style each day?', o: ['5 minutes, tops', '10 to 20 minutes', '30 minutes or more', 'I love styling, no limit'] },
+    { q: 'Which texture are you drawn to?', o: ['Straight and sleek', 'Wavy and soft', 'Curly and bouncy', 'Coily and natural'] },
+    { q: 'What matters most to you?', o: ['A lace nobody can see', 'Maximum volume', 'Lasting a long time', 'Easy upkeep'] },
+    { q: 'Roughly what’s your budget?', o: ['Under ₦50,000', '₦50,000 to ₦80,000', '₦80,000 to ₦120,000', 'Price is no object'] }
+  ];
+  function quiz() {
+    const box = $('[data-quiz]'), res = $('[data-quiz-results]');
+    const ans = [];
+    let step = 0;
+    const L = ['a', 'b', 'c', 'd'];
+    function paint(dir) {
+      const Q = QUIZ[step];
+      box.innerHTML = `<div class="quiz__bar" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="${QUIZ.length}" aria-valuenow="${step + 1}"><i style="width:${(step / QUIZ.length) * 100}%"></i></div>
+        <p class="quiz__step">Question ${step + 1} of ${QUIZ.length}</p>
+        <h2 class="quiz__q" id="quiz-q" tabindex="-1">${esc(Q.q)}</h2>
+        <div class="quiz__opts" role="radiogroup" aria-labelledby="quiz-q">${Q.o.map((o, i) => `<button class="quiz__opt" type="button" role="radio" aria-checked="${ans[step] === i}" tabindex="${(ans[step] ?? 0) === i ? 0 : -1}" data-a="${i}"><i aria-hidden="true">${L[i]}</i>${esc(o)}</button>`).join('')}</div>
+        <div class="quiz__nav"><button class="btn btn--black btn--sm" type="button" data-back ${step ? '' : 'hidden'}>Back</button><span class="small muted">${ans[step] == null ? 'Pick one to continue' : ''}</span></div>`;
+      requestAnimationFrame(() => { const bar = $('.quiz__bar i', box); if (bar) bar.style.width = ((step + (ans[step] != null ? 1 : 0)) / QUIZ.length) * 100 + '%'; });
+      if (!reduced && dir) box.animate([{ opacity: 0, transform: `translateX(${dir * 24}px)` }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)' });
+      if (dir) $('#quiz-q').focus({ preventScroll: true });
+    }
+    box.addEventListener('click', (e) => {
+      const o = e.target.closest('[data-a]');
+      if (o) {
+        ans[step] = Number(o.dataset.a);
+        $$('[data-a]', box).forEach((b) => { b.setAttribute('aria-checked', String(b === o)); b.tabIndex = b === o ? 0 : -1; });
+        $('.quiz__bar i', box).style.width = ((step + 1) / QUIZ.length) * 100 + '%';
+        setTimeout(() => { if (step < QUIZ.length - 1) { step++; paint(1); } else finish(); }, reduced ? 0 : 320);
+      }
+      if (e.target.closest('[data-back]') && step) { step--; paint(-1); }
+    });
+    box.addEventListener('keydown', (e) => {
+      if (!/^Arrow/.test(e.key) || !e.target.matches('[data-a]')) return;
+      e.preventDefault();
+      const items = $$('[data-a]', box), i = items.indexOf(e.target);
+      items[(i + (/Down|Right/.test(e.key) ? 1 : -1) + items.length) % items.length].focus();
+    });
+    async function finish() {
+      let data;
+      try { data = await S.ready; } catch (err) { return; }
+      const picks = recommend(data.products, ans);
+      res.hidden = false;
+      $('[data-results]').innerHTML = picks.map((x) => `<div style="display:grid;background:var(--surface)">${card(x.p)}<p class="result__why">${esc(x.why)}</p></div>`).join('');
+      box.innerHTML = `<div class="quiz__bar"><i style="width:100%"></i></div><p class="quiz__step">All done</p><h2 class="quiz__q">We found <em style="color:var(--gold)">${picks.length} piece${picks.length === 1 ? '' : 's'}</em> for you.</h2><p class="lede">Picked from your answers on lifestyle, texture and budget. Not quite right? Message us and we’ll help you choose.</p><div class="hero__go" style="margin-top:8px"><a class="btn" href="#res-title">See your match</a><a class="btn btn--line" href="#" data-wa-quiz target="_blank" rel="noopener">Ask us on WhatsApp</a></div>`;
+      $('[data-wa-quiz]').href = S.waLink(`Hi Baddie Strands! I took the hair quiz: ${QUIZ.map((q, i) => q.o[ans[i]]).join('; ')}. Can you help me choose?`);
+      S.store.set('bs_quiz', ans);
+      res.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+      $('#res-title').focus({ preventScroll: true });
+    }
+    $('[data-quiz-again]').addEventListener('click', () => { ans.length = 0; step = 0; res.hidden = true; paint(-1); box.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' }); });
+    paint(0);
+  }
+  // score every piece against the answers; returns the top three with a reason
+  function recommend(products, a) {
+    const TEX = [['bone', 'straight'], ['body', 'loose', 'water'], ['deep', 'curly'], ['coily']];
+    const BUDGET = [[0, 50000], [50000, 80000], [80000, 120000], [0, Infinity]];
+    const easyTex = ['bone', 'straight', 'body'];
+    const has = (p, re) => re.test([p.name, p.description, (p.details || []).join(' ')].join(' '));
+    const scored = products.filter((p) => p.stock !== 0).map((p) => {
+      let sc = 0; const why = [];
+      const lo = DB.priceRange(p)[0];
+      if (TEX[a[2]].includes(p.texture)) { sc += 6; why.push(`${texName(p.texture).toLowerCase()}, the texture you picked`); }
+      const [min, max] = BUDGET[a[4]];
+      if (lo <= max && lo >= min) { sc += 3; why.push('in your budget'); } else if (lo > max) sc -= Math.min(4, Math.ceil((lo - max) / 15000)); else sc += 1;
+      if (p.category === 'wigs') sc += 1.5;
+      if ((a[0] === 0 || a[0] === 3 || a[1] === 0) && (has(p, /glueless|beginner|easy|60-second|u-part/i) || easyTex.includes(p.texture))) { sc += 2; why.push('quick to wear'); }
+      if ((a[0] === 2 || a[1] >= 2) && /deep|curly|body|loose|water/.test(p.texture)) { sc += 1; }
+      if (a[3] === 0 && has(p, /\bHD\b/)) { sc += 2.5; why.push('HD lace that disappears'); }
+      if (a[3] === 1 && (has(p, /200%|180%|double weft|volume/i) || p.category === 'bundles')) { sc += 2.5; why.push('full, high-density volume'); }
+      if (a[3] === 2 && has(p, /virgin|reusable|12\+ months|durab/i)) { sc += 1.5; why.push('built to last'); }
+      if (a[3] === 3 && (has(p, /easy|maintenance|frizz|glueless|beginner/i) || easyTex.includes(p.texture))) { sc += 2; why.push('easy to look after'); }
+      if (p.featured) sc += 0.5;
+      return { p, sc, why };
+    }).sort((x, y) => y.sc - x.sc);
+    return scored.slice(0, 3).map((x) => ({ p: x.p, why: x.why.length ? 'Why: ' + Array.from(new Set(x.why)).slice(0, 3).join(', ') + '.' : 'A versatile favourite that suits most styles.' }));
+  }
+
+  // ══════════════════════════════════════════════════════
+  // DELIVERY
+  // ══════════════════════════════════════════════════════
+  async function delivery() {
+    let s;
+    try { s = (await S.ready).settings; } catch (e) { return; }
+    const d = s.delivery || {};
+    $('[data-fees-note]').textContent = `Nationwide delivery across all 36 states and the FCT. Anywhere not listed is ${money(d.default_fee || 3500)}, ${String(d.default_days || '2 to 4 days').toLowerCase()}.${Number(d.free_over) > 0 ? ` Free delivery on orders of ${money(d.free_over)} or more.` : ''} International shipping to the UK, Europe, North America and across Africa.`;
+    const rows = states(s).map((n) => [n, (d.fees || {})[n], DB.deliveryDays(s, n)]);
+    const tb = $('[data-fees]'), fq = $('[data-fee-q]');
+    const mine = S.store.get('bs_state', '');
+    const paintFees = () => { const q = fq.value.trim().toLowerCase(); tb.innerHTML = rows.filter((r) => !q || r[0].toLowerCase().includes(q)).map((r) => `<tr${r[0] === mine ? ' style="background:var(--gold-tint)"' : ''}><td>${esc(r[0])}</td><td>${money(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('') || '<tr><td colspan="3" class="muted">No state matches that.</td></tr>'; };
+    fq.addEventListener('input', paintFees);
+    paintFees();
+  }
+
+  ({ home, shop, product, checkout, track, help, contact, knowledge, quiz, delivery })[page]?.();
 })();

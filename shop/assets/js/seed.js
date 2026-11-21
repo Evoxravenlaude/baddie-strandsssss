@@ -75,7 +75,9 @@ window.BS_SEED = {
    "featured": true,
    "is_new": false,
    "sort": 0,
-   "images": [],
+   "images": [
+    "assets/img/products/closure-bob-black.jpg"
+   ],
    "active": true
   },
   {
@@ -123,6 +125,10 @@ window.BS_SEED = {
    ],
    "shades": [
     {
+     "name": "Ginger",
+     "hex": "#9A4A22"
+    },
+    {
      "name": "Natural black",
      "hex": "#1a1008"
     },
@@ -139,7 +145,9 @@ window.BS_SEED = {
    "featured": false,
    "is_new": true,
    "sort": 1,
-   "images": [],
+   "images": [
+    "assets/img/products/body-wave-ginger.jpg"
+   ],
    "active": true
   },
   {
@@ -203,7 +211,9 @@ window.BS_SEED = {
    "featured": true,
    "is_new": false,
    "sort": 2,
-   "images": [],
+   "images": [
+    "assets/img/products/deep-wave-frontal-black.jpg"
+   ],
    "active": true
   },
   {
@@ -315,6 +325,10 @@ window.BS_SEED = {
    ],
    "shades": [
     {
+     "name": "Burgundy 99J",
+     "hex": "#5B1222"
+    },
+    {
      "name": "Jet black",
      "hex": "#1a1008"
     },
@@ -335,7 +349,9 @@ window.BS_SEED = {
    "featured": true,
    "is_new": false,
    "sort": 4,
-   "images": [],
+   "images": [
+    "assets/img/products/bone-straight-burgundy.jpg"
+   ],
    "active": true
   },
   {
@@ -758,10 +774,62 @@ window.BS_SEED = {
    "phone_display": "+234 703 324 7980",
    "email": "baddiestrands@gmail.com",
    "instagram": "the_baddie_strands",
+   "tiktok": "baddie.strands",
    "city": "Abuja",
-   "hours": [[12, 18], [9, 21], [9, 21], [9, 21], [9, 21], [9, 21], [9, 21]]
+   "hours": [
+    [
+     12,
+     18
+    ],
+    [
+     9,
+     21
+    ],
+    [
+     9,
+     21
+    ],
+    [
+     9,
+     21
+    ],
+    [
+     9,
+     21
+    ],
+    [
+     9,
+     21
+    ],
+    [
+     9,
+     21
+    ]
+   ]
   },
   "announcement": "Same-day delivery in Abuja. Nationwide in 1 to 4 days.",
+  "stats": [
+   {
+    "value": "500+",
+    "label": "Happy queens"
+   },
+   {
+    "value": "4.9★",
+    "label": "Average rating"
+   },
+   {
+    "value": "36",
+    "label": "States delivered"
+   }
+  ],
+  "ticker": [
+   "Same-day delivery in Abuja",
+   "Worldwide shipping now available",
+   "100% virgin human hair",
+   "HD lace, undetectable on all skin tones",
+   "Nationwide delivery in 1 to 4 days",
+   "Baddie Strands, where queens are made"
+  ],
   "faq": [
    {
     "group": "Delivery",

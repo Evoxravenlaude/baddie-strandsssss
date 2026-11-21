@@ -75,7 +75,7 @@
   // ════════════════════════════════════════════════════════
   // DEMO backend (this browser only)
   // ════════════════════════════════════════════════════════
-  const KEY = 'bs_demo_v1';
+  const KEY = 'bs_demo_v4';
   function demoSampleOrders(products) {
     // a believable month of orders so the dashboard has something to show
     let seed = 7;

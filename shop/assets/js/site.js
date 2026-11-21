@@ -52,9 +52,11 @@
     return `<a class="card${p.stock === 0 ? ' is-out' : ''}" href="product.html?p=${encodeURIComponent(p.slug)}" data-card="${esc(p.slug)}">
       <span class="pic">${pics(p, { second: true, alt: '' })}</span>
       <span class="card__flags">${flags(p).map((f) => `<span class="flag${f[1] ? ' flag--' + f[1] : ''}">${f[0]}</span>`).join('')}</span>
-      <span class="card__row"><span class="card__name">${esc(p.name)}</span></span>
-      <span class="card__row"><span class="price">${priceText(p)}</span>${sh.length ? `<span class="dots" aria-label="${sh.length} shade${sh.length === 1 ? '' : 's'}">${sh.slice(0, 4).map((s) => `<i style="--c:${esc(s.hex)}"></i>`).join('')}${sh.length > 4 ? `<b>+${sh.length - 4}</b>` : ''}</span>` : ''}</span>
-      <span class="card__meta">${esc(texName(p.texture))}, ${esc((CATS[p.category] || p.category).toLowerCase().replace(/s$/, ''))}</span>
+      <span class="card__body">
+        <span class="card__meta">${esc(texName(p.texture))} ${esc((CATS[p.category] || p.category).toLowerCase().replace(/s$/, ''))}</span>
+        <span class="card__name">${esc(p.name)}</span>
+        <span class="card__row"><span class="price">${priceText(p)}</span>${sh.length ? `<span class="dots" aria-label="${sh.length} shade${sh.length === 1 ? '' : 's'}">${sh.slice(0, 4).map((s) => `<i style="--c:${esc(s.hex)}"></i>`).join('')}${sh.length > 4 ? `<b>+${sh.length - 4}</b>` : ''}</span>` : ''}</span>
+      </span>
     </a>`;
   }
   // remember the piece so its page can show it instantly, and let the picture glide across
@@ -254,8 +256,8 @@
     }, { passive: true });
     hd.addEventListener('focusin', () => hd.classList.remove('is-hidden'));
     // current page in the nav
-    const page = document.body.dataset.page, cat = new URLSearchParams(location.search).get('category');
-    const cur = page === 'shop' ? (cat || 'all') : page;
+    const page = document.body.dataset.page;
+    const cur = page === 'product' ? 'shop' : page;
     $$('[data-nav]').forEach((a) => { if (a.dataset.nav === cur) a.setAttribute('aria-current', 'page'); });
     $$('[data-bag-open]').forEach((b) => b.addEventListener('click', () => Overlay.show($('#bag'))));
     const menuBtn = $('[data-menu-open]');
@@ -302,6 +304,9 @@
     $$('[data-wa]').forEach((a) => { a.href = waLink('Hi Baddie Strands!'); });
     $$('[data-mail]').forEach((a) => { a.href = 'mailto:' + (st.email || ''); });
     $$('[data-ig]').forEach((a) => { a.href = 'https://www.instagram.com/' + String(st.instagram || '').replace(/^@/, ''); });
+    const tt = String(st.tiktok || '').replace(/^@/, '');
+    $$('[data-tt]').forEach((a) => { a.href = 'https://www.tiktok.com/@' + tt; a.hidden = !tt; });
+    $$('[data-tt-text]').forEach((n) => { n.textContent = tt ? '@' + tt : ''; });
     $$('[data-wa-text]').forEach((n) => { n.textContent = st.phone_display || st.whatsapp || ''; });
     $$('[data-mail-text]').forEach((n) => { n.textContent = st.email || ''; });
     $$('[data-ig-text]').forEach((n) => { n.textContent = '@' + String(st.instagram || '').replace(/^@/, ''); });
@@ -331,31 +336,27 @@
     }));
   }
 
-  // ── Stretching titles ────────────────────────────────────
-  function stretchTitles() {
-    $$('[data-stretch-title]').forEach((h) => {
-      const chars = [];
-      $$('.ln', h).forEach((ln) => {
-        ln.innerHTML = Array.from(ln.textContent).map((c) => (c === ' ' ? ' ' : `<span class="ch">${esc(c)}</span>`)).join('');
-        chars.push(...$$('.ch', ln));
-      });
-      if (reduced) return;
-      // a wave runs through the letters once
-      chars.forEach((c, i) => { c.style.fontStretch = '62%'; setTimeout(() => { c.style.fontStretch = ''; }, 120 + i * 28); });
-      if (!fine) return;
-      let raf = 0, px = -1e4, py = -1e4;
-      const run = () => {
-        raf = 0;
-        chars.forEach((c) => {
-          const r = c.getBoundingClientRect();
-          const d = Math.hypot(r.left + r.width / 2 - px, r.top + r.height / 2 - py);
-          const k = Math.max(0, 1 - d / 260);
-          c.style.fontStretch = (100 + 25 * k).toFixed(1) + '%';
-        });
-      };
-      h.addEventListener('pointermove', (e) => { px = e.clientX; py = e.clientY; if (!raf) raf = requestAnimationFrame(run); });
-      h.addEventListener('pointerleave', () => { px = py = -1e4; if (!raf) raf = requestAnimationFrame(run); });
-    });
+  // ── Gold cursor (mice only) ───────────────────────────
+  function initCursor() {
+    if (!fine || reduced) return;
+    const dot = $('.cursor'), ring = $('.cursor-ring');
+    if (!dot || !ring) return;
+    let x = -100, y = -100, rx = -100, ry = -100, raf = 0;
+    const loop = () => {
+      rx += (x - rx) * 0.18; ry += (y - ry) * 0.18;
+      dot.style.transform = `translate3d(${x}px,${y}px,0)`;
+      ring.style.transform = `translate3d(${rx}px,${ry}px,0)`;
+      raf = Math.abs(x - rx) + Math.abs(y - ry) > 0.3 ? requestAnimationFrame(loop) : 0;
+    };
+    document.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      x = e.clientX; y = e.clientY;
+      document.documentElement.classList.add('has-cursor');
+      document.documentElement.classList.toggle('is-pointing', !!e.target.closest('a, button, label, summary, select, [role="tab"], .swatch, .chip'));
+      if (!raf) raf = requestAnimationFrame(loop);
+    }, { passive: true });
+    document.addEventListener('pointerleave', () => document.documentElement.classList.remove('has-cursor'));
+    document.documentElement.addEventListener('mouseleave', () => document.documentElement.classList.remove('has-cursor'));
   }
 
   // ── Reveal on scroll ─────────────────────────────────────
@@ -375,7 +376,7 @@
   window.Site = Site;
   if (DB.mode === 'demo') $('[data-demo]').hidden = false;
   $$('[data-year]').forEach((n) => { n.textContent = new Date().getFullYear(); });
-  initHeader(); initSearch(); initNewsletter(); stretchTitles(); Bag.paint();
+  initHeader(); initSearch(); initNewsletter(); initCursor(); Bag.paint();
   Site.ready = Promise.all([DB.settings(), DB.products()]).then(([s, products]) => {
     Site.settings = s; Site.products = products;
     applySettings(s);
