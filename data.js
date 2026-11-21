@@ -1,6 +1,6 @@
 // ============================================================
 // BADDIE STRANDS — Store data
-// Products, knowledge hub, reviews, quiz and delivery zones.
+// Products, texture chapters, stylist, answers, reviews, delivery.
 // Edit this file to update what the shop shows.
 //
 // Product fields
@@ -10,7 +10,11 @@
 //   hot       true = Bestseller           new       true = New in
 //   lengths   sizes offered               colors / colorNames  shades offered
 //   tone      backdrop colour for this piece in the showroom
-//   image     a file name in this folder, or a full https:// URL
+//   texture   how the hair moves: bone, straight, body, loose, water,
+//             deep, curly or coily. The site draws the hair from this.
+//   ombre     true = shades blend from dark roots into the colour
+//   image     optional photo: a file name in this folder or an https://
+//             link. Leave "" and the site shows the drawn hair instead.
 // ============================================================
 
 const STORE_DATA = {
@@ -32,11 +36,8 @@ const STORE_DATA = {
       hot: true,
       new: false,
       tone: "#7A1E46",
-      image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&q=80",
-      images: [
-        "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&q=80",
-        "https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?w=600&q=80"
-      ],
+      texture: "straight",
+      image: "",
       description: "100% virgin Remy human hair. Silky smooth texture, full cuticle intact, tangle-free. Comes with a 5×5 HD lace closure that melts seamlessly into your skin. Perfect for beginners and professionals alike.",
       features: ["100% Virgin Human Hair", "HD Lace Closure", "Pre-plucked Hairline", "Bleached Knots", "180% Density", "Can be bleached & dyed"]
     },
@@ -57,8 +58,8 @@ const STORE_DATA = {
       hot: false,
       new: true,
       tone: "#A6652F",
-      image: "https://images.unsplash.com/photo-1560869713-7d0a29430803?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1560869713-7d0a29430803?w=600&q=80"],
+      texture: "body",
+      image: "",
       description: "Luxurious Brazilian body wave bundles with a natural bounce and flow. Double-wefted for fullness, zero shedding. The wave pattern holds beautifully whether wet or dry.",
       features: ["Brazilian Virgin Hair", "Double Wefted", "Zero Shedding", "Natural Wave Pattern", "Can be heat styled", "3 bundles recommended for full look"]
     },
@@ -79,8 +80,8 @@ const STORE_DATA = {
       hot: true,
       new: false,
       tone: "#1F5A5E",
-      image: "https://images.unsplash.com/photo-1530519729491-aea5b51d1ee1?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1530519729491-aea5b51d1ee1?w=600&q=80"],
+      texture: "deep",
+      image: "",
       description: "Stunning deep wave pattern with a 13×6 HD lace frontal. Creates a natural-looking hairline from ear to ear. The deep, defined curls add incredible volume and drama.",
       features: ["13×6 HD Lace Frontal", "Deep Wave Pattern", "Ear-to-ear Coverage", "Pre-bleached Knots", "200% Density", "Glueless installation option"]
     },
@@ -101,8 +102,8 @@ const STORE_DATA = {
       hot: false,
       new: true,
       tone: "#4E5B2A",
-      image: "https://images.unsplash.com/photo-1600948836101-f9ffda59d250?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1600948836101-f9ffda59d250?w=600&q=80"],
+      texture: "coily",
+      image: "",
       description: "Celebrate your roots with this authentic 4C coily texture wig. Crafted from virgin African hair, it mimics the natural Afro texture perfectly. Celebrate your African heritage with unmatched realism.",
       features: ["Authentic 4C Texture", "Virgin African Hair", "Lace Front", "Protective Style", "No Heat Needed", "Afrocentric Design"]
     },
@@ -123,8 +124,8 @@ const STORE_DATA = {
       hot: true,
       new: false,
       tone: "#2B3A55",
-      image: "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&q=80"],
+      texture: "bone",
+      image: "",
       description: "Ultra-sleek bone straight hair with a mirror-like shine. The smoothest, silkiest straight hair we carry. Stays perfectly straight in humidity. A Baddie Strands bestseller.",
       features: ["Super Straight Texture", "Anti-Humidity Coating", "Mirror-like Shine", "HD Lace", "Beginner Friendly", "Heat Resistant up to 230°C"]
     },
@@ -145,8 +146,8 @@ const STORE_DATA = {
       hot: false,
       new: false,
       tone: "#B5533C",
-      image: "https://images.unsplash.com/photo-1499557354967-2b2d8910bcca?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1499557354967-2b2d8910bcca?w=600&q=80"],
+      texture: "water",
+      image: "",
       description: "Full set of 7-piece loose deep wave clip-in extensions. Perfect for adding length and volume instantly. Easy DIY installation, no salon needed. Safe for natural hair.",
       features: ["7-Piece Full Set", "Strong Snap Clips", "Blend with Natural Hair", "No Damage", "Reusable 12+ months", "Salon-quality finish"]
     },
@@ -167,8 +168,8 @@ const STORE_DATA = {
       hot: false,
       new: true,
       tone: "#A3245C",
-      image: "https://images.unsplash.com/photo-1586116104126-7b8e839d5b9f?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1586116104126-7b8e839d5b9f?w=600&q=80"],
+      texture: "curly",
+      image: "",
       description: "Chic and modern curly bob wig with an HD lace front that disappears into your skin. The curl pattern is defined, bouncy, and holds its shape without frizz. Bold meets elegant.",
       features: ["Curly Bob Style", "HD Undetectable Lace", "Pre-styled", "Frizz-resistant", "Easy Maintenance", "Day-to-night versatile"]
     },
@@ -189,8 +190,8 @@ const STORE_DATA = {
       hot: false,
       new: false,
       tone: "#A9842C",
-      image: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=600&q=80"],
+      texture: "loose",
+      image: "",
       description: "Peruvian loose wave bundles with the perfect blend of straight and wavy. Extremely soft texture, minimal shedding. The natural lustre of Peruvian hair is unmatched.",
       features: ["Peruvian Virgin Hair", "Loose Wave Pattern", "Natural Lustre", "Low Shedding", "Can be curled", "3-4 bundles for full head"]
     },
@@ -211,8 +212,8 @@ const STORE_DATA = {
       hot: true,
       new: false,
       tone: "#2C5F8A",
-      image: "https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?w=600&q=80"],
+      texture: "water",
+      image: "",
       description: "Put it on in 60 seconds, no glue, no tape, no mess. This glueless water wave wig features an adjustable band and combs that secure it firmly. The water wave texture is playful yet polished.",
       features: ["Glueless Installation", "Adjustable Band + Combs", "60-Second Install", "Water Wave Texture", "Beginner-Friendly", "Protects Natural Hair"]
     },
@@ -233,8 +234,9 @@ const STORE_DATA = {
       hot: false,
       new: true,
       tone: "#C0862A",
-      image: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&q=80"],
+      texture: "body",
+      ombre: true,
+      image: "",
       description: "Pre-coloured ombre highlight bundles by our in-house colour artists. Beautifully blended tones from root to tip. You get the colour without the chemical damage.",
       features: ["Pre-Coloured", "Professional Ombre Blend", "Zero Chemical Damage to Your Hair", "Balayage Effect", "Instant Colour Pop", "Heat-resistant colour"]
     },
@@ -255,8 +257,8 @@ const STORE_DATA = {
       hot: false,
       new: false,
       tone: "#7D6BA8",
-      image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80"],
+      texture: "straight",
+      image: "",
       description: "Achieve the perfect sleek high pony or low bun in minutes. Wrap-around design means no clips, no damage. The drawstring system creates a tight, natural-looking base.",
       features: ["Wrap-Around Design", "Drawstring System", "No Clips / No Damage", "Sleek or Curly Option", "Match any outfit", "Easy to style"]
     },
@@ -277,81 +279,12 @@ const STORE_DATA = {
       hot: false,
       new: false,
       tone: "#6B4A3A",
-      image: "https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?w=600&q=80"],
+      texture: "straight",
+      image: "",
       description: "The U-part wig blends your own natural hair through the U-shaped opening for the most undetectable, seamless look. Great for natural hair ladies who want to protect while looking polished.",
       features: ["Blends Your Natural Hair", "Most Undetectable Look", "U-Shaped Opening", "Clips & Combs Included", "Protective Style", "No Lace Required"]
     }
   ],
-
-  knowledge: {
-    basics: [
-      {
-        num: "01",
-        title: "Know Your Hair Type",
-        body: "From 1A to 4C — understanding your curl pattern, porosity, and density is the first step. High porosity hair absorbs moisture fast but loses it just as quickly. Low porosity needs heat to open the cuticle. Knowing this changes everything.",
-        action: { label: "Take the hair quiz", go: "quiz" }
-      },
-      {
-        num: "02",
-        title: "Virgin vs Remy Hair",
-        body: "Virgin hair has never been chemically processed — it's the purest form. Remy hair means the cuticles are all aligned in one direction, preventing tangling. All Baddie Strands products are virgin AND Remy — never settle for less.",
-        action: { label: "See what goes into every strand", go: "#promise" }
-      },
-      {
-        num: "03",
-        title: "Lace Types Explained",
-        body: "HD lace is the thinnest, most transparent — it disappears on all skin tones. Regular lace is thicker but more durable. 13×4 covers ear-to-ear, 13×6 adds depth for parting, 360 lace covers the full perimeter.",
-        action: { label: "Shop lace wigs", go: "shop:wigs" }
-      },
-      {
-        num: "04",
-        title: "Density Guide",
-        body: "Density is how full the wig looks. 150% is natural and light. 180% is full and glamorous. 200% is the maximum — dramatic, show-stopping volume. Choose based on your lifestyle and the look you want.",
-        action: null
-      },
-      {
-        num: "05",
-        title: "Reading Hair Length",
-        body: "Hair is measured in its straightened state. A 20\" straight wig hits the mid-back. A 20\" curly wig may appear much shorter due to shrinkage. Always account for your texture when choosing length.",
-        action: { label: "Open the length guide", go: "#length" }
-      },
-      {
-        num: "06",
-        title: "Cap Construction",
-        body: "The cap is the foundation. Machine-made caps are budget-friendly but less breathable. Hand-tied caps move more naturally. Glueless caps have adjustable bands. Choose your cap based on comfort, lifestyle, and activity level.",
-        action: null
-      }
-    ],
-    care: {
-      "Washing": [
-        { title: "Detangle Before Washing", body: "Always detangle from tips to roots using a wide-tooth comb or your fingers. Never start from the root — you will cause unnecessary breakage and matting." },
-        { title: "Use Sulphate-Free Shampoo", body: "Sulphates strip the hair of natural oils. For human hair extensions, use a moisturising, sulphate-free shampoo. Dilute it slightly in a bowl of warm water for an even, gentle cleanse." },
-        { title: "Wash in Downward Strokes", body: "Work the shampoo gently downward, following the direction of the cuticle. Never scrub or rub in circular motions — this causes frizz and tangling." },
-        { title: "Deep Condition Every Wash", body: "Apply a rich conditioner from mid-shaft to ends. Leave for 15–30 minutes under a plastic cap. Human hair doesn't receive natural oils from a scalp, so it needs this external moisture." },
-        { title: "Rinse with Cool Water", body: "Always finish with a cool water rinse. Cold water closes the cuticle, sealing in moisture and locking in that mirror shine." },
-        { title: "Air Dry or Low Heat", body: "Pat gently with a microfibre towel — never rub. Air dry on a wig stand or use a blow dryer on the lowest heat setting with a diffuser attachment." }
-      ],
-      "Styling": [
-        { title: "Always Use Heat Protectant", body: "Even if the hair is heat resistant, apply a thermal protectant spray before any heat styling. This preserves the integrity of the hair and extends its lifespan significantly." },
-        { title: "Flat Iron at the Right Temperature", body: "For fine or coloured hair, use 150–180°C. For thick, coarse hair, go up to 220°C. Never exceed 230°C. Use professional-grade flat irons for smooth, even results." },
-        { title: "Curl with a Wand, Set with Cool Air", body: "After curling, let each curl cool completely in your hand before releasing — this sets the curl for all-day hold. Hit with cool air from a dryer to lock them in place." },
-        { title: "Avoid Alcohol-Based Products", body: "Many hairsprays and styling gels contain drying alcohols. Check the label for ethanol or isopropyl alcohol as one of the first ingredients — these will dry out and damage your hair." }
-      ],
-      "Storage": [
-        { title: "Always Store on a Wig Stand", body: "A wig stand maintains the shape of the cap and prevents the hair from being crushed or tangled. Invest in a quality mannequin head or collapsible wig stand." },
-        { title: "Silk or Satin-Lined Bags", body: "When travelling or storing a wig for a long time, place it in a silk or satin bag. Cotton absorbs moisture and causes frizz. Silk preserves moisture and keeps the cuticle smooth." },
-        { title: "Detangle Before Storing", body: "Never put a wig away tangled. Always finger-detangle or brush through before storage. Tangles worsen over time and become much harder to remove later." },
-        { title: "Avoid Direct Sunlight", body: "UV rays fade colour and weaken the hair shaft. Store wigs away from windows or sunlight. If you must be in the sun for extended periods, use a UV protectant hair spray." }
-      ],
-      "Maintenance": [
-        { title: "Refresh Between Washes with Water Spray", body: "Spritz your hair lightly with water and scrunch to revive curls or waves. Add a light leave-in conditioner or hair serum for shine and frizz control." },
-        { title: "Moisturise Weekly", body: "Use the LOC or LCO method: Layer Liquid (water), Oil (argan, jojoba, or castor), then Cream (shea butter, leave-in). This locks moisture in for longer periods." },
-        { title: "Trim Ends Every 3 Months", body: "Even human hair gets split ends with regular heat and manipulation. A small trim every 3 months keeps the ends healthy, bouncy, and tangle-free." },
-        { title: "Sleep on Silk or Satin", body: "Cotton pillowcases cause friction, frizz, and breakage while you sleep. Switch to a silk or satin pillowcase, or use a silk bonnet when sleeping. Your hair will thank you." }
-      ]
-    }
-  },
 
   testimonials: [
     {
@@ -398,69 +331,57 @@ const STORE_DATA = {
     }
   ],
 
-  quiz: [
-    {
-      q: "What's your lifestyle like?",
-      options: ["Very active — gym, sports, outdoor", "Office life — sleek and professional", "Social butterfly — events and parties", "Stay-at-home — comfort first"]
-    },
-    {
-      q: "How much styling time do you have daily?",
-      options: ["5 minutes max", "10–20 minutes", "30+ minutes", "I love styling — unlimited!"]
-    },
-    {
-      q: "What's your preferred hair texture?",
-      options: ["Straight and sleek", "Wavy and natural", "Curly and bouncy", "Coily and natural"]
-    },
-    {
-      q: "What's your priority?",
-      options: ["Undetectable lace look", "Maximum volume", "Long-lasting durability", "Easy maintenance"]
-    },
-    {
-      q: "What's your approximate budget?",
-      options: ["Under ₦50,000", "₦50,000 – ₦80,000", "₦80,000 – ₦120,000", "Price is no object"]
-    }
+  // ── THE FOUR TEXTURES (the scroll story on the homepage) ───
+  // product: the id shown with the chapter; shade: which of its shades.
+  chapters: [
+    { texture: "bone", title: "Bone straight", line: "Heavy, sleek and mirror-shiny. It stays straight even when Abuja turns humid.", product: 5, shade: 0, bg: "#6F0A3A", ink: "#F6E2D3" },
+    { texture: "body", title: "Body wave", line: "Soft S-waves with bounce. The \u201cI woke up like this\u201d texture.", product: 2, shade: 2, bg: "#1C4448", ink: "#F6E2D3" },
+    { texture: "deep", title: "Deep wave", line: "Tight, defined ripples and serious volume. For when you want the room to notice.", product: 3, shade: 0, bg: "#C0D2CC", ink: "#230B06" },
+    { texture: "coily", title: "Kinky coily", line: "4C texture that blends with your own. Your roots, celebrated.", product: 4, shade: 0, bg: "#DDA63A", ink: "#230B06" }
   ],
 
-  // ── WHAT GOES INTO EVERY STRAND (story section) ────────────
-  promise: [
-    { title: "Virgin hair", body: "100% virgin human hair. Never chemically processed, cuticles aligned in one direction so it doesn't tangle." },
-    { title: "HD lace", body: "The thinnest, most transparent lace we carry. It disappears on all skin tones." },
-    { title: "Same-day in Abuja", body: "Order in Abuja and wear it today. Most major cities get theirs in one to two days." },
-    { title: "Worldwide shipping", body: "Tracked delivery to the UK, Europe, the USA, Canada and across Africa." },
-    { title: "Secure checkout", body: "Pay by card through Paystack or by bank transfer. Your card details are never stored." }
-  ],
-
-  // ── LENGTH GUIDE ───────────────────────────────────────────
-  // Where straight hair of each length falls on a 5ft 5in frame.
-  // sitsShorter: how much of its length a texture loses to its pattern.
-  lengthGuide: {
-    landmarks: [
-      { upTo: 9, label: "Chin" }, { upTo: 11, label: "Neck" }, { upTo: 13, label: "Shoulders" },
-      { upTo: 15, label: "Below the shoulders" }, { upTo: 17, label: "Armpit" }, { upTo: 19, label: "Bra strap" },
-      { upTo: 21, label: "Mid-back" }, { upTo: 23, label: "Lower back" }, { upTo: 25, label: "Waist" },
-      { upTo: 27, label: "Hip" }, { upTo: 29, label: "Tailbone" }, { upTo: 99, label: "Below the hip" }
+  // ── THE STYLIST ("Find your crown") ─────────────────────────
+  stylist: {
+    moves: [
+      { id: "sleek", label: "Sleek and straight", textures: ["bone", "straight"], show: "bone" },
+      { id: "waves", label: "Soft waves", textures: ["body", "loose", "water"], show: "body" },
+      { id: "curls", label: "Defined curls", textures: ["deep", "curly"], show: "deep" },
+      { id: "coils", label: "Coily, like mine", textures: ["coily"], show: "coily" }
     ],
-    textures: [
-      { id: "straight", label: "Straight", sitsShorter: 0 },
-      { id: "wavy", label: "Wavy", sitsShorter: 0.08 },
-      { id: "curly", label: "Curly", sitsShorter: 0.18 }
+    kinds: [
+      { id: "wigs", label: "A wig I can just put on" },
+      { id: "bundles", label: "Bundles for my stylist" },
+      { id: "extensions", label: "A quick add-on" },
+      { id: "any", label: "Surprise me" }
     ]
   },
 
-  // ── PICTURES USED AROUND THE SITE ──────────────────────────
-  media: {
-    hero: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1200&q=80",
-    story: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80",
-    promise: "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=900&q=80",
-    basics: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=1600&q=80",
-    care: {
-      "Washing": "https://images.unsplash.com/photo-1560869713-7d0a29430803?w=900&q=80",
-      "Styling": "https://images.unsplash.com/photo-1586116104126-7b8e839d5b9f?w=900&q=80",
-      "Storage": "https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?w=900&q=80",
-      "Maintenance": "https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?w=900&q=80"
-    }
-  }
+  // ── LENGTH GUIDE ───────────────────────────────────────────
+  // Where straight hair of each length falls on a 5ft 5in frame.
+  lengthGuide: [
+    { upTo: 9, label: "chin" }, { upTo: 11, label: "neck" }, { upTo: 13, label: "shoulders" },
+    { upTo: 15, label: "just past the shoulders" }, { upTo: 17, label: "armpits" }, { upTo: 19, label: "bra strap" },
+    { upTo: 21, label: "mid-back" }, { upTo: 23, label: "lower back" }, { upTo: 25, label: "waist" },
+    { upTo: 27, label: "hips" }, { upTo: 29, label: "tailbone" }, { upTo: 99, label: "below the hips" }
+  ],
 
+  // ── ANSWERS ("Ask us anything") ────────────────────────────
+  // Delivery answers are written from DELIVERY below, so they stay in step.
+  faq: [
+    { group: "Delivery", q: "How fast can I get it?", a: "@delivery-local" },
+    { group: "Delivery", q: "Do you ship outside Nigeria?", a: "@delivery-intl" },
+    { group: "The hair", q: "Virgin or Remy, what\u2019s the difference?", a: "Virgin hair has never been chemically processed. Remy means the cuticles all run the same way, so it doesn\u2019t tangle. Everything we sell is both." },
+    { group: "The hair", q: "Which lace should I go for?", a: "HD lace is the thinnest and disappears on every skin tone. Regular lace is a little thicker and lasts longer. A 13\u00d74 frontal covers ear to ear, 13\u00d76 gives you more room to part, and 360 lace goes all the way round." },
+    { group: "The hair", q: "How full should it be?", a: "That\u2019s density. 150% looks natural and light, 180% is full and glamorous, and 200% is maximum volume. Pick for the look you want and how much weight you\u2019re happy to carry." },
+    { group: "The hair", q: "Why does my curly unit look shorter?", a: "Length is measured with the hair pulled straight. A 20\u2033 straight unit reaches mid-back; a 20\u2033 curly one sits higher because of shrinkage. The stylist above shows you where each length lands." },
+    { group: "The hair", q: "Which cap is right for me?", a: "Machine-made caps cost less but breathe less. Hand-tied caps move more naturally. Glueless caps have an adjustable band and combs, so you can put them on in about a minute." },
+    { group: "Care", q: "How do I wash it?", a: "Detangle from the ends up first. Use a sulphate-free shampoo in downward strokes, never circles. Deep condition for 15 to 30 minutes, rinse with cool water to seal the cuticle, then pat dry and let it air-dry on a stand." },
+    { group: "Care", q: "Can I use heat on it?", a: "Yes. Always use a heat protectant. Keep fine or coloured hair at 150\u2013180\u00b0C and never go above 230\u00b0C. Let curls cool in your hand before you let go, then set them with cool air." },
+    { group: "Care", q: "How do I keep it soft between washes?", a: "Spritz with water and a little leave-in. Once a week, layer water, then oil, then cream. Trim the ends every three months, and sleep on silk or satin." },
+    { group: "Care", q: "How should I store it?", a: "On a wig stand, detangled, out of direct sun. When you travel, use a silk or satin bag. Cotton pulls moisture out." },
+    { group: "Ordering", q: "How do I pay?", a: "By card through Paystack, or by bank transfer. If neither suits you, place the order and finish it with us on WhatsApp." },
+    { group: "Ordering", q: "Can you get something you don\u2019t list?", a: "Often, yes. Tell us the length, texture and shade in the box below and we\u2019ll reply within two hours." }
+  ]
 };
 
 // ── DELIVERY ZONES (shown in the delivery section) ───────────
