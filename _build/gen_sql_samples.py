@@ -1,7 +1,7 @@
 # Rebuilds the product rows in supabase/2-sample-products.sql from seed.js,
 # so the demo shop and a fresh live shop start with the same pieces.
 import json, re
-ROOT = '/home/claude/bs4'
+ROOT = '/home/claude/bs5'
 s = open(f'{ROOT}/shop/assets/js/seed.js').read()
 pre = 'window.BS_SEED = '
 data = json.loads(s[s.index(pre) + len(pre):].rstrip().rstrip(';'))

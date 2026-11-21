@@ -1,6 +1,6 @@
 # Builds the shop's HTML pages from one shared header and footer.
 import os
-OUT = '/home/claude/bs4/shop'
+OUT = '/home/claude/bs5/shop'
 V = '2'
 
 ICONS = '''<svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -56,8 +56,9 @@ def head(title, desc, page):
 {nav}
     </nav>
     <div class="hd__tools">
+      <span class="clock" data-clock></span>
       <button class="iconbtn" type="button" data-search-open aria-label="Search the shop"><svg class="ico"><use href="#i-search"/></svg></button>
-      <button class="bagbtn" type="button" data-bag-open aria-label="Open your bag"><svg class="ico"><use href="#i-bag"/></svg><span class="bagbtn__n" data-bag-count>0</span></button>
+      <button class="bagbtn" type="button" data-bag-open aria-label="Open your bag"><svg class="ico"><use href="#i-bag"/></svg><span>Bag</span><span class="bagbtn__n" data-bag-count>0</span></button>
       <button class="iconbtn hd__menu" type="button" data-menu-open aria-label="Menu" aria-expanded="false" aria-controls="menu"><svg class="ico"><use href="#i-menu"/></svg></button>
     </div>
   </div>
@@ -65,7 +66,7 @@ def head(title, desc, page):
 '''
 
 FOOT = '''
-<section class="sec--deep" aria-labelledby="circle-title" style="border-top:1px solid var(--border)">
+<section class="blush" aria-labelledby="circle-title">
   <div class="wrap circle">
     <div><p class="tag">Stay in the loop</p><h2 class="h2" id="circle-title">Join the <em>Inner Circle</em></h2><p class="lede" style="margin-top:12px">Exclusive drops, styling tips and members-only deals. No spam, ever.</p></div>
     <div>
@@ -89,7 +90,8 @@ FOOT = '''
     <nav aria-label="Learn"><h3>Learn</h3><a href="knowledge.html">Hair knowledge</a><a href="knowledge.html#care">Care guide</a><a href="quiz.html">Hair quiz</a><a href="help.html">Questions</a></nav>
     <nav aria-label="Information"><h3>Info</h3><a href="delivery.html">Delivery</a><a href="track.html">Track an order</a><a href="about.html">Our story</a><a href="contact.html">Contact us</a><p data-open class="open">Checking hours</p></nav>
   </div>
-  <div class="wrap ft__base"><p>&copy; <span data-year>2026</span> Baddie Strands. All rights reserved.</p><p>Made with love in Abuja, Nigeria</p></div>
+  <div class="ft__word" aria-hidden="true"><p>Baddie Strands</p></div>
+  <div class="wrap ft__base"><p>&copy; <span data-year>2026</span> Baddie Strands. All rights reserved.</p><p><span data-clock-foot>Abuja, Nigeria</span></p></div>
 </footer>
 
 <div class="menu" id="menu" data-menu hidden role="dialog" aria-modal="true" aria-label="Menu">
@@ -111,7 +113,7 @@ FOOT = '''
     <div class="drawer__foot" data-bag-foot hidden>
       <div class="free" data-free hidden><span data-free-text></span><div class="free__bar"><i data-free-bar></i></div></div>
       <div class="sum"><div class="sum__total"><span>Subtotal</span><span class="price" data-bag-subtotal></span></div><div class="small muted"><span>Delivery is worked out at checkout from your state.</span></div></div>
-      <a class="btn btn--pink btn--wide" href="checkout.html">Checkout securely</a>
+      <a class="btn btn--pink btn--wide btn--go" href="checkout.html" style="justify-content:space-between;padding-left:30px">Checkout securely <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a>
       <button class="btn btn--black btn--wide" type="button" data-close>Keep shopping</button>
     </div>
   </div>
@@ -160,7 +162,7 @@ STORY = '''
         <p class="body">Baddie Strands began with one mission: give Nigerian women access to the quality of hair they deserve, without compromise. Every strand is 100% virgin, ethically handled, and built to last.</p>
         <p class="body">We are a proudly Nigerian business with a worldwide reach. Whether you’re in Wuse or Wimbledon, we bring the same quality to your door, and every package carries a piece of that Abuja excellence.</p>
         <div class="places"><span>Nigeria</span><span>United Kingdom</span><span>USA</span><span>Ghana</span><span>And more</span></div>
-        <a class="btn btn--line" href="contact.html">Connect with us</a>
+        <a class="btn btn--line btn--go" href="contact.html">Connect with us <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a>
       </div>
     </div>'''
 
@@ -175,22 +177,25 @@ PAGES['index.html'] = (
   'home', f'''
 <main id="main">
   <section class="hero" aria-labelledby="hero-title">
-    <div class="hero__text">
-      <p class="tag">✦ &nbsp;Nigerian-owned luxury hair brand</p>
-      <h1 class="display" id="hero-title">Hair That Speaks <em>Before You Do</em></h1>
-      <p class="lede">100% virgin human hair. HD lace that vanishes on your skin. <em style="font-family:var(--italic);color:var(--cream)">Your Hair, Your Crown</em>: from Abuja to the world, Baddie Strands delivers the crown you deserve.</p>
-      <div class="hero__go"><a class="btn" href="shop.html">Shop the collection</a><a class="btn btn--line" href="quiz.html">Find your match</a></div>
+    <h1 class="visually-hidden" id="hero-title">Hair that speaks before you do</h1>
+    <div class="hero__stage">
+      <span class="hero__line hero__line--1" aria-hidden="true">Hair That Speaks</span>
+      <span class="hero__photo"><img src="assets/img/hero.jpg" alt="A long, glossy bone-straight wig in deep burgundy" fetchpriority="high"></span>
+      <span class="hero__line hero__line--2" aria-hidden="true">Before You Do</span>
+      <span class="badge-ring" aria-hidden="true"><span>Virgin<br>Human<br>Hair<br>100%</span></span>
     </div>
-    <p class="hero__scroll" aria-hidden="true">Scroll to explore</p>
-    <div class="hero__media">
-      <img src="assets/img/hero.jpg" alt="A long, glossy bone-straight wig in deep burgundy" fetchpriority="high">
-      <div class="badge-ring" aria-hidden="true">Virgin<br>Human<br>Hair<br>100%</div>
-      <div class="stats" data-stats></div>
+    <div class="hero__intro">
+      <p class="lede">100% virgin human hair, with HD lace that vanishes on your skin. <em style="font-family:var(--italic);color:var(--cream)">Your Hair, Your Crown</em>, from Abuja to the world.</p>
+      <div class="hero__go"><a class="btn btn--go" href="shop.html">Shop the collection <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a><a class="btn btn--line" href="quiz.html">Find your match</a></div>
     </div>
+    <div class="hero__corner" data-corner><p class="tag">Nigerian-owned since 2020</p><div class="stats" data-stats></div></div>
     <div class="ticker" aria-hidden="true"><div class="ticker__run" data-ticker></div></div>
   </section>
 
-  <div class="features" aria-label="Why Baddie Strands"><div class="features__run">{feat}{feat.replace('<span class="feature">', '<span class="feature" aria-hidden="true">')}</div></div>
+  <section class="wall" aria-label="Your hair, your crown">
+    <div class="wall__run" aria-hidden="true"><img src="assets/img/hero.jpg" alt="" loading="lazy"><img src="assets/img/about.jpg" alt="" loading="lazy"><img src="assets/img/bob.jpg" alt="" loading="lazy"><img src="assets/img/quiz.jpg" alt="" loading="lazy"><img src="assets/img/hero.jpg" alt="" loading="lazy"><img src="assets/img/about.jpg" alt="" loading="lazy"><img src="assets/img/bob.jpg" alt="" loading="lazy"><img src="assets/img/quiz.jpg" alt="" loading="lazy"><img src="assets/img/hero.jpg" alt="" loading="lazy"><img src="assets/img/about.jpg" alt="" loading="lazy"><img src="assets/img/bob.jpg" alt="" loading="lazy"><img src="assets/img/quiz.jpg" alt="" loading="lazy"><img src="assets/img/hero.jpg" alt="" loading="lazy"><img src="assets/img/about.jpg" alt="" loading="lazy"><img src="assets/img/bob.jpg" alt="" loading="lazy"><img src="assets/img/quiz.jpg" alt="" loading="lazy"></div>
+    <p class="wall__motto">Your Hair, Your Crown</p>
+  </section>
 
   <section class="sec" aria-label="Our story"><div class="wrap">{STORY}</div></section>
 
@@ -212,11 +217,11 @@ PAGES['index.html'] = (
   <section class="sec sec--tight" aria-labelledby="match-title">
     <div class="wrap">
       <div class="match rv">
-        <div class="match__text">
+        <div class="match__text blush">
           <p class="tag">Personalised recommendation</p>
           <h2 class="h2" id="match-title">Find Your Perfect <em>Match</em></h2>
           <p class="lede">Answer five quick questions about your lifestyle, texture and budget, and we’ll pick the pieces made for you.</p>
-          <div><a class="btn" href="quiz.html">Take the hair quiz</a></div>
+          <div><a class="btn btn--go" href="quiz.html">Take the hair quiz <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a></div>
         </div>
         <div class="match__media"><span class="pic"><img src="assets/img/quiz.jpg" alt="A long deep wave wig in natural black" loading="lazy"></span></div>
       </div>
@@ -232,7 +237,7 @@ PAGES['index.html'] = (
 
   <section class="sec" aria-labelledby="k-title">
     <div class="wrap">
-      <div class="sec__head"><div><p class="tag">The knowledge hub</p><h2 class="h2" id="k-title">Everything You Need to <em>Know</em></h2></div><a class="btn btn--line" href="knowledge.html">Read the guide</a></div>
+      <div class="sec__head"><div><p class="tag">The knowledge hub</p><h2 class="h2" id="k-title">Everything You Need to <em>Know</em></h2></div><a class="btn btn--line btn--go" href="knowledge.html">Read the guide <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a></div>
       <div class="kgrid">
         <article class="kcard rv"><p class="kcard__n">01</p><h3>Virgin vs Remy Hair</h3><p>Virgin hair has never been chemically processed. Remy means the cuticles all run one way, so it doesn’t tangle. Everything we sell is both.</p></article>
         <article class="kcard rv"><p class="kcard__n">02</p><h3>Lace Types Explained</h3><p>HD lace is the thinnest and disappears on every skin tone. A 13×4 frontal covers ear to ear; 13×6 gives you more room to part.</p></article>
@@ -243,7 +248,7 @@ PAGES['index.html'] = (
 
   <section class="sec sec--tight" aria-labelledby="new-title">
     <div class="wrap">
-      <div class="sec__head"><div><p class="tag">Just landed</p><h2 class="h2" id="new-title">New <em>In</em></h2></div><a class="btn btn--line" href="shop.html?sort=new">See everything new</a></div>
+      <div class="sec__head"><div><p class="tag">Just landed</p><h2 class="h2" id="new-title">New <em>In</em></h2></div><a class="btn btn--line btn--go" href="shop.html?sort=new">See everything new <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a></div>
       <div class="grid" data-new style="padding:0"></div>
     </div>
   </section>
@@ -283,7 +288,7 @@ PAGES['product.html'] = (
     <div class="pdp" data-pdp>
       <div class="gallery">
         <div class="gallery__thumbs" data-thumbs></div>
-        <div class="gallery__main" data-main><span class="pic"><img data-main-img alt=""></span></div>
+        <div class="gallery__main" data-main><span class="ghostword" data-ghost aria-hidden="true"></span><span class="pic"><img data-main-img alt=""></span></div>
       </div>
       <div class="buy" data-buy>
         <div class="ghost" style="height:56px;width:80%"></div><div class="ghost" style="height:24px;width:30%"></div><div class="ghost" style="height:140px"></div>
@@ -295,7 +300,7 @@ PAGES['product.html'] = (
     </section>
   </div>
   <div class="mbar" data-mbar aria-hidden="true"><div><b data-mbar-name></b><span class="price" data-mbar-price></span></div><button class="btn" type="button" data-mbar-add tabindex="-1">Add to bag</button></div>
-  <div class="wrap" data-missing hidden><div class="empty"><h1 class="h2">We couldn’t find that piece.</h1><p class="muted">It may have sold out or been renamed.</p><a class="btn" href="shop.html">See all hair</a></div></div>
+  <div class="wrap" data-missing hidden><div class="empty"><h1 class="h2">We couldn’t find that piece.</h1><p class="muted">It may have sold out or been renamed.</p><a class="btn btn--go" href="shop.html">See all hair <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a></div></div>
 </main>''')
 
 PAGES['knowledge.html'] = (
@@ -309,13 +314,13 @@ PAGES['knowledge.html'] = (
     </div>
     <div id="panel-basics" role="tabpanel" aria-labelledby="tab-basics" data-kpanel="basics">
       <h2 class="visually-hidden">Hair basics</h2>
-      <div class="kgrid">
-        <article class="kcard"><p class="kcard__n">01</p><h3>Know Your Hair Type</h3><p>From 1A to 4C, understanding your curl pattern, porosity and density is the first step. High-porosity hair absorbs moisture fast but loses it just as quickly. Low porosity needs warmth to open the cuticle.</p></article>
-        <article class="kcard"><p class="kcard__n">02</p><h3>Virgin vs Remy Hair</h3><p>Virgin hair has never been chemically processed: it’s the purest form. Remy hair has all its cuticles aligned in one direction, which prevents tangling. All Baddie Strands hair is virgin and Remy.</p></article>
-        <article class="kcard"><p class="kcard__n">03</p><h3>Lace Types Explained</h3><p>HD lace is the thinnest and most transparent, and disappears on every skin tone. Regular lace is thicker but more durable. 13×4 covers ear to ear, 13×6 adds depth for parting, and 360 lace covers the full perimeter.</p></article>
-        <article class="kcard"><p class="kcard__n">04</p><h3>Density Guide</h3><p>Density is how full the wig looks. 150% is natural and light. 180% is full and glamorous. 200% is the maximum: dramatic, show-stopping volume. Choose for your lifestyle and the look you want.</p></article>
-        <article class="kcard"><p class="kcard__n">05</p><h3>Reading Hair Length</h3><p>Hair is measured straightened. A 20″ straight wig reaches mid-back; a 20″ curly wig may look much shorter because of shrinkage. Always allow for your texture when choosing length.</p></article>
-        <article class="kcard"><p class="kcard__n">06</p><h3>Cap Construction</h3><p>The cap is the foundation. Machine-made caps cost less but breathe less. Hand-tied caps move more naturally. Glueless caps have adjustable bands. Choose for comfort, lifestyle and activity level.</p></article>
+      <div class="chapters">
+        <details class="chapter" open><summary><span class="chapter__n">01</span><h3 class="chapter__t">Know Your Hair Type</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">From 1A to 4C, understanding your curl pattern, porosity and density is the first step. High-porosity hair absorbs moisture fast but loses it just as quickly. Low porosity needs warmth to open the cuticle.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">02</span><h3 class="chapter__t">Virgin vs Remy Hair</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">Virgin hair has never been chemically processed: it’s the purest form. Remy hair has all its cuticles aligned in one direction, which prevents tangling. All Baddie Strands hair is virgin and Remy.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">03</span><h3 class="chapter__t">Lace Types Explained</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">HD lace is the thinnest and most transparent, and disappears on every skin tone. Regular lace is thicker but more durable. 13×4 covers ear to ear, 13×6 adds depth for parting, and 360 lace covers the full perimeter.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">04</span><h3 class="chapter__t">Density Guide</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">Density is how full the wig looks. 150% is natural and light. 180% is full and glamorous. 200% is the maximum: dramatic, show-stopping volume. Choose for your lifestyle and the look you want.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">05</span><h3 class="chapter__t">Reading Hair Length</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">Hair is measured straightened. A 20″ straight wig reaches mid-back; a 20″ curly wig may look much shorter because of shrinkage. Always allow for your texture when choosing length.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">06</span><h3 class="chapter__t">Cap Construction</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">The cap is the foundation. Machine-made caps cost less but breathe less. Hand-tied caps move more naturally. Glueless caps have adjustable bands. Choose for comfort, lifestyle and activity level.</p></details>
       </div>
     </div>
     <div id="panel-care" role="tabpanel" aria-labelledby="tab-care" data-kpanel="care" hidden>
@@ -396,7 +401,7 @@ PAGES['checkout.html'] = (
 <main id="main">
   <div class="wrap">
     <div class="pagehead" style="padding-bottom:0" data-co-title><p class="tag">Secure checkout</p><h1 class="h1">Your <em>Order</em></h1></div>
-    <div data-co-empty hidden class="empty"><p class="lede">Your bag is empty.</p><a class="btn" href="shop.html">Find something you love</a></div>
+    <div data-co-empty hidden class="empty"><p class="lede">Your bag is empty.</p><a class="btn btn--go" href="shop.html">Find something you love <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a></div>
     <div class="co" data-co>
       <form data-co-form novalidate>
         <section class="step" data-step="1">
@@ -523,7 +528,7 @@ PAGES['404.html'] = (
     <p class="tag">Error 404</p>
     <h1 class="display">This Page Has <em>Moved On</em></h1>
     <p class="lede">The page you’re looking for doesn’t exist, or it moved. The hair is still here.</p>
-    <div class="hero__go"><a class="btn" href="shop.html">Shop the collection</a><a class="btn btn--line" href="index.html">Home</a></div>
+    <div class="hero__go"><a class="btn btn--go" href="shop.html">Shop the collection <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a><a class="btn btn--line" href="index.html">Home</a></div>
   </div></div>
 </main>''')
 
