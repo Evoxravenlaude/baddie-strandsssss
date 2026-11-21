@@ -1,115 +1,135 @@
-# Baddie Strands
+# Baddie Strands: shop and admin
 
-**Your Hair, Your Crown.** The shop site for Baddie Strands, a Nigerian-owned luxury hair brand born in Abuja.
+Two websites that share one database:
 
-This is a static site: plain HTML, CSS and JavaScript, no build step. Drop the folder on Vercel or Netlify to publish it. To replace what's live on `baddie-strands.vercel.app`, push these files to the repo the project deploys from (or drag the folder into a new Vercel deploy).
+| Folder | What it is | Who uses it |
+|---|---|---|
+| `shop/` | The online shop: home, shop, product pages, checkout, order tracking, about, help, contact | Customers |
+| `admin/` | The dashboard: orders, products, customers, messages, discount codes, delivery fees, website text, settings | You and your team |
+| `supabase/` | Two files that set up the database | Run once |
 
-To preview on your computer, run `npx serve` inside this folder and open the address it prints. Double-clicking `index.html` also works, but Chrome won't load the fonts from files on disk, so headlines fall back to a system font.
+The admin dashboard is a separate website with its own address. The shop doesn't link to it, and search engines are told not to list it.
 
-## How the page works
+Both are plain HTML, CSS and JavaScript with no build step.
 
-The hair is the site. There are no stock photos: every piece of hair you see is drawn live in the browser by `strands.js`, in the texture, shade and length of the product. Visitors can run their cursor (or finger) through it.
+## Try it straight away (demo mode)
 
-1. **Opening.** A curtain of hair grows while the counter runs to 100%, then parts like a stage curtain. It plays once per visit; "Skip" ends it straight away.
-2. **Hero.** "Your hair, your crown." with the hair sitting between the two lines. Two ways in: *Find my crown* (the stylist) or *Just let me shop*.
-3. **The four textures.** The hero pins in place and scrolling turns the same hair into bone straight, body wave, deep wave and kinky coily. The background, the giant word behind it and the product to wear it as change with each one. Dots on the bottom jump between textures; *Skip to the shop* jumps past.
-4. **Showroom.** One piece at a time, with the next two waiting on the right. Drag, swipe, use the arrows or the arrow keys. The centre piece is live and morphs into the next one. *Grid* switches to a staggered grid of every piece. Filters, sort and a *Saved* filter (after you heart something).
-5. **Product detail.** Opens from wherever you tapped. Changing the length or shade changes the hair in front of you, and a note tells you where that length falls on the body.
-6. **The stylist.** Four questions (how it moves, length, shade, what you're shopping for). The hair beside the questions changes with every answer; you can change any answer. It ends with up to three matching pieces you can add to the bag directly.
-7. **Story, reviews, answers.** The wordmark sharpens into focus and a single strand draws down from its dot. Reviews rotate on their own. Answers are grouped in tabs; delivery answers are generated from the delivery table in `data.js`, so they never go out of date.
-8. **Ask for it.** Type what you can't find and it opens WhatsApp with the message written.
-9. **Footer.** Newsletter, live Abuja clock with open/closed status, and "Wear the crown" growing as you reach the bottom.
+Until the database is connected, both sites run in **demo mode**:
 
-Motion uses GSAP, ScrollTrigger and Lenis (smooth scrolling), kept in `assets/vendor/`. With "reduce motion" switched on in the visitor's device settings there is no opening, no pinning and no smooth scrolling: the four textures become four cards and everything still works.
+- The shop works fully, with sample products. Orders, messages and newsletter sign-ups are saved in that visitor's browser only.
+- The dashboard opens with any email and password and shows a month of sample orders, so you can try every button. Changes stay in that browser.
 
-## What's in the folder
+To preview on your computer, run `npx serve shop` and `npx serve admin` from this folder and open the addresses they print.
 
-| File | What it does |
-|---|---|
-| `index.html` | The shop page |
-| `styles.css` | All shop styling |
-| `strands.js` | Draws the hair: textures, shades, length, wig/bundle/clip-in shapes, combing |
-| `app.js` | Opening, the texture scene, showroom, product detail, stylist, bag, search, reviews, answers |
-| `checkout.js` | Sign-in, delivery details, payment, order record |
-| `config.js` | **Your settings**: contact details, Paystack key, bank account, EmailJS keys, hours |
-| `data.js` | **Your content**: products, the four textures, stylist questions, reviews, answers, delivery zones and fees |
-| `admin.html`, `admin.css`, `admin.js` | The admin dashboard |
-| `assets/fonts/` | The three typefaces, hosted with the site |
-| `assets/vendor/` | GSAP, ScrollTrigger, SplitText and Lenis, hosted with the site |
+## Going live
 
-## Before you go live
+You need a free Supabase account and your Vercel account. Allow about 20 minutes.
 
-Work through these in `config.js`. The admin dashboard shows the same checklist under **Setup**.
+### 1. Make the database
 
-1. **Contact details.** Check the WhatsApp number, email and Instagram handle. The old site used two spellings of the email address (`baddiestrands@` and `baddiestrandss@`); this one uses `baddiestrands@gmail.com` everywhere. Change it in one place if that's wrong.
-2. **Card payments.** Paste your Paystack public key into `paystackPublicKey`. Until you do, "Pay by card" is switched off at checkout.
-3. **Bank transfer.** Replace `0000000000` with your real account number. Until you do, bank transfer is switched off so nobody can send money to a placeholder.
-4. **Email.** Add your EmailJS keys so sign-in codes and new-order emails are sent. Until you do, the sign-in code is shown on screen so you can still test.
-5. **Admin sign-in.** Change the username and password at the top of `admin.js`.
-6. **Sample content.** The reviews, ratings and review counts came with the original template. Swap in your own before launch.
+1. Go to **supabase.com** and create a project. Choose the region closest to your customers (London or Frankfurt work well for Nigeria). Save the database password somewhere safe.
+2. Open **SQL Editor** and press **New query**.
+3. Open `supabase/1-setup.sql` in a text editor. Near the bottom, change `baddiestrands@gmail.com` on the line marked **YOUR ADMIN EMAIL** to the email you'll sign in with. Copy the whole file, paste it into Supabase and press **Run**. You should see "Success".
+4. Optional: to start with the twelve products from the old site, do the same with `supabase/2-sample-products.sql`. You can edit or delete them in the dashboard afterwards.
 
-While card and bank transfer are both off, checkout still works: the customer places the order and sends it to you on WhatsApp with one tap.
+### 2. Make your sign-in
 
-## Changing things
+1. In Supabase, open **Authentication**, then **Users**, then **Add user**, then **Create new user**. Use the same email as in step 1.3 and choose a password. Tick **Auto confirm user**.
+2. Still in **Authentication**, open **Sign In / Providers** and switch off **Allow new users to sign up**. Only people you add can then get in.
+3. Open **Authentication**, **URL Configuration**. Set **Site URL** to your dashboard's address (step 4), and add the same address under **Redirect URLs**. This is where "forgot password" emails send people back to.
 
-**Products** live in `data.js`. Copy a product, give it a new `id`, and edit the fields:
+### 3. Connect both sites
 
-- `texture` decides how the hair is drawn: `bone`, `straight`, `body`, `loose`, `water`, `deep`, `curly` or `coily`.
-- `colors` and `colorNames` are the shades, in the same order. The first shade is the one shown by default. Add `ombre: true` to fade the tips lighter.
-- `category` decides the shape: `wigs` are drawn as a wig, `bundles` as a weft, `extensions` as clip-ins (or a ponytail if the name says "pony").
-- `tone` is the backdrop colour that piece gets in the showroom.
-- `image` is optional. Leave it as `""` to show the drawn hair, or put a file name in this folder or a full `https://` link to show your own photo instead. Use real photos of your own units only; the drawn hair is better than a stock photo of someone else's.
+1. In Supabase, open **Project Settings**, then **API** (or **Data API**). Copy the **Project URL** and the **anon public** key.
+2. Paste them into `shop/config.js` **and** `admin/config.js`:
+   ```js
+   supabaseUrl: 'https://abcdefgh.supabase.co',
+   supabaseKey: 'eyJhbGciOi...'
+   ```
+   The anon key is meant to be public. The database's security rules decide what it can do. **Never** paste the `service_role` key anywhere in these files.
+3. In `admin/config.js`, set `shopUrl` to your shop's address.
 
-You can also add and edit products in the admin dashboard, including texture and shades. Those edits stay in your browser until you press **Copy for data.js**, paste over the `products` list in `data.js`, and redeploy.
+### 4. Publish on Vercel
 
-**The four textures** in the scrolling scene are `chapters` in `data.js`: the texture, the line of copy, the product to show, which shade, and the background and text colours.
+Publish each folder as its own Vercel project.
 
-**The stylist** questions and how answers map to textures are under `stylist` in `data.js`.
+- **Shop:** in your existing `baddie-strands` project, replace the files with the contents of `shop/` (or set the project's **Root Directory** to `shop` if this whole folder is in your GitHub repo). It stays at `baddie-strands.vercel.app`.
+- **Dashboard:** create a new Vercel project from the same repo with **Root Directory** set to `admin`, and name it something like `baddie-strands-admin`. Its address becomes `baddie-strands-admin.vercel.app`. You can give it a private name if you'd rather not have it guessed; sign-in protects it either way.
 
-**Delivery** has two lists in `data.js`: `DELIVERY` is what the answers show, `DELIVERY_FEES` is what checkout charges. Keep them in step.
+### 5. Switch on payments
 
-**Length guide.** The landmarks ("20 inches falls to your mid-back") are in `lengthGuide` in `data.js`. They are standard approximations; check them against your own units.
+Sign in to the dashboard and open **Settings**:
 
-**Colours and type** are set at the top of `styles.css` under "Tokens".
+- **Card payments:** paste your Paystack **public** key (`pk_live_...`). Card payments then appear at checkout.
+- **Bank transfer:** enter the bank, account name and 10-digit account number. Transfer then appears at checkout, with the details shown after the order.
+- **WhatsApp:** leave "Let customers finish on WhatsApp" on if you want that option too.
 
-## How orders reach you
+Then check your phone number, email, Instagram and opening hours on the same page. **Delivery fees** and **Website text** have their own pages.
 
-- A customer adds pieces to the bag, signs in with an email code, enters delivery details and pays.
-- The delivery fee comes from `DELIVERY_FEES` in `data.js`, by state.
-- You are told about the order by **email** (once EmailJS is connected) and by the **WhatsApp** button on the confirmation screen. Card payments also appear in your Paystack dashboard.
-- Card payments are confirmed in the customer's browser. Check the payment in Paystack before you ship.
+## Running the shop day to day
 
-### What the admin dashboard can and can't see
+Everything is in the dashboard. The **How to** page inside it covers the common jobs in plain words. In short:
 
-The site has no server or database. Everything it remembers is saved in the browser it is used in. That means:
+- **Today** lists what needs you (orders to confirm, payments to check, low stock, unread messages), your sales, and your best sellers.
+- **Orders**: open an order and the box at the top tells you the next step, with one button for it: mark as paid, confirm, start packing, mark as sent, mark as delivered. Each step is recorded and shown to the customer on her tracking page. There are buttons to WhatsApp her a ready-written update, copy the address for your rider, and print a packing slip. **Record a sale** adds orders from Instagram, WhatsApp or in person so your figures and stock stay right.
+- **Products**: add and edit pieces, upload photos (they're resized for you), set a different price per length, add shades, count stock, and hide or show pieces. Stock can be changed straight from the list with − and +.
+- **Customers**: everyone who has ordered, what they've spent, and your newsletter list. Both can be downloaded as spreadsheets.
+- **Messages** from the contact page, with reply buttons.
+- **Discount codes**: percent or naira off, with optional minimum spend, use limit and end date. The form says in a sentence what the code will do.
+- Press **Ctrl K** (or tap the search bar) to jump to any order, product or page.
+- In **Settings**, **Turn on alerts** gives you a pop-up on your computer when an order comes in while the dashboard is open.
 
-- The dashboard shows visits, sign-ups and orders **made on that same device**, plus orders you record by hand with **Record an order**.
-- An order a customer places on her own phone does **not** appear in your dashboard. It reaches you by email and WhatsApp.
-- Newsletter sign-ups are stored on the visitor's device. To collect them centrally, connect a mailing-list service or a database.
+### Card payments are confirmed by you
 
-Sign-in identifies a customer by email for that device. It is not a secure account system. Shared orders, subscribers and product edits across devices need a backend (your earlier `bs-upgrade` folder used Supabase for this).
+When a customer pays by card, the order shows **Check payment**. Open it, press **Open Paystack**, find the reference, and press **It's there: mark as paid**. The website can't see inside your Paystack account, so this short check is what stops a fake "I paid" from getting through. Automatic confirmation needs a small server function on Supabase; it's a good next step once the shop is busy.
 
-## Where the design comes from
+### Photos
 
-| Part | Borrowed from |
-|---|---|
-| One persistent object that changes as you scroll (the hair), ghost word behind it | brocksbushes.moonshiners.co.uk, lofliballs.com |
-| Pinned chapters with Roman numerals, circular progress dots, colour change per chapter | arcteryx.com System 0 |
-| Rounded window frame, glass pill menu that opens into tiles, showroom carousel with ghost word, counts in the filter pills, 01 / 12 counter | patike.ch |
-| Opening counter, giant headline with the object through it, reviews picker, answers with big serif questions and square plus box | dialedcoffee.com |
-| Stylist: big option tiles, full-width bar button, growing footer letters | carnilove.ashfall.studio |
-| Shade swatches and length slider that change the product live | nettiesbees.com |
-| Custom cursor in difference blend, labels on hover ("Drag", "Comb") | ruthgriffioen.art, enigmascult.com |
-| Grid view: staggered columns, bar-bracketed names, marker under the chosen filter | pistacchioecaffe.it |
-| Lowercase wordmark that sharpens into focus, thread drawn from the dot, live Abuja clock | concretaceramiche.it |
-| "Ask for it" line input with typed suggestions, oval buttons, copper-to-black panel | enigmascult.com |
+Until a product has a photo, the shop shows a clean drawing of its texture in its first shade. Add real photos in **Products**. Portrait or square photos on a plain background look best. Use photos of your own units: the drawings are better than a stock photo of someone else's hair.
 
-## Browser support
+## Good to know
 
-Current Chrome, Edge, Safari and Firefox, on desktop and phone. Every control works with a keyboard, and the site respects the "reduce motion" setting.
+- **Prices can't be tampered with.** The database works out every order's prices, discounts, delivery fee and stock itself. What the browser sends is only which pieces, lengths and shades.
+- **Who can see what.** Shoppers can read products and settings, place orders, look up their own order with its number and email, send messages and join the newsletter. Only emails on your admin list can see orders, customers, messages and codes. Add or remove team members in **Settings**, **Team**, and create their sign-in in Supabase.
+- **Order emails aren't sent yet.** Customers see their order number and a tracking link on screen, and WhatsApp orders open a chat with you. New orders appear on the dashboard (with alerts if you turn them on). Sending emails automatically needs an email service connected to Supabase.
+- **Sample content.** The reviews on the home page came from the old template. Replace them with real ones in **Website text**.
+- **Demo data never mixes with real data.** Once the keys are in `config.js`, the sites use only the database.
 
-## Contact
+## What's in each folder
 
-- WhatsApp: +234 703 324 7980
-- Email: baddiestrands@gmail.com
-- Instagram: [@the_baddie_strands](https://instagram.com/the_baddie_strands)
+```
+shop/
+  index.html        Home
+  shop.html         All products, with filters and sorting
+  product.html      One product (product.html?p=its-web-address)
+  checkout.html     Three-step checkout and the thank-you screen
+  track.html        Order tracking
+  about.html, help.html, contact.html, 404.html
+  config.js         Your two Supabase values
+  assets/css/site.css
+  assets/js/site.js     Header, bag, search, footer, product cards
+  assets/js/pages.js    What each page does
+  assets/js/db.js       Reading and saving (shared with the admin)
+  assets/js/art.js      The texture drawings (shared with the admin)
+  assets/js/seed.js     Demo-mode sample data
+  assets/fonts/         Archivo, hosted with the site
+  assets/vendor/supabase.js
+admin/
+  index.html, config.js
+  assets/css/admin.css
+  assets/js/admin.js    The whole dashboard
+  (plus copies of db.js, art.js, seed.js, fonts and supabase.js)
+supabase/
+  1-setup.sql            Tables, security rules and order functions
+  2-sample-products.sql  Optional starting products and reviews
+```
+
+`db.js`, `art.js` and `seed.js` are identical in both sites. If you change one, copy it to the other.
+
+## Design notes
+
+Pink (#FF1F8E) and black on white, with one typeface, Archivo, whose letters can stretch wider and narrower. That stretch is the shop's one signature: the headline widens near the cursor, product names stretch on hover, and the footer wordmark stretches as it scrolls in, the way extensions add length. Everything else is kept quiet so the hair leads. Pages fade into each other in browsers that support it, and a product's picture glides from the grid into its page. With "reduce motion" switched on, all of that is turned off.
+
+The dashboard uses the same typeface and colours more calmly, and always pairs a status colour with a word so nothing depends on colour alone.
+
+Fonts: Archivo by Omnibus-Type, SIL Open Font License. Supabase JS library: MIT License.
