@@ -1106,14 +1106,21 @@
   async function viewContent() {
     await need('settings');
     const s = JSON.parse(JSON.stringify(D.settings));
-    const pick = () => JSON.stringify({ a: s.announcement, r: s.reviews, f: s.faq });
+    if (!Array.isArray(s.stats)) s.stats = [];
+    while (s.stats.length < 3) s.stats.push({ value: '', label: '' });
+    if (!Array.isArray(s.ticker)) s.ticker = [];
+    const pick = () => JSON.stringify({ a: s.announcement, r: s.reviews, f: s.faq, s: s.stats, t: s.ticker });
     let saved = pick();
-    view.innerHTML = `<div class="head"><div><h1>Website text</h1><p>The black bar at the top of the shop, the reviews on the home page, and the questions on the Help page.</p></div></div>
+    view.innerHTML = `<div class="head"><div><h1>Website text</h1><p>The bar at the top of the shop, the numbers and gold moving strip on the home page, the reviews, and the questions on the Help page.</p></div></div>
       <form data-form novalidate>
         <section class="panel"><div class="panel__head"><h2 class="sub">Top bar</h2></div><div class="panel__body" style="display:grid;gap:12px">
           <label class="field"><span>Message</span><input class="input" name="ann" value="${esc(s.announcement || '')}" maxlength="140" placeholder="Same-day delivery in Abuja."><small>Shows on every page. Leave empty to hide the bar.</small></label>
-          <p style="background:#000;color:var(--pink);text-align:center;font-weight:600;font-size:13.5px;padding:9px;border-radius:8px" data-ann-prev></p></div></section>
-        <section class="panel"><div class="panel__head"><div><h2 class="sub">Reviews</h2><p class="small muted">The home page shows them one at a time, in this order.</p></div><button class="btn btn--sm" type="button" data-add-review>${icon('plus')}Add a review</button></div><div class="panel__body rows" data-reviews></div></section>
+          <p style="background:#111010;border:1px solid var(--line);color:var(--text-2);text-align:center;font-size:13px;letter-spacing:.06em;padding:9px;border-radius:2px" data-ann-prev></p></div></section>
+        <section class="panel"><div class="panel__head"><div><h2 class="sub">Home page</h2><p class="small muted">The three numbers beside the big photo, and the gold strip of messages that moves under it.</p></div></div><div class="panel__body" style="display:grid;gap:18px">
+          <div class="rows" data-stats>${s.stats.slice(0, 3).map((x, i) => `<div class="rowedit rowedit--stat" data-st="${i}"><input class="input" data-k="value" value="${esc(x.value || '')}" placeholder="500+" aria-label="Number ${i + 1}" maxlength="8"><input class="input" data-k="label" value="${esc(x.label || '')}" placeholder="Happy queens" aria-label="What number ${i + 1} means" maxlength="24"><span></span></div>`).join('')}<small class="hint">Leave a row empty to hide it. Keep the numbers true.</small></div>
+          <label class="field"><span>Gold strip messages</span><textarea class="input" name="ticker" style="min-height:130px" placeholder="One message per line">${esc(s.ticker.join('\n'))}</textarea><small>One message per line. Short works best, like “Same-day delivery in Abuja”. Leave empty to hide the strip.</small></label>
+        </div></section>
+        <section class="panel"><div class="panel__head"><div><h2 class="sub">Reviews</h2><p class="small muted">The home page shows them as a row of cards, in this order.</p></div><button class="btn btn--sm" type="button" data-add-review>${icon('plus')}Add a review</button></div><div class="panel__body rows" data-reviews></div></section>
         <section class="panel"><div class="panel__head"><div><h2 class="sub">Help page questions</h2><p class="small muted">Grouped by topic on the Help page. Customers can search them.</p></div><button class="btn btn--sm" type="button" data-add-faq>${icon('plus')}Add a question</button></div><div class="panel__body rows" data-faq></div>
           <div class="savebar"><span class="savebar__state" data-state></span><button class="btn btn--pink btn--lg" type="submit">Save website text</button></div></section>
       </form>`;
@@ -1123,6 +1130,8 @@
     const paintFaq = () => { $('[data-faq]', view).innerHTML = s.faq.map((f, i) => `<div class="panel" style="padding:12px;display:grid;gap:8px" data-fq="${i}"><div class="rowedit" style="grid-template-columns:180px minmax(0,1fr) 40px"><select class="input" data-k="group" aria-label="Topic">${groups().map((g) => `<option ${f.group === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select><input class="input" data-k="q" value="${esc(f.q)}" placeholder="Question" aria-label="Question"><button class="iconbtn" type="button" data-rm-fq="${i}" aria-label="Remove this question">${icon('trash')}</button></div><textarea class="input" data-k="a" style="min-height:70px" placeholder="Answer" aria-label="Answer">${esc(f.a)}</textarea></div>`).join(''); };
     const read = () => {
       s.announcement = form.elements.ann.value.trim();
+      s.stats = $$('[data-st]', view).map((el) => ({ value: $('[data-k="value"]', el).value.trim(), label: $('[data-k="label"]', el).value.trim() }));
+      s.ticker = form.elements.ticker.value.split('\n').map((t) => t.trim()).filter(Boolean);
       $$('[data-rv]', view).forEach((el) => { const r = s.reviews[Number(el.dataset.rv)]; $$('[data-k]', el).forEach((i) => { r[i.dataset.k] = i.dataset.k === 'stars' ? Number(i.value) : i.value.trim(); }); });
       $$('[data-fq]', view).forEach((el) => { const f = s.faq[Number(el.dataset.fq)]; $$('[data-k]', el).forEach((i) => { f[i.dataset.k] = i.value.trim(); }); });
       $('[data-ann-prev]', view).textContent = s.announcement || '(bar hidden)';
@@ -1144,7 +1153,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault(); read();
       s.reviews = s.reviews.filter((r) => r.text); s.faq = s.faq.filter((f) => f.q && f.a);
-      try { D.settings = await busy($('[type=submit]', form), () => DB.saveSettings(Object.assign({}, D.settings, { announcement: s.announcement, reviews: s.reviews, faq: s.faq }))); saved = pick(); paintReviews(); paintFaq(); read(); toast('Saved. The shop shows the new text now.'); }
+      try { D.settings = await busy($('[type=submit]', form), () => DB.saveSettings(Object.assign({}, D.settings, { announcement: s.announcement, reviews: s.reviews, faq: s.faq, stats: s.stats.filter((x) => x.value), ticker: s.ticker }))); saved = pick(); paintReviews(); paintFaq(); read(); toast('Saved. The shop shows the new text now.'); }
       catch (err) { oops(err); }
     });
     guard = () => { read(); return pick() !== saved; };
@@ -1171,6 +1180,7 @@
           <label class="field"><span>Phone number as it should look</span><input class="input" name="phone_display" value="${esc(st.phone_display || '')}" placeholder="+234 703 324 7980"></label>
           <label class="field"><span>Email</span><input class="input" name="email" type="email" value="${esc(st.email || '')}"></label>
           <label class="field"><span>Instagram name</span><input class="input" name="instagram" value="${esc(st.instagram || '')}" placeholder="the_baddie_strands"></label>
+          <label class="field"><span>TikTok name</span><input class="input" name="tiktok" value="${esc(st.tiktok || '')}" placeholder="baddie.strands"><small>Leave empty to hide the TikTok link.</small></label>
         </div></section>
         <section class="panel"><div class="panel__head"><div><h2 class="sub">Opening hours</h2><p class="small muted">The shop shows “Open now” or when you open next, in Abuja time.</p></div></div><div class="panel__body rows">
           ${DAYS.map((name, i) => { const h = st.hours[i]; return `<div class="rowedit" style="grid-template-columns:130px 110px minmax(0,1fr) minmax(0,1fr)" data-day="${i}"><b>${name}</b><label class="switch"><input type="checkbox" data-open ${h ? 'checked' : ''} aria-label="Open on ${name}"><small>${h ? 'Open' : 'Closed'}</small></label><select class="input" data-from aria-label="${name} opens" ${h ? '' : 'disabled'}>${hourOpts(h ? h[0] : 9)}</select><select class="input" data-to aria-label="${name} closes" ${h ? '' : 'disabled'}>${hourOpts(h ? h[1] : 18)}</select></div>`; }).join('')}
@@ -1198,7 +1208,7 @@
     const form = $('[data-form]', view);
     const f = form.elements;
     const read = () => {
-      st.whatsapp = f.whatsapp.value.replace(/\D/g, ''); st.phone_display = f.phone_display.value.trim(); st.email = f.email.value.trim(); st.instagram = f.instagram.value.trim().replace(/^@/, '');
+      st.whatsapp = f.whatsapp.value.replace(/\D/g, ''); st.phone_display = f.phone_display.value.trim(); st.email = f.email.value.trim(); st.instagram = f.instagram.value.trim().replace(/^@/, ''); st.tiktok = f.tiktok.value.trim().replace(/^@/, '');
       st.hours = $$('[data-day]', view).map((row) => { const on = $('[data-open]', row).checked; $('[data-from]', row).disabled = !on; $('[data-to]', row).disabled = !on; $('[data-open]', row).nextElementSibling.textContent = on ? 'Open' : 'Closed'; return on ? [Number($('[data-from]', row).value), Number($('[data-to]', row).value)] : null; });
       pay.paystack_public_key = f.pk.value.trim(); pay.bank_name = f.bank.value.trim(); pay.bank_account_name = f.acct_name.value.trim(); pay.bank_account_number = f.acct.value.replace(/\D/g, ''); pay.whatsapp_orders = f.wa_orders.checked;
       const dirty = pick() !== saved, el = $('[data-state]', view);
@@ -1258,7 +1268,7 @@
         <details${open('products')}><summary>Adding or changing a product</summary><div class="guide__body"><ol><li>Go to <a class="linkbtn" href="#/products">Products</a> and press <b>Add a product</b>.</li><li>Add photos, a name, the type and texture, a price, the lengths you sell and the shades.</li><li>If longer lengths cost more, type the price beside each length.</li><li>Press <b>Add product</b>. It’s on the shop straight away.</li></ol><p>To change stock quickly, use the − and + beside each product in the list. To take something off the shop for a while, switch off <b>On the shop</b> instead of deleting it.</p></div></details>
         <details${open('sale')}><summary>Recording a sale from Instagram or WhatsApp</summary><div class="guide__body"><p>Press <b>Record a sale</b> on Today or Orders. Choose what she bought, the price and how she paid. It counts in your sales figures and takes the pieces out of stock, so your numbers stay right.</p></div></details>
         <details${open('codes')}><summary>Discount codes</summary><div class="guide__body"><p>Go to <a class="linkbtn" href="#/discounts">Discount codes</a> and press <b>Make a code</b>. Choose percent or naira off, and optionally a minimum spend, how many times it can be used, and the last day it works. The box at the bottom says in plain words what the code will do.</p></div></details>
-        <details${open('text')}><summary>Changing the words on the shop</summary><div class="guide__body"><p>The top bar message, the reviews on the home page and the Help page questions are all in <a class="linkbtn" href="#/content">Website text</a>. Your phone number, email, Instagram and opening hours are in <a class="linkbtn" href="#/settings">Settings</a>. Delivery prices are in <a class="linkbtn" href="#/delivery">Delivery fees</a>.</p></div></details>
+        <details${open('text')}><summary>Changing the words on the shop</summary><div class="guide__body"><p>The top bar message, the home page numbers and gold strip, the reviews and the Help page questions are all in <a class="linkbtn" href="#/content">Website text</a>. Your phone number, email, Instagram, TikTok and opening hours are in <a class="linkbtn" href="#/settings">Settings</a>. Delivery prices are in <a class="linkbtn" href="#/delivery">Delivery fees</a>.</p></div></details>
         <details${open('live')}><summary>Going live: connecting the database</summary><div class="guide__body">
           <p>${DB.mode === 'live' ? '<b>You’re connected.</b> This dashboard and the shop read and save to your Supabase database.' : '<b>You’re in demo mode.</b> Until the steps below are done, this dashboard shows sample data saved in this browser, and the shop’s orders stay in each customer’s browser.'}</p>
           <ol>
