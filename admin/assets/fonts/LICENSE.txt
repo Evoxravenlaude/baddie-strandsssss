@@ -3,6 +3,7 @@ Fonts in this folder (all SIL Open Font License 1.1, https://openfontlicense.org
 Cormorant Garamond: Copyright 2015 The Cormorant Project Authors (https://github.com/CatharsisFonts/Cormorant)
 Jost: Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type/Jost)
 Playfair Display: Copyright 2017 The Playfair Display Project Authors (https://github.com/clauseggers/Playfair-Display)
+Dancing Script: Copyright 2016 The Dancing Script Project Authors (https://github.com/googlefonts/DancingScript)
 naira-sans.woff2: the naira sign (₦) only, from Archivo, Copyright 2020 The Archivo Project Authors (https://github.com/Omnibus-Type/Archivo)
 
 Files from the Fontsource packages (fontsource.org).
