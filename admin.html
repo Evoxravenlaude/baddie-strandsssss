@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baddie Strands — Admin</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-setup.js"></script>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Baddie<span>Strands</span></div>
+    <div class="login-sub">Admin Portal</div>
+    <div class="login-form">
+      <div><label class="login-label">Email</label><input type="email" id="login-email" placeholder="baddiestrands@gmail.com" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+      <div id="login-otp-wrap" style="display:none">
+        <label class="login-label">6-Digit Code</label>
+        <div class="otp-row"><input class="otp-cell" maxlength="1" type="text" inputmode="numeric"><input class="otp-cell" maxlength="1" type="text" inputmode="numeric"><input class="otp-cell" maxlength="1" type="text" inputmode="numeric"><input class="otp-cell" maxlength="1" type="text" inputmode="numeric"><input class="otp-cell" maxlength="1" type="text" inputmode="numeric"><input class="otp-cell" maxlength="1" type="text" inputmode="numeric"></div>
+        <button class="login-btn" onclick="adminVerifyOtp()" style="margin-top:16px">Verify & Enter</button>
+        <button onclick="adminLogin(true)" style="margin-top:10px;font-size:0.75rem;color:var(--muted);text-decoration:underline;width:100%;text-align:center">Resend code</button>
+      </div>
+      <button class="login-btn" id="login-btn" onclick="adminLogin()">Send Login Code</button>
+      <div id="login-error" class="login-error"></div>
+    </div>
+    <div class="login-hint">Sign in with your <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c8aaa9acaca1adbbbcbaa9a6acbb88afa5a9a1a4e6aba7a5">[email&#160;protected]</a> address</div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="admin-app">
+  <div id="cursor"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">Baddie<span>Strands</span></div>
+      <div class="sidebar-logo-sub">Admin Dashboard</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Overview</div>
+      <a class="sidebar-link active" data-page="dashboard" onclick="showPage('dashboard',this)">
+        <span class="sidebar-icon">▪</span>Dashboard
+      </a>
+      <a class="sidebar-link" data-page="orders" onclick="showPage('orders',this)">
+        <span class="sidebar-icon">▪</span>Orders
+      </a>
+      <div class="sidebar-section-label" style="margin-top:12px">Manage</div>
+      <a class="sidebar-link" data-page="subscribers" onclick="showPage('subscribers',this)">
+        <span class="sidebar-icon">▪</span>Subscribers
+      </a>
+      <div class="sidebar-section-label" style="margin-top:12px">Store</div>
+      <a class="sidebar-link" href="index.html" target="_blank">
+        <span class="sidebar-icon">▪</span>View Store ↗
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        Signed in as<strong id="sidebar-email">—</strong>
+      </div>
+      <button class="sidebar-logout" onclick="adminLogout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main">
+    <div class="admin-topbar">
+      <div class="admin-topbar-title" id="topbar-title">Dashboard</div>
+      <div class="admin-topbar-actions">
+        <div id="topbar-date" style="font-size:0.75rem;color:var(--muted)"></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div class="admin-page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value">₦<span id="stat-revenue">0</span></div>
+          <div class="stat-change up" id="stat-rev-change">Loading...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-value"><span id="stat-orders">0</span></div>
+          <div class="stat-change" id="stat-ord-change">Loading...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending Orders</div>
+          <div class="stat-value"><span id="stat-pending">0</span></div>
+          <div class="stat-change" style="color:var(--muted)">Awaiting confirmation</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Subscribers</div>
+          <div class="stat-value"><span id="stat-subs">0</span></div>
+          <div class="stat-change" style="color:var(--muted)">Newsletter list</div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="admin-card">
+        <div class="admin-card-title">Recent Orders</div>
+        <table class="admin-table" id="recent-orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>State</th>
+              <th>Total</th>
+              <th>Payment</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="recent-orders-body">
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS PAGE -->
+    <div class="admin-page" id="page-orders">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">All Orders</div>
+          <div style="font-size:1.4rem;color:var(--cream);font-family:var(--font-display)">Order Management</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <select id="order-status-filter" onchange="filterOrders()" style="width:160px;padding:10px 14px;font-size:0.8rem">
+            <option value="">All Statuses</option>
+            <option>Pending</option>
+            <option>Processing</option>
+            <option>Shipped</option>
+            <option>Delivered</option>
+            <option>Cancelled</option>
+          </select>
+          <button class="admin-btn" onclick="exportOrdersCSV()">Export CSV</button>
+        </div>
+      </div>
+      <div class="admin-card" style="overflow-x:auto">
+        <table class="admin-table" id="all-orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Delivery State</th>
+              <th>Total</th>
+              <th>Payment</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="all-orders-body">
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SUBSCRIBERS PAGE -->
+    <div class="admin-page" id="page-subscribers">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Newsletter</div>
+          <div style="font-size:1.4rem;color:var(--cream);font-family:var(--font-display)">Subscribers</div>
+        </div>
+        <button class="admin-btn" onclick="exportSubsCSV()">Export CSV</button>
+      </div>
+      <div class="admin-card">
+        <div style="font-family:var(--font-display);font-size:3rem;color:var(--pink);margin-bottom:6px" id="subs-count">0</div>
+        <div style="font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:28px">Total Subscribers</div>
+        <table class="admin-table" id="subs-table">
+          <thead><tr><th>#</th><th>Email</th><th>Subscribed</th></tr></thead>
+          <tbody id="subs-body">
+            <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:30px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADMIN TOAST -->
+<div id="admin-toast"><div class="at-title"></div><div class="at-body"></div></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+'use strict';
+
+const ADMIN_EMAIL = 'baddiestrands@gmail.com';
+let _allOrders = [];
+let _allSubs = [];
+let _loginStep = 'email'; // 'email' | 'otp'
+
+/* ── CURSOR ── */
+document.addEventListener('DOMContentLoaded', () => {
+  const cursor = document.getElementById('cursor');
+  if (cursor) {
+    document.addEventListener('mousemove', e => { cursor.style.left = e.clientX+'px'; cursor.style.top = e.clientY+'px'; });
+  }
+  document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-NG', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  checkExistingSession();
+});
+
+/* ── AUTH ── */
+async function checkExistingSession() {
+  try {
+    const { data: { session } } = await window.supabase.auth.getSession();
+    if (session && session.user.email === ADMIN_EMAIL) {
+      showAdminApp(session.user.email);
+    }
+  } catch(e) { /* Supabase not configured yet */ }
+}
+
+async function adminLogin(isResend = false) {
+  const email = document.getElementById('login-email')?.value.trim();
+
+  if (_loginStep === 'otp' && !isResend) return; // handled by adminVerifyOtp
+
+  if (!email) { showLoginError('Please enter your email address.'); return; }
+  if (email !== ADMIN_EMAIL) { showLoginError('Access denied. Only the store owner can log in.'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+
+  const { error } = await window.supabase.auth.signInWithOtp({ email });
+  btn.disabled = false; btn.textContent = 'Send Login Code';
+
+  if (error) { showLoginError(error.message); return; }
+
+  // Show OTP inputs
+  _loginStep = 'otp';
+  document.getElementById('login-otp-wrap').style.display = 'block';
+  document.getElementById('login-btn').style.display = 'none';
+  document.getElementById('login-email').disabled = true;
+  document.querySelector('#login-otp-wrap .otp-cell')?.focus();
+  if (isResend) showLoginError('New code sent. Check your inbox.', 'ok');
+
+  // Wire OTP cell auto-advance
+  const cells = document.querySelectorAll('#login-otp-wrap .otp-cell');
+  cells.forEach((cell, idx) => {
+    cell.oninput = () => {
+      if (cell.value.length > 1) cell.value = cell.value.slice(-1);
+      if (cell.value && idx < 5) cells[idx + 1].focus();
+      if (idx === 5 && cell.value) adminVerifyOtp();
+    };
+    cell.onkeydown = e => { if (e.key === 'Backspace' && !cell.value && idx > 0) cells[idx - 1].focus(); };
+  });
+}
+
+async function adminVerifyOtp() {
+  const cells = document.querySelectorAll('#login-otp-wrap .otp-cell');
+  const token = Array.from(cells).map(c => c.value).join('');
+  const email = document.getElementById('login-email').value.trim();
+  if (token.length < 6) { showLoginError('Enter all 6 digits.'); return; }
+
+  const { data, error } = await window.supabase.auth.verifyOtp({ email, token, type: 'email' });
+  if (error) { showLoginError('Incorrect or expired code. Try again.'); cells.forEach(c=>c.value=''); cells[0].focus(); return; }
+  if (data.user.email !== ADMIN_EMAIL) { await window.supabase.auth.signOut(); showLoginError('Access denied.'); return; }
+  showAdminApp(data.user.email);
+}
+
+function showLoginError(msg, type = 'err') {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = type === 'ok' ? 'rgba(90,138,110,0.1)' : 'rgba(201,56,96,0.1)';
+  el.style.color = type === 'ok' ? '#6abf96' : '#e86080';
+  el.style.borderColor = type === 'ok' ? '#4a8a6a' : '#c93860';
+}
+
+function showAdminApp(email) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-app').classList.add('visible');
+  document.getElementById('sidebar-email').textContent = email;
+  loadDashboard();
+}
+
+async function adminLogout() {
+  await window.supabase.auth.signOut();
+  window.location.reload();
+}
+
+/* ── PAGE ROUTING ── */
+function showPage(page, linkEl) {
+  document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById(`page-${page}`)?.classList.add('active');
+  if (linkEl) linkEl.classList.add('active');
+  const titles = { dashboard:'Dashboard', orders:'Order Management', subscribers:'Subscribers' };
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+  if (page === 'orders') loadAllOrders();
+  if (page === 'subscribers') loadSubscribers();
+}
+
+/* ── DASHBOARD ── */
+async function loadDashboard() {
+  try {
+    const { data: orders } = await window.supabase.from('orders').select('*').order('created_at', { ascending: false });
+    const { data: subs } = await window.supabase.from('subscribers').select('email');
+
+    _allOrders = orders || [];
+    _allSubs = subs || [];
+
+    const revenue = _allOrders.filter(o => o.status !== 'Cancelled').reduce((s, o) => s + (o.total_amount || 0), 0);
+    const pending = _allOrders.filter(o => o.status === 'Pending').length;
+
+    document.getElementById('stat-revenue').textContent = revenue.toLocaleString('en-NG');
+    document.getElementById('stat-orders').textContent = _allOrders.length;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-subs').textContent = _allSubs.length;
+    document.getElementById('stat-rev-change').textContent = `${_allOrders.length} orders total`;
+    document.getElementById('stat-ord-change').style.color = pending > 0 ? 'var(--warn)' : 'var(--success)';
+    document.getElementById('stat-ord-change').textContent = pending > 0 ? `${pending} need attention` : 'All orders handled';
+
+    renderOrdersTable(_allOrders.slice(0, 10), 'recent-orders-body');
+  } catch(e) {
+    console.error('[BS Admin] Dashboard load:', e.message);
+    document.getElementById('recent-orders-body').innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--error);padding:30px">Failed to load — check Supabase config in supabase-setup.js</td></tr>`;
+  }
+}
+
+async function loadAllOrders() {
+  try {
+    const { data: orders } = await window.supabase.from('orders').select('*').order('created_at', { ascending: false });
+    _allOrders = orders || [];
+    renderOrdersTable(_allOrders, 'all-orders-body');
+  } catch(e) {
+    document.getElementById('all-orders-body').innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--error);padding:30px">${e.message}</td></tr>`;
+  }
+}
+
+function filterOrders() {
+  const filter = document.getElementById('order-status-filter').value;
+  const filtered = filter ? _allOrders.filter(o => o.status === filter) : _allOrders;
+  renderOrdersTable(filtered, 'all-orders-body');
+}
+
+function renderOrdersTable(orders, tbodyId) {
+  const tbody = document.getElementById(tbodyId); if (!tbody) return;
+  if (!orders.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">No orders found.</td></tr>`; return; }
+
+  const statusClass = { Pending:'warn', Processing:'info', Shipped:'info', Delivered:'success', Cancelled:'error' };
+
+  tbody.innerHTML = orders.map(order => {
+    let delivery = {};
+    try { delivery = typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address) : (order.delivery_address || {}); } catch(e) {}
+    const date = new Date(order.created_at).toLocaleDateString('en-NG');
+    const shortId = String(order.id).substring(0, 8).toUpperCase();
+    const badge = statusClass[order.status] || 'info';
+    return `<tr>
+      <td style="color:var(--pink);font-size:0.85rem;font-weight:500">#${shortId}</td>
+      <td>${date}</td>
+      <td>${delivery.name || '—'}<br><small style="color:var(--muted)">${delivery.email || order.user_id?.substring(0,8) || '—'}</small></td>
+      <td>${order.delivery_state || '—'}</td>
+      <td style="color:var(--cream)">₦${(order.total_amount||0).toLocaleString('en-NG')}</td>
+      <td style="font-size:0.8rem;color:var(--ash)">${order.payment_method || '—'}</td>
+      <td><span class="badge badge-${badge}">${order.status || 'Unknown'}</span></td>
+      <td>
+        <select onchange="updateOrderStatus('${order.id}',this.value)" style="padding:6px 10px;font-size:0.75rem;width:130px">
+          <option value="">Update Status</option>
+          <option value="Pending"${order.status==='Pending'?' selected':''}>Pending</option>
+          <option value="Processing"${order.status==='Processing'?' selected':''}>Processing</option>
+          <option value="Shipped"${order.status==='Shipped'?' selected':''}>Shipped</option>
+          <option value="Delivered"${order.status==='Delivered'?' selected':''}>Delivered</option>
+          <option value="Cancelled"${order.status==='Cancelled'?' selected':''}>Cancelled</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  if (!newStatus) return;
+  try {
+    const { error } = await window.supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+    if (error) throw error;
+    adminToast('Status Updated', `Order marked as ${newStatus}.`);
+    await loadDashboard();
+    if (document.getElementById('page-orders').classList.contains('active')) await loadAllOrders();
+  } catch(e) {
+    adminToast('Error', e.message);
+  }
+}
+
+function exportOrdersCSV() {
+  if (!_allOrders.length) { adminToast('No Data', 'No orders to export.'); return; }
+  const rows = [['Order ID','Date','Customer Name','Customer Email','State','Total','Payment','Status']];
+  _allOrders.forEach(o => {
+    let d = {};
+    try { d = typeof o.delivery_address === 'string' ? JSON.parse(o.delivery_address) : (o.delivery_address || {}); } catch(e) {}
+    rows.push([o.id, new Date(o.created_at).toLocaleDateString(), d.name||'', d.email||'', o.delivery_state||'', o.total_amount||0, o.payment_method||'', o.status||'']);
+  });
+  downloadCSV(rows, 'baddie-strands-orders.csv');
+}
+
+/* ── SUBSCRIBERS ── */
+async function loadSubscribers() {
+  try {
+    const { data } = await window.supabase.from('subscribers').select('*').order('created_at', { ascending: false });
+    _allSubs = data || [];
+    document.getElementById('subs-count').textContent = _allSubs.length;
+    const tbody = document.getElementById('subs-body');
+    if (!_allSubs.length) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:30px">No subscribers yet.</td></tr>`; return; }
+    tbody.innerHTML = _allSubs.map((s,i) => `<tr><td style="color:var(--muted)">${i+1}</td><td style="color:var(--cream)">${s.email}</td><td style="color:var(--ash)">${s.created_at ? new Date(s.created_at).toLocaleDateString('en-NG') : '—'}</td></tr>`).join('');
+  } catch(e) {
+    document.getElementById('subs-body').innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--error);padding:30px">${e.message}</td></tr>`;
+  }
+}
+
+function exportSubsCSV() {
+  if (!_allSubs.length) { adminToast('No Data', 'No subscribers to export.'); return; }
+  const rows = [['Email','Subscribed Date']];
+  _allSubs.forEach(s => rows.push([s.email, s.created_at ? new Date(s.created_at).toLocaleDateString() : '']));
+  downloadCSV(rows, 'baddie-strands-subscribers.csv');
+}
+
+/* ── UTILS ── */
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
+
+function adminToast(title, body) {
+  const toast = document.getElementById('admin-toast'); if (!toast) return;
+  toast.querySelector('.at-title').textContent = title;
+  toast.querySelector('.at-body').textContent = body;
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+</script>
+</body>
+</html>
