@@ -4,7 +4,7 @@ Two websites that share one database:
 
 | Folder | What it is | Who uses it |
 |---|---|---|
-| `shop/` | The online shop: home, shop, product pages, checkout, order tracking, about, help, contact | Customers |
+| `shop/` | The online shop: home, shop, product pages, hair knowledge and care guide, hair quiz, delivery, checkout, order tracking, about, help, contact | Customers |
 | `admin/` | The dashboard: orders, products, customers, messages, discount codes, delivery fees, website text, settings | You and your team |
 | `supabase/` | Two files that set up the database | Run once |
 
@@ -85,14 +85,18 @@ When a customer pays by card, the order shows **Check payment**. Open it, press 
 
 ### Photos
 
-Until a product has a photo, the shop shows a clean drawing of its texture in its first shade. Add real photos in **Products**. Portrait or square photos on a plain background look best. Use photos of your own units: the drawings are better than a stock photo of someone else's hair.
+Four sample pieces already use your own photos (the burgundy bone straight, the ginger body wave, the black bob and the deep wave). They live in `assets/img/products/` in both sites. Every other piece shows a clean drawing of its texture in its first shade until you add a photo in **Products**. Portrait photos on a plain or dark background look best. Use photos of your own units: the drawings are better than a stock photo of someone else's hair.
+
+### The home page words
+
+In **Website text** you can change the top bar, the three numbers beside the hero photo (500+ happy queens, 4.9★ average rating, 36 states delivered), the messages in the moving gold strip, the reviews, and the Help questions. The numbers came from the old site: keep them true. Your TikTok name is in **Settings** next to Instagram.
 
 ## Good to know
 
 - **Prices can't be tampered with.** The database works out every order's prices, discounts, delivery fee and stock itself. What the browser sends is only which pieces, lengths and shades.
 - **Who can see what.** Shoppers can read products and settings, place orders, look up their own order with its number and email, send messages and join the newsletter. Only emails on your admin list can see orders, customers, messages and codes. Add or remove team members in **Settings**, **Team**, and create their sign-in in Supabase.
 - **Order emails aren't sent yet.** Customers see their order number and a tracking link on screen, and WhatsApp orders open a chat with you. New orders appear on the dashboard (with alerts if you turn them on). Sending emails automatically needs an email service connected to Supabase.
-- **Sample content.** The reviews on the home page came from the old template. Replace them with real ones in **Website text**.
+- **Sample content.** The reviews and the three home page numbers came from the old site. Replace them with real ones in **Website text**.
 - **Demo data never mixes with real data.** Once the keys are in `config.js`, the sites use only the database.
 
 ## What's in each folder
@@ -104,6 +108,9 @@ shop/
   product.html      One product (product.html?p=its-web-address)
   checkout.html     Three-step checkout and the thank-you screen
   track.html        Order tracking
+  knowledge.html    Hair basics and the care guide
+  quiz.html         Five-question hair quiz with picks from your products
+  delivery.html     Fees for every state, and worldwide shipping
   about.html, help.html, contact.html, 404.html
   config.js         Your two Supabase values
   assets/css/site.css
@@ -112,7 +119,8 @@ shop/
   assets/js/db.js       Reading and saving (shared with the admin)
   assets/js/art.js      The texture drawings (shared with the admin)
   assets/js/seed.js     Demo-mode sample data
-  assets/fonts/         Archivo, hosted with the site
+  assets/fonts/         Cormorant Garamond, Jost, Playfair Display italic, hosted with the site
+  assets/img/           Hero and story photos; product photos in products/
   assets/vendor/supabase.js
 admin/
   index.html, config.js
@@ -128,8 +136,10 @@ supabase/
 
 ## Design notes
 
-Pink (#FF1F8E) and black on white, with one typeface, Archivo, whose letters can stretch wider and narrower. That stretch is the shop's one signature: the headline widens near the cursor, product names stretch on hover, and the footer wordmark stretches as it scrolls in, the way extensions add length. Everything else is kept quiet so the hair leads. Pages fade into each other in browsers that support it, and a product's picture glides from the grid into its page. With "reduce motion" switched on, all of that is turned off.
+The look of the original Baddie Strands site: near-black, warm gold (#C9A96E) and cream, with Cormorant Garamond for headings and prices, Jost for text, and Playfair Display italic for the "Your Hair, Your Crown" line. The original's touches are kept: the gold cursor ring on computers, the rotating "Virgin Human Hair 100%" badge, the gold strip of messages under the hero, the moving feature line, gold-edged cards and sharp, letter-spaced buttons whose fill slides in. Brand pink is kept for the things that move money: the bag count, the checkout and place-order buttons, and the chosen payment option.
 
-The dashboard uses the same typeface and colours more calmly, and always pairs a status colour with a word so nothing depends on colour alone.
+Pages fade into each other in browsers that support it, and a product's picture glides from the grid into its page. With "reduce motion" switched on, the motion is turned off and the normal cursor stays.
 
-Fonts: Archivo by Omnibus-Type, SIL Open Font License. Supabase JS library: MIT License.
+The dashboard uses the same dark, gold and cream look, kept plain and readable, and always pairs a status colour with a word so nothing depends on colour alone.
+
+Fonts: Cormorant Garamond by Christian Thalmann, Jost by Owen Earl (indestructible type*), Playfair Display by Claus Eggers Sørensen, all SIL Open Font License; a one-character naira subset of Archivo by Omnibus-Type, SIL Open Font License. Supabase JS library: MIT License.
