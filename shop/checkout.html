@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en-NG">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checkout | Baddie Strands</title>
+<meta name="description" content="Checkout">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="Checkout | Baddie Strands">
+<meta property="og:description" content="Checkout">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/img/icon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css?v=1">
+</head>
+<body data-page="checkout">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3.5 8h17M3.5 16h17"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24"><path d="M4.5 19.5l1.1-3.9A8 8 0 1 1 8.6 18.4z"/><path d="M9.2 8.6c.3 2.7 2.4 4.9 5.1 5.3l.9-1.1 1.9.8-.3 1.5c-3.9.4-8.1-3.6-7.9-7.5l1.5-.4.9 1.8z"/></symbol>
+</svg>
+<a class="skip" href="#main">Skip to content</a>
+<div class="demo" data-demo hidden>Demo mode: orders and messages stay in this browser until the shop is connected to its database.</div>
+<div class="announce" data-announce hidden><p data-announce-text></p></div>
+<header class="hd" data-hd>
+  <div class="hd__in wrap">
+    <a class="logo" href="index.html" aria-label="Baddie Strands, home"><span>Baddie</span><span>Strands</span></a>
+    <nav class="hd__nav" aria-label="Main">
+      <a href="shop.html" data-nav="all">Shop all</a>
+      <a href="shop.html?category=wigs" data-nav="wigs">Wigs</a>
+      <a href="shop.html?category=bundles" data-nav="bundles">Bundles</a>
+      <a href="shop.html?category=extensions" data-nav="extensions">Extensions</a>
+      <a href="about.html" data-nav="about">About</a>
+      <a href="help.html" data-nav="help">Help</a>
+    </nav>
+    <div class="hd__tools">
+      <button class="iconbtn" type="button" data-search-open aria-label="Search the shop"><svg class="ico"><use href="#i-search"/></svg></button>
+      <button class="bagbtn" type="button" data-bag-open aria-label="Open your bag"><span>Bag</span><span class="bagbtn__n" data-bag-count>0</span></button>
+      <button class="iconbtn hd__menu" type="button" data-menu-open aria-label="Menu" aria-expanded="false" aria-controls="menu"><svg class="ico"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+    <div class="pagehead" style="padding-bottom:0"><h1 class="h1" data-co-title>Checkout</h1></div>
+    <div data-co-empty hidden class="empty"><p class="lede">Your bag is empty.</p><a class="btn" href="shop.html">Find something you love</a></div>
+    <div class="co" data-co>
+      <form data-co-form novalidate>
+        <section class="step" data-step="1">
+          <div class="step__head"><h2><i>1</i>Your details</h2><button class="linkbtn" type="button" data-edit="1" hidden>Change</button></div>
+          <p class="step__sum" data-sum="1" hidden></p>
+          <div class="step__body" data-body="1">
+            <div class="fgrid">
+              <label class="field full"><span>Full name</span><input class="input" name="name" autocomplete="name" required></label>
+              <label class="field"><span>Email</span><input class="input" name="email" type="email" autocomplete="email" required><small>For your receipt and order updates.</small></label>
+              <label class="field"><span>Phone (WhatsApp if you have it)</span><input class="input" name="phone" type="tel" autocomplete="tel" required><small>The rider calls this number.</small></label>
+            </div>
+            <p class="err" data-err="1" role="alert"></p>
+            <div><button class="btn" type="button" data-next="1">Continue to delivery</button></div>
+          </div>
+        </section>
+        <section class="step is-locked" data-step="2">
+          <div class="step__head"><h2><i>2</i>Delivery</h2><button class="linkbtn" type="button" data-edit="2" hidden>Change</button></div>
+          <p class="step__sum" data-sum="2" hidden></p>
+          <div class="step__body" data-body="2" hidden>
+            <div class="fgrid">
+              <label class="field full"><span>Street address</span><input class="input" name="address" autocomplete="street-address" required></label>
+              <label class="field"><span>Area or town</span><input class="input" name="city" autocomplete="address-level2"></label>
+              <label class="field"><span>State</span><select class="input" name="state" data-states required><option value="">Choose your state</option></select></label>
+              <label class="field full"><span>Anything we should know? (optional)</span><input class="input" name="note" placeholder="Landmark, best time to deliver"></label>
+            </div>
+            <p class="note" data-fee-note hidden></p>
+            <p class="err" data-err="2" role="alert"></p>
+            <div><button class="btn" type="button" data-next="2">Continue to payment</button></div>
+          </div>
+        </section>
+        <section class="step is-locked" data-step="3">
+          <div class="step__head"><h2><i>3</i>Payment</h2></div>
+          <div class="step__body" data-body="3" hidden>
+            <fieldset class="pay" data-pay style="border:0;padding:0;margin:0"><legend class="visually-hidden">How would you like to pay?</legend></fieldset>
+            <p class="err" data-err="3" role="alert"></p>
+            <div><button class="btn" type="submit" data-place>Place order</button></div>
+            <p class="small muted">By placing your order you agree to our delivery and returns terms on the Help page.</p>
+          </div>
+        </section>
+      </form>
+      <aside class="cosum" aria-label="Order summary">
+        <h2 class="h3">Order summary</h2>
+        <div class="cosum__lines" data-co-lines></div>
+        <form class="inline" data-code-form novalidate>
+          <label class="visually-hidden" for="code">Discount code</label>
+          <input class="input" id="code" name="code" placeholder="Discount code" autocomplete="off" style="height:46px;text-transform:uppercase">
+          <button class="btn btn--black btn--sm" type="submit" style="min-height:46px">Apply</button>
+        </form>
+        <p class="small" data-code-msg role="status"></p>
+        <div class="sum">
+          <div><span>Subtotal</span><span class="price" data-co-sub></span></div>
+          <div data-co-disc-row hidden><span>Discount <span data-co-code></span> <button class="linkbtn" type="button" data-code-remove>Remove</button></span><span class="price" data-co-disc></span></div>
+          <div><span>Delivery</span><span class="price" data-co-fee>Choose your state</span></div>
+          <div class="sum__total"><span>Total</span><span class="price" data-co-total></span></div>
+        </div>
+      </aside>
+    </div>
+    <div class="done" data-done hidden></div>
+  </div>
+</main>
+<footer class="ft">
+  <div class="wrap ft__top">
+    <div class="ft__join">
+      <h2 class="h2">New drops, first.</h2>
+      <p>Restocks, new textures and members-only prices. One or two emails a month.</p>
+      <form class="inline" data-newsletter novalidate>
+        <label class="visually-hidden" for="join-email">Your email</label>
+        <input class="input" id="join-email" name="email" type="email" autocomplete="email" placeholder="Your email" required>
+        <button class="btn" type="submit">Join</button>
+      </form>
+      <p class="ft__note" data-newsletter-note role="status"></p>
+    </div>
+    <nav class="ft__cols" aria-label="Footer">
+      <div><h3>Shop</h3><a href="shop.html">All hair</a><a href="shop.html?category=wigs">Wigs</a><a href="shop.html?category=bundles">Bundles</a><a href="shop.html?category=closures">Closures</a><a href="shop.html?category=extensions">Extensions</a></div>
+      <div><h3>Help</h3><a href="help.html">Questions</a><a href="help.html#delivery">Delivery fees</a><a href="track.html">Track an order</a><a href="about.html">About us</a><a href="contact.html">Contact</a></div>
+      <div><h3>Talk to us</h3><a href="#" data-wa target="_blank" rel="noopener">WhatsApp</a><a href="#" data-mail>Email</a><a href="#" data-ig target="_blank" rel="noopener">Instagram</a><p data-open class="open">Checking hours</p></div>
+    </nav>
+  </div>
+  <p class="ft__word" aria-hidden="true">Baddie Strands</p>
+  <div class="wrap ft__base"><p>&copy; <span data-year>2026</span> Baddie Strands, Abuja, Nigeria.</p><p>100% virgin human hair. Pay by card, bank transfer or on WhatsApp.</p></div>
+</footer>
+
+<div class="menu" id="menu" data-menu hidden role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="menu__top">
+    <a class="logo" href="index.html"><span>Baddie</span><span>Strands</span></a>
+    <button class="iconbtn" type="button" data-menu-close aria-label="Close menu"><svg class="ico"><use href="#i-close"/></svg></button>
+  </div>
+  <nav class="menu__links" aria-label="Menu">
+    <a href="shop.html">Shop all</a><a href="shop.html?category=wigs">Wigs</a><a href="shop.html?category=bundles">Bundles</a><a href="shop.html?category=extensions">Extensions</a><a href="about.html">About</a><a href="help.html">Help</a><a href="track.html">Track order</a>
+  </nav>
+  <div class="menu__foot"><a href="#" data-wa target="_blank" rel="noopener">WhatsApp us</a><a href="contact.html">Contact</a><p data-open class="open">Checking hours</p></div>
+</div>
+
+<div class="overlay" id="bag" data-overlay hidden>
+  <div class="scrim" data-close></div>
+  <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="bag-title" tabindex="-1">
+    <div class="drawer__head"><h2 class="h3" id="bag-title">Your bag <span class="muted" data-bag-n></span></h2><button class="iconbtn" type="button" data-close aria-label="Close bag"><svg class="ico"><use href="#i-close"/></svg></button></div>
+    <div class="drawer__body" data-bag-lines></div>
+    <div class="drawer__foot" data-bag-foot hidden>
+      <div class="free" data-free hidden><span data-free-text></span><div class="free__bar"><i data-free-bar></i></div></div>
+      <div class="sum"><div><span>Subtotal</span><b class="price" data-bag-subtotal></b></div><div class="small muted"><span>Delivery is worked out at checkout from your state.</span></div></div>
+      <a class="btn btn--wide" href="checkout.html">Checkout</a>
+      <button class="btn btn--line btn--wide" type="button" data-close>Keep shopping</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="search" data-overlay hidden>
+  <div class="scrim" data-close></div>
+  <div class="search" role="dialog" aria-modal="true" aria-label="Search the shop" tabindex="-1">
+    <div class="wrap">
+      <div class="search__bar">
+        <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+        <label class="visually-hidden" for="search-input">Search</label>
+        <input id="search-input" type="search" placeholder="Search wigs, textures, shades" autocomplete="off">
+        <button class="iconbtn" type="button" data-close aria-label="Close search"><svg class="ico"><use href="#i-close"/></svg></button>
+      </div>
+      <div data-search-results></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" data-toast role="status" aria-live="polite"><span data-toast-text></span><span data-toast-act></span></div>
+
+<script src="config.js?v=1"></script>
+<script src="assets/js/seed.js?v=1"></script>
+<script src="assets/js/db.js?v=1"></script>
+<script src="assets/js/art.js?v=1"></script>
+<script src="assets/js/site.js?v=1"></script>
+<script src="assets/js/pages.js?v=1"></script>
+</body>
+</html>
