@@ -1,0 +1,13 @@
+Third-party scripts in this folder
+==================================
+
+gsap.min.js, ScrollTrigger.min.js, SplitText.min.js  (GSAP 3.13.0)
+  Copyright GreenSock / Webflow. Free to use, including commercially,
+  under the GSAP Standard "No Charge" License: https://gsap.com/standard-license
+
+lenis.min.js  (Lenis 1.3.4)
+  Copyright darkroom.engineering. MIT License: https://github.com/darkroomengineering/lenis
+
+They are kept here, rather than loaded from a CDN, so the site works
+offline, never breaks if a CDN changes, and makes no third-party requests
+on page load.
