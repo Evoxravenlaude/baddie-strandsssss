@@ -46,7 +46,7 @@
     const band = p && (p.category === 'bundles' || p.category === 'extensions')
       ? `<rect x="22" y="${top - 16}" width="356" height="18" rx="3" fill="#0a0a0a"/>` : p && p.category === 'closures'
       ? `<rect x="80" y="${top - 22}" width="240" height="26" rx="4" fill="#F4C9B4"/>` : '';
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="g" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#f3ebdd"/><stop offset=".65" stop-color="#ddcdb1"/><stop offset="1" stop-color="#bfa983"/></radialGradient></defs><rect width="${W}" height="${H}" fill="url(#g)"/><g fill="none" stroke="${hex}" stroke-linecap="round" stroke-linejoin="round">${paths}</g>${band}</svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="g" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#fdeef2"/><stop offset=".65" stop-color="#f9d3dd"/><stop offset="1" stop-color="#f2b3c3"/></radialGradient></defs><rect width="${W}" height="${H}" fill="url(#g)"/><g fill="none" stroke="${hex}" stroke-linecap="round" stroke-linejoin="round">${paths}</g>${band}</svg>`;
     const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     artCache.set(key, url);
     return url;

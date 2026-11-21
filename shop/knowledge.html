@@ -49,8 +49,9 @@
       <a href="contact.html" data-nav="contact">Contact</a>
     </nav>
     <div class="hd__tools">
+      <span class="clock" data-clock></span>
       <button class="iconbtn" type="button" data-search-open aria-label="Search the shop"><svg class="ico"><use href="#i-search"/></svg></button>
-      <button class="bagbtn" type="button" data-bag-open aria-label="Open your bag"><svg class="ico"><use href="#i-bag"/></svg><span class="bagbtn__n" data-bag-count>0</span></button>
+      <button class="bagbtn" type="button" data-bag-open aria-label="Open your bag"><svg class="ico"><use href="#i-bag"/></svg><span>Bag</span><span class="bagbtn__n" data-bag-count>0</span></button>
       <button class="iconbtn hd__menu" type="button" data-menu-open aria-label="Menu" aria-expanded="false" aria-controls="menu"><svg class="ico"><use href="#i-menu"/></svg></button>
     </div>
   </div>
@@ -65,13 +66,13 @@
     </div>
     <div id="panel-basics" role="tabpanel" aria-labelledby="tab-basics" data-kpanel="basics">
       <h2 class="visually-hidden">Hair basics</h2>
-      <div class="kgrid">
-        <article class="kcard"><p class="kcard__n">01</p><h3>Know Your Hair Type</h3><p>From 1A to 4C, understanding your curl pattern, porosity and density is the first step. High-porosity hair absorbs moisture fast but loses it just as quickly. Low porosity needs warmth to open the cuticle.</p></article>
-        <article class="kcard"><p class="kcard__n">02</p><h3>Virgin vs Remy Hair</h3><p>Virgin hair has never been chemically processed: it’s the purest form. Remy hair has all its cuticles aligned in one direction, which prevents tangling. All Baddie Strands hair is virgin and Remy.</p></article>
-        <article class="kcard"><p class="kcard__n">03</p><h3>Lace Types Explained</h3><p>HD lace is the thinnest and most transparent, and disappears on every skin tone. Regular lace is thicker but more durable. 13×4 covers ear to ear, 13×6 adds depth for parting, and 360 lace covers the full perimeter.</p></article>
-        <article class="kcard"><p class="kcard__n">04</p><h3>Density Guide</h3><p>Density is how full the wig looks. 150% is natural and light. 180% is full and glamorous. 200% is the maximum: dramatic, show-stopping volume. Choose for your lifestyle and the look you want.</p></article>
-        <article class="kcard"><p class="kcard__n">05</p><h3>Reading Hair Length</h3><p>Hair is measured straightened. A 20″ straight wig reaches mid-back; a 20″ curly wig may look much shorter because of shrinkage. Always allow for your texture when choosing length.</p></article>
-        <article class="kcard"><p class="kcard__n">06</p><h3>Cap Construction</h3><p>The cap is the foundation. Machine-made caps cost less but breathe less. Hand-tied caps move more naturally. Glueless caps have adjustable bands. Choose for comfort, lifestyle and activity level.</p></article>
+      <div class="chapters">
+        <details class="chapter" open><summary><span class="chapter__n">01</span><h3 class="chapter__t">Know Your Hair Type</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">From 1A to 4C, understanding your curl pattern, porosity and density is the first step. High-porosity hair absorbs moisture fast but loses it just as quickly. Low porosity needs warmth to open the cuticle.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">02</span><h3 class="chapter__t">Virgin vs Remy Hair</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">Virgin hair has never been chemically processed: it’s the purest form. Remy hair has all its cuticles aligned in one direction, which prevents tangling. All Baddie Strands hair is virgin and Remy.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">03</span><h3 class="chapter__t">Lace Types Explained</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">HD lace is the thinnest and most transparent, and disappears on every skin tone. Regular lace is thicker but more durable. 13×4 covers ear to ear, 13×6 adds depth for parting, and 360 lace covers the full perimeter.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">04</span><h3 class="chapter__t">Density Guide</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">Density is how full the wig looks. 150% is natural and light. 180% is full and glamorous. 200% is the maximum: dramatic, show-stopping volume. Choose for your lifestyle and the look you want.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">05</span><h3 class="chapter__t">Reading Hair Length</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">Hair is measured straightened. A 20″ straight wig reaches mid-back; a 20″ curly wig may look much shorter because of shrinkage. Always allow for your texture when choosing length.</p></details>
+        <details class="chapter"><summary><span class="chapter__n">06</span><h3 class="chapter__t">Cap Construction</h3><span class="chapter__plus" aria-hidden="true"></span></summary><p class="chapter__body">The cap is the foundation. Machine-made caps cost less but breathe less. Hand-tied caps move more naturally. Glueless caps have adjustable bands. Choose for comfort, lifestyle and activity level.</p></details>
       </div>
     </div>
     <div id="panel-care" role="tabpanel" aria-labelledby="tab-care" data-kpanel="care" hidden>
@@ -83,7 +84,7 @@
     </div>
   </div>
 </main>
-<section class="sec--deep" aria-labelledby="circle-title" style="border-top:1px solid var(--border)">
+<section class="blush" aria-labelledby="circle-title">
   <div class="wrap circle">
     <div><p class="tag">Stay in the loop</p><h2 class="h2" id="circle-title">Join the <em>Inner Circle</em></h2><p class="lede" style="margin-top:12px">Exclusive drops, styling tips and members-only deals. No spam, ever.</p></div>
     <div>
@@ -107,7 +108,8 @@
     <nav aria-label="Learn"><h3>Learn</h3><a href="knowledge.html">Hair knowledge</a><a href="knowledge.html#care">Care guide</a><a href="quiz.html">Hair quiz</a><a href="help.html">Questions</a></nav>
     <nav aria-label="Information"><h3>Info</h3><a href="delivery.html">Delivery</a><a href="track.html">Track an order</a><a href="about.html">Our story</a><a href="contact.html">Contact us</a><p data-open class="open">Checking hours</p></nav>
   </div>
-  <div class="wrap ft__base"><p>&copy; <span data-year>2026</span> Baddie Strands. All rights reserved.</p><p>Made with love in Abuja, Nigeria</p></div>
+  <div class="ft__word" aria-hidden="true"><p>Baddie Strands</p></div>
+  <div class="wrap ft__base"><p>&copy; <span data-year>2026</span> Baddie Strands. All rights reserved.</p><p><span data-clock-foot>Abuja, Nigeria</span></p></div>
 </footer>
 
 <div class="menu" id="menu" data-menu hidden role="dialog" aria-modal="true" aria-label="Menu">
@@ -129,7 +131,7 @@
     <div class="drawer__foot" data-bag-foot hidden>
       <div class="free" data-free hidden><span data-free-text></span><div class="free__bar"><i data-free-bar></i></div></div>
       <div class="sum"><div class="sum__total"><span>Subtotal</span><span class="price" data-bag-subtotal></span></div><div class="small muted"><span>Delivery is worked out at checkout from your state.</span></div></div>
-      <a class="btn btn--pink btn--wide" href="checkout.html">Checkout securely</a>
+      <a class="btn btn--pink btn--wide btn--go" href="checkout.html" style="justify-content:space-between;padding-left:30px">Checkout securely <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a>
       <button class="btn btn--black btn--wide" type="button" data-close>Keep shopping</button>
     </div>
   </div>

@@ -11,11 +11,11 @@
   const ghosts = (n) => Array.from({ length: n }, () => '<div class="ghost-card"><div class="ghost"></div><div class="ghost"></div></div>').join('');
   const inches = (len) => { const m = /(\d+(?:\.\d+)?)/.exec(String(len || '')); return m ? Number(m[1]) : 0; };
   const GUIDE = [[9, 'chin'], [11, 'neck'], [13, 'shoulders'], [15, 'just past the shoulders'], [17, 'armpits'], [19, 'bra strap'], [21, 'mid-back'], [23, 'lower back'], [25, 'waist'], [27, 'hips'], [29, 'tailbone'], [999, 'below the hips']];
-  const fallsTo = (len, texture) => {
-    const shrink = { curly: 0.25, coily: 0.4, deep: 0.15, water: 0.1 }[texture] || 0;
-    const i = inches(len) * (1 - shrink);
-    return (GUIDE.find((g) => i <= g[0]) || GUIDE[GUIDE.length - 1])[1];
-  };
+  const shrunk = (len, texture) => inches(len) * (1 - ({ curly: 0.25, coily: 0.4, deep: 0.15, water: 0.1 }[texture] || 0));
+  const fallsTo = (len, texture) => { const i = shrunk(len, texture); return (GUIDE.find((g) => i <= g[0]) || GUIDE[GUIDE.length - 1])[1]; };
+  // the ruler under the lengths runs from 8 to 30 inches (after lofliballs)
+  const RULER = [[8, '8″'], [9, 'chin'], [13, 'shoulders'], [19, 'bra strap'], [25, 'waist'], [30, '30″']];
+  const rulerAt = (i) => Math.max(0, Math.min(100, ((i - 8) / 22) * 100));
   const states = (s) => {
     const names = Object.keys((s.delivery && s.delivery.fees) || {});
     const fct = names.filter((n) => /FCT|Abuja/i.test(n));
@@ -38,7 +38,7 @@
     // stats panel and the gold ticker, both editable in the admin
     const stats = (s.stats || []).filter((x) => x && x.value);
     $('[data-stats]').innerHTML = stats.map((x) => `<div><b>${esc(x.value)}</b><span>${esc(x.label || '')}</span></div>`).join('');
-    $('[data-stats]').hidden = !stats.length;
+    $('[data-corner]').hidden = !stats.length;
     const tick = (s.ticker || []).filter(Boolean);
     const run = $('[data-ticker]');
     if (tick.length) { const one = tick.map((t) => `<span>${esc(t)}</span>`).join(''); run.innerHTML = one + one; }
@@ -201,16 +201,17 @@
       st.shade = keepShade && keepShade < shades.length ? keepShade : 0;
       st.qty = keepQty || 1;
       document.title = `${p.name} | Baddie Strands`;
+      const gw = $('[data-ghost]'); if (gw) gw.textContent = texName(p.texture);
       const md = $('meta[name="description"]'); if (md) md.content = p.description.slice(0, 155);
       $('[data-crumbs]').innerHTML = `<a href="shop.html">Shop</a><span aria-hidden="true">/</span><a href="shop.html?category=${esc(p.category)}">${esc(CATS[p.category] || p.category)}</a><span aria-hidden="true">/</span><span aria-current="page">${esc(p.name)}</span>`;
       const [lo, hi] = DB.priceRange(p);
       const out = p.stock === 0;
       $('[data-buy]').innerHTML = `
         ${flags(p).length ? `<div class="buy__flags">${flags(p).map((f) => `<span class="flag${f[1] ? ' flag--' + f[1] : ''}">${f[0]}</span>`).join('')}</div>` : ''}
-        <div><h1 class="buy__name">${esc(p.name)}</h1><p class="muted" style="margin-top:10px">${esc(texName(p.texture))}, ${esc((CATS[p.category] || '').toLowerCase())}</p></div>
+        <div><h1 class="buy__name">${esc(p.name).split(' ').map((w, i) => `<span class="w" style="animation-delay:${i * 90}ms">${w}</span>`).join(' ')}</h1><p class="muted" style="margin-top:10px">${esc(texName(p.texture))}, ${esc((CATS[p.category] || '').toLowerCase())}</p></div>
         <p class="price buy__price" data-price></p>
         ${p.description ? `<p class="muted" style="max-width:52ch">${esc(p.description)}</p>` : ''}
-        ${lens.length ? `<fieldset class="opt"><legend>Length <span data-len-out></span></legend><div class="chips" role="radiogroup" aria-label="Length">${lens.map((l) => { const pr = DB.priceFor(p, l.length); return `<button class="chip" type="button" role="radio" data-len="${esc(l.length)}" aria-checked="false">${esc(l.length)}${lo !== hi ? `<small>${money(pr).replace(',000', 'k')}</small>` : ''}</button>`; }).join('')}</div><p class="small muted" data-falls></p></fieldset>` : ''}
+        ${lens.length ? `<fieldset class="opt"><legend>Length <span data-len-out></span></legend><div class="chips" role="radiogroup" aria-label="Length">${lens.map((l) => { const pr = DB.priceFor(p, l.length); return `<button class="chip" type="button" role="radio" data-len="${esc(l.length)}" aria-checked="false">${esc(l.length)}${lo !== hi ? `<small>${money(pr).replace(',000', 'k')}</small>` : ''}</button>`; }).join('')}</div><div class="ruler" aria-hidden="true"><div class="ruler__track"><i class="ruler__fill" data-ruler-fill></i><i class="ruler__mark" data-ruler-mark></i></div><div class="ruler__labels">${RULER.map((r) => `<span style="left:${rulerAt(r[0])}%">${r[1]}</span>`).join('')}</div></div><p class="small muted" data-falls></p></fieldset>` : ''}
         ${shades.length ? `<fieldset class="opt"><legend>Shade <span data-shade-out></span></legend><div class="swatches" role="radiogroup" aria-label="Shade">${shades.map((s, i) => `<button class="swatch" type="button" role="radio" data-shade="${i}" style="--c:${esc(s.hex)}" aria-checked="false" aria-label="${esc(s.name)}" title="${esc(s.name)}"></button>`).join('')}</div></fieldset>` : ''}
         <div class="buy__act">
           <div class="qty"><button type="button" data-q="-1" aria-label="One fewer">−</button><output data-qty aria-label="Quantity">1</output><button type="button" data-q="1" aria-label="One more">+</button></div>
@@ -223,7 +224,7 @@
           <output data-est-out aria-live="polite"></output>
         </div>
         <div class="acc">
-          ${p.details.length ? `<details open><summary>What you get</summary><div class="acc__body"><ul>${p.details.map((d) => `<li>${esc(d)}</li>`).join('')}</ul></div></details>` : ''}
+          ${p.details.length ? `<details open><summary>What you get</summary><div class="acc__body"><ul class="tags">${p.details.map((d) => `<li>${esc(d)}</li>`).join('')}</ul></div></details>` : ''}
           <details><summary>Delivery and returns</summary><div class="acc__body"><p>Same day in Abuja, 1 to 2 days to Lagos and Port Harcourt, 2 to 4 days everywhere else in Nigeria. We ship abroad too: message us on WhatsApp.</p><p>Unworn hair with the lace uncut can be exchanged within 7 days. For hygiene, worn or cut units can’t be returned.</p></div></details>
           <details><summary>Caring for it</summary><div class="acc__body"><p>Wash every 7 to 10 wears with sulphate-free shampoo, deep condition, and air-dry on a stand. Use heat protectant and stay under 180°C. Sleep on silk or satin.</p><p><a class="link" href="help.html">More care answers</a></p></div></details>
         </div>`;
@@ -265,7 +266,8 @@
       $$('[data-len]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.len === st.len)));
       $$('[data-shade]').forEach((b) => b.setAttribute('aria-checked', String(Number(b.dataset.shade) === st.shade)));
       const lo = $('[data-len-out]'); if (lo) lo.textContent = st.len || '';
-      const fl = $('[data-falls]'); if (fl && st.len) fl.textContent = `At ${st.len}, it falls to about your ${fallsTo(st.len, p.texture)}.`;
+      const fl = $('[data-falls]'); if (fl && st.len) fl.textContent = `At ${st.len}, it falls to about your ${fallsTo(st.len, p.texture)}${shrunk(st.len, p.texture) < inches(st.len) ? ', because curls sit higher than they measure' : ''}.`;
+      const mk = $('[data-ruler-mark]'); if (mk && st.len) { const at = rulerAt(shrunk(st.len, p.texture)); mk.style.left = at + '%'; $('[data-ruler-fill]').style.width = at + '%'; }
       const so = $('[data-shade-out]'); if (so) so.textContent = (p.shades[st.shade] || {}).name || '';
       $('[data-qty]').textContent = st.qty;
       const add = $('[data-add]');

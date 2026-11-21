@@ -49,8 +49,9 @@
       <a href="contact.html" data-nav="contact">Contact</a>
     </nav>
     <div class="hd__tools">
+      <span class="clock" data-clock></span>
       <button class="iconbtn" type="button" data-search-open aria-label="Search the shop"><svg class="ico"><use href="#i-search"/></svg></button>
-      <button class="bagbtn" type="button" data-bag-open aria-label="Open your bag"><svg class="ico"><use href="#i-bag"/></svg><span class="bagbtn__n" data-bag-count>0</span></button>
+      <button class="bagbtn" type="button" data-bag-open aria-label="Open your bag"><svg class="ico"><use href="#i-bag"/></svg><span>Bag</span><span class="bagbtn__n" data-bag-count>0</span></button>
       <button class="iconbtn hd__menu" type="button" data-menu-open aria-label="Menu" aria-expanded="false" aria-controls="menu"><svg class="ico"><use href="#i-menu"/></svg></button>
     </div>
   </div>
@@ -71,7 +72,7 @@
         <p class="body">Baddie Strands began with one mission: give Nigerian women access to the quality of hair they deserve, without compromise. Every strand is 100% virgin, ethically handled, and built to last.</p>
         <p class="body">We are a proudly Nigerian business with a worldwide reach. Whether you’re in Wuse or Wimbledon, we bring the same quality to your door, and every package carries a piece of that Abuja excellence.</p>
         <div class="places"><span>Nigeria</span><span>United Kingdom</span><span>USA</span><span>Ghana</span><span>And more</span></div>
-        <a class="btn btn--line" href="contact.html">Connect with us</a>
+        <a class="btn btn--line btn--go" href="contact.html">Connect with us <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a>
       </div>
     </div>
     <div class="kgrid" style="margin-top:clamp(64px,8vw,110px)">
@@ -81,7 +82,7 @@
     </div>
   </div>
 </main>
-<section class="sec--deep" aria-labelledby="circle-title" style="border-top:1px solid var(--border)">
+<section class="blush" aria-labelledby="circle-title">
   <div class="wrap circle">
     <div><p class="tag">Stay in the loop</p><h2 class="h2" id="circle-title">Join the <em>Inner Circle</em></h2><p class="lede" style="margin-top:12px">Exclusive drops, styling tips and members-only deals. No spam, ever.</p></div>
     <div>
@@ -105,7 +106,8 @@
     <nav aria-label="Learn"><h3>Learn</h3><a href="knowledge.html">Hair knowledge</a><a href="knowledge.html#care">Care guide</a><a href="quiz.html">Hair quiz</a><a href="help.html">Questions</a></nav>
     <nav aria-label="Information"><h3>Info</h3><a href="delivery.html">Delivery</a><a href="track.html">Track an order</a><a href="about.html">Our story</a><a href="contact.html">Contact us</a><p data-open class="open">Checking hours</p></nav>
   </div>
-  <div class="wrap ft__base"><p>&copy; <span data-year>2026</span> Baddie Strands. All rights reserved.</p><p>Made with love in Abuja, Nigeria</p></div>
+  <div class="ft__word" aria-hidden="true"><p>Baddie Strands</p></div>
+  <div class="wrap ft__base"><p>&copy; <span data-year>2026</span> Baddie Strands. All rights reserved.</p><p><span data-clock-foot>Abuja, Nigeria</span></p></div>
 </footer>
 
 <div class="menu" id="menu" data-menu hidden role="dialog" aria-modal="true" aria-label="Menu">
@@ -127,7 +129,7 @@
     <div class="drawer__foot" data-bag-foot hidden>
       <div class="free" data-free hidden><span data-free-text></span><div class="free__bar"><i data-free-bar></i></div></div>
       <div class="sum"><div class="sum__total"><span>Subtotal</span><span class="price" data-bag-subtotal></span></div><div class="small muted"><span>Delivery is worked out at checkout from your state.</span></div></div>
-      <a class="btn btn--pink btn--wide" href="checkout.html">Checkout securely</a>
+      <a class="btn btn--pink btn--wide btn--go" href="checkout.html" style="justify-content:space-between;padding-left:30px">Checkout securely <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a>
       <button class="btn btn--black btn--wide" type="button" data-close>Keep shopping</button>
     </div>
   </div>

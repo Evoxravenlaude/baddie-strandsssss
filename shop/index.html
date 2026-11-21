@@ -49,8 +49,9 @@
       <a href="contact.html" data-nav="contact">Contact</a>
     </nav>
     <div class="hd__tools">
+      <span class="clock" data-clock></span>
       <button class="iconbtn" type="button" data-search-open aria-label="Search the shop"><svg class="ico"><use href="#i-search"/></svg></button>
-      <button class="bagbtn" type="button" data-bag-open aria-label="Open your bag"><svg class="ico"><use href="#i-bag"/></svg><span class="bagbtn__n" data-bag-count>0</span></button>
+      <button class="bagbtn" type="button" data-bag-open aria-label="Open your bag"><svg class="ico"><use href="#i-bag"/></svg><span>Bag</span><span class="bagbtn__n" data-bag-count>0</span></button>
       <button class="iconbtn hd__menu" type="button" data-menu-open aria-label="Menu" aria-expanded="false" aria-controls="menu"><svg class="ico"><use href="#i-menu"/></svg></button>
     </div>
   </div>
@@ -58,22 +59,25 @@
 
 <main id="main">
   <section class="hero" aria-labelledby="hero-title">
-    <div class="hero__text">
-      <p class="tag">✦ &nbsp;Nigerian-owned luxury hair brand</p>
-      <h1 class="display" id="hero-title">Hair That Speaks <em>Before You Do</em></h1>
-      <p class="lede">100% virgin human hair. HD lace that vanishes on your skin. <em style="font-family:var(--italic);color:var(--cream)">Your Hair, Your Crown</em>: from Abuja to the world, Baddie Strands delivers the crown you deserve.</p>
-      <div class="hero__go"><a class="btn" href="shop.html">Shop the collection</a><a class="btn btn--line" href="quiz.html">Find your match</a></div>
+    <h1 class="visually-hidden" id="hero-title">Hair that speaks before you do</h1>
+    <div class="hero__stage">
+      <span class="hero__line hero__line--1" aria-hidden="true">Hair That Speaks</span>
+      <span class="hero__photo"><img src="assets/img/hero.jpg" alt="A long, glossy bone-straight wig in deep burgundy" fetchpriority="high"></span>
+      <span class="hero__line hero__line--2" aria-hidden="true">Before You Do</span>
+      <span class="badge-ring" aria-hidden="true"><span>Virgin<br>Human<br>Hair<br>100%</span></span>
     </div>
-    <p class="hero__scroll" aria-hidden="true">Scroll to explore</p>
-    <div class="hero__media">
-      <img src="assets/img/hero.jpg" alt="A long, glossy bone-straight wig in deep burgundy" fetchpriority="high">
-      <div class="badge-ring" aria-hidden="true">Virgin<br>Human<br>Hair<br>100%</div>
-      <div class="stats" data-stats></div>
+    <div class="hero__intro">
+      <p class="lede">100% virgin human hair, with HD lace that vanishes on your skin. <em style="font-family:var(--italic);color:var(--cream)">Your Hair, Your Crown</em>, from Abuja to the world.</p>
+      <div class="hero__go"><a class="btn btn--go" href="shop.html">Shop the collection <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a><a class="btn btn--line" href="quiz.html">Find your match</a></div>
     </div>
+    <div class="hero__corner" data-corner><p class="tag">Nigerian-owned since 2020</p><div class="stats" data-stats></div></div>
     <div class="ticker" aria-hidden="true"><div class="ticker__run" data-ticker></div></div>
   </section>
 
-  <div class="features" aria-label="Why Baddie Strands"><div class="features__run"><span class="feature"><i><svg><use href="#i-spark"/></svg></i>100% Virgin Human Hair</span><span class="feature"><i><svg><use href="#i-globe"/></svg></i>Worldwide Shipping</span><span class="feature"><i><svg><use href="#i-bolt"/></svg></i>Same-Day Abuja Delivery</span><span class="feature"><i><svg><use href="#i-gem"/></svg></i>HD Undetectable Lace</span><span class="feature"><i><svg><use href="#i-crown"/></svg></i>Nigerian-Owned &amp; Proud</span><span class="feature"><i><svg><use href="#i-lock"/></svg></i>Secure Card Checkout</span><span class="feature" aria-hidden="true"><i><svg><use href="#i-spark"/></svg></i>100% Virgin Human Hair</span><span class="feature" aria-hidden="true"><i><svg><use href="#i-globe"/></svg></i>Worldwide Shipping</span><span class="feature" aria-hidden="true"><i><svg><use href="#i-bolt"/></svg></i>Same-Day Abuja Delivery</span><span class="feature" aria-hidden="true"><i><svg><use href="#i-gem"/></svg></i>HD Undetectable Lace</span><span class="feature" aria-hidden="true"><i><svg><use href="#i-crown"/></svg></i>Nigerian-Owned &amp; Proud</span><span class="feature" aria-hidden="true"><i><svg><use href="#i-lock"/></svg></i>Secure Card Checkout</span></div></div>
+  <section class="wall" aria-label="Your hair, your crown">
+    <div class="wall__run" aria-hidden="true"><img src="assets/img/hero.jpg" alt="" loading="lazy"><img src="assets/img/about.jpg" alt="" loading="lazy"><img src="assets/img/bob.jpg" alt="" loading="lazy"><img src="assets/img/quiz.jpg" alt="" loading="lazy"><img src="assets/img/hero.jpg" alt="" loading="lazy"><img src="assets/img/about.jpg" alt="" loading="lazy"><img src="assets/img/bob.jpg" alt="" loading="lazy"><img src="assets/img/quiz.jpg" alt="" loading="lazy"><img src="assets/img/hero.jpg" alt="" loading="lazy"><img src="assets/img/about.jpg" alt="" loading="lazy"><img src="assets/img/bob.jpg" alt="" loading="lazy"><img src="assets/img/quiz.jpg" alt="" loading="lazy"><img src="assets/img/hero.jpg" alt="" loading="lazy"><img src="assets/img/about.jpg" alt="" loading="lazy"><img src="assets/img/bob.jpg" alt="" loading="lazy"><img src="assets/img/quiz.jpg" alt="" loading="lazy"></div>
+    <p class="wall__motto">Your Hair, Your Crown</p>
+  </section>
 
   <section class="sec" aria-label="Our story"><div class="wrap">
     <div class="story">
@@ -88,7 +92,7 @@
         <p class="body">Baddie Strands began with one mission: give Nigerian women access to the quality of hair they deserve, without compromise. Every strand is 100% virgin, ethically handled, and built to last.</p>
         <p class="body">We are a proudly Nigerian business with a worldwide reach. Whether you’re in Wuse or Wimbledon, we bring the same quality to your door, and every package carries a piece of that Abuja excellence.</p>
         <div class="places"><span>Nigeria</span><span>United Kingdom</span><span>USA</span><span>Ghana</span><span>And more</span></div>
-        <a class="btn btn--line" href="contact.html">Connect with us</a>
+        <a class="btn btn--line btn--go" href="contact.html">Connect with us <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a>
       </div>
     </div></div></section>
 
@@ -110,11 +114,11 @@
   <section class="sec sec--tight" aria-labelledby="match-title">
     <div class="wrap">
       <div class="match rv">
-        <div class="match__text">
+        <div class="match__text blush">
           <p class="tag">Personalised recommendation</p>
           <h2 class="h2" id="match-title">Find Your Perfect <em>Match</em></h2>
           <p class="lede">Answer five quick questions about your lifestyle, texture and budget, and we’ll pick the pieces made for you.</p>
-          <div><a class="btn" href="quiz.html">Take the hair quiz</a></div>
+          <div><a class="btn btn--go" href="quiz.html">Take the hair quiz <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a></div>
         </div>
         <div class="match__media"><span class="pic"><img src="assets/img/quiz.jpg" alt="A long deep wave wig in natural black" loading="lazy"></span></div>
       </div>
@@ -130,7 +134,7 @@
 
   <section class="sec" aria-labelledby="k-title">
     <div class="wrap">
-      <div class="sec__head"><div><p class="tag">The knowledge hub</p><h2 class="h2" id="k-title">Everything You Need to <em>Know</em></h2></div><a class="btn btn--line" href="knowledge.html">Read the guide</a></div>
+      <div class="sec__head"><div><p class="tag">The knowledge hub</p><h2 class="h2" id="k-title">Everything You Need to <em>Know</em></h2></div><a class="btn btn--line btn--go" href="knowledge.html">Read the guide <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a></div>
       <div class="kgrid">
         <article class="kcard rv"><p class="kcard__n">01</p><h3>Virgin vs Remy Hair</h3><p>Virgin hair has never been chemically processed. Remy means the cuticles all run one way, so it doesn’t tangle. Everything we sell is both.</p></article>
         <article class="kcard rv"><p class="kcard__n">02</p><h3>Lace Types Explained</h3><p>HD lace is the thinnest and disappears on every skin tone. A 13×4 frontal covers ear to ear; 13×6 gives you more room to part.</p></article>
@@ -141,12 +145,12 @@
 
   <section class="sec sec--tight" aria-labelledby="new-title">
     <div class="wrap">
-      <div class="sec__head"><div><p class="tag">Just landed</p><h2 class="h2" id="new-title">New <em>In</em></h2></div><a class="btn btn--line" href="shop.html?sort=new">See everything new</a></div>
+      <div class="sec__head"><div><p class="tag">Just landed</p><h2 class="h2" id="new-title">New <em>In</em></h2></div><a class="btn btn--line btn--go" href="shop.html?sort=new">See everything new <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a></div>
       <div class="grid" data-new style="padding:0"></div>
     </div>
   </section>
 </main>
-<section class="sec--deep" aria-labelledby="circle-title" style="border-top:1px solid var(--border)">
+<section class="blush" aria-labelledby="circle-title">
   <div class="wrap circle">
     <div><p class="tag">Stay in the loop</p><h2 class="h2" id="circle-title">Join the <em>Inner Circle</em></h2><p class="lede" style="margin-top:12px">Exclusive drops, styling tips and members-only deals. No spam, ever.</p></div>
     <div>
@@ -170,7 +174,8 @@
     <nav aria-label="Learn"><h3>Learn</h3><a href="knowledge.html">Hair knowledge</a><a href="knowledge.html#care">Care guide</a><a href="quiz.html">Hair quiz</a><a href="help.html">Questions</a></nav>
     <nav aria-label="Information"><h3>Info</h3><a href="delivery.html">Delivery</a><a href="track.html">Track an order</a><a href="about.html">Our story</a><a href="contact.html">Contact us</a><p data-open class="open">Checking hours</p></nav>
   </div>
-  <div class="wrap ft__base"><p>&copy; <span data-year>2026</span> Baddie Strands. All rights reserved.</p><p>Made with love in Abuja, Nigeria</p></div>
+  <div class="ft__word" aria-hidden="true"><p>Baddie Strands</p></div>
+  <div class="wrap ft__base"><p>&copy; <span data-year>2026</span> Baddie Strands. All rights reserved.</p><p><span data-clock-foot>Abuja, Nigeria</span></p></div>
 </footer>
 
 <div class="menu" id="menu" data-menu hidden role="dialog" aria-modal="true" aria-label="Menu">
@@ -192,7 +197,7 @@
     <div class="drawer__foot" data-bag-foot hidden>
       <div class="free" data-free hidden><span data-free-text></span><div class="free__bar"><i data-free-bar></i></div></div>
       <div class="sum"><div class="sum__total"><span>Subtotal</span><span class="price" data-bag-subtotal></span></div><div class="small muted"><span>Delivery is worked out at checkout from your state.</span></div></div>
-      <a class="btn btn--pink btn--wide" href="checkout.html">Checkout securely</a>
+      <a class="btn btn--pink btn--wide btn--go" href="checkout.html" style="justify-content:space-between;padding-left:30px">Checkout securely <i class="arw" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a>
       <button class="btn btn--black btn--wide" type="button" data-close>Keep shopping</button>
     </div>
   </div>

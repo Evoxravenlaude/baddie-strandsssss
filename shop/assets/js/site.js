@@ -315,7 +315,15 @@
       const o = openState(st.hours);
       $$('[data-open]').forEach((n) => { n.hidden = !o; if (o) { n.textContent = o.text; n.classList.toggle('is-open', o.open); } });
     };
-    tick(); setInterval(tick, 60000);
+    // live Abuja time in the header and footer (after concretaceramiche)
+    const clock = () => {
+      let t = '';
+      try { t = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date()).replace(' ', '\u2009'); } catch (e) { return; }
+      const o = openState(st.hours);
+      $$('[data-clock]').forEach((n) => { n.innerHTML = `Abuja <b>${t}</b>`; n.classList.toggle('is-open', !!(o && o.open)); n.title = o ? o.text : ''; });
+      $$('[data-clock-foot]').forEach((n) => { n.textContent = `Abuja, Nigeria, ${t}`; });
+    };
+    tick(); clock(); setInterval(() => { tick(); clock(); }, 30000);
     const an = $('[data-announce]');
     if (s.announcement && String(s.announcement).trim()) { $('[data-announce-text]').textContent = s.announcement; an.hidden = false; }
   }
@@ -336,7 +344,7 @@
     }));
   }
 
-  // ── Gold cursor (mice only) ───────────────────────────
+  // ── Pink cursor (mice only) ───────────────────────────
   function initCursor() {
     if (!fine || reduced) return;
     const dot = $('.cursor'), ring = $('.cursor-ring');
