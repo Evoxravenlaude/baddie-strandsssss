@@ -89,7 +89,7 @@ Four sample pieces already use your own photos (the burgundy bone straight, the 
 
 ### The home page words
 
-In **Website text** you can change the top bar, the three numbers beside the hero photo (500+ happy queens, 4.9★ average rating, 36 states delivered), the messages in the moving gold strip, the reviews, and the Help questions. The numbers came from the old site: keep them true. Your TikTok name is in **Settings** next to Instagram.
+In **Website text** you can change the top bar, the three numbers in the card beside the headline (500+ happy queens, 4.9★ average rating, 36 states delivered), the messages in the moving pink strip, the reviews, and the Help questions. The numbers came from the old site: keep them true. Your TikTok name is in **Settings** next to Instagram.
 
 ## Good to know
 
@@ -119,7 +119,7 @@ shop/
   assets/js/db.js       Reading and saving (shared with the admin)
   assets/js/art.js      The texture drawings (shared with the admin)
   assets/js/seed.js     Demo-mode sample data
-  assets/fonts/         Cormorant Garamond, Jost, Playfair Display italic, hosted with the site
+  assets/fonts/         Cormorant Garamond, Jost, Dancing Script, Playfair Display italic, hosted with the site
   assets/img/           Hero and story photos; product photos in products/
   assets/vendor/supabase.js
 admin/
@@ -136,10 +136,26 @@ supabase/
 
 ## Design notes
 
-The look of the original Baddie Strands site: near-black, warm gold (#C9A96E) and cream, with Cormorant Garamond for headings and prices, Jost for text, and Playfair Display italic for the "Your Hair, Your Crown" line. The original's touches are kept: the gold cursor ring on computers, the rotating "Virgin Human Hair 100%" badge, the gold strip of messages under the hero, the moving feature line, gold-edged cards and sharp, letter-spaced buttons whose fill slides in. Brand pink is kept for the things that move money: the bag count, the checkout and place-order buttons, and the chosen payment option.
+Her brand colours are pink and black, taken from her Instagram: the bubblegum pink behind her profile picture (#FF99AE) on near-black, with the blush paper of her policy cards (#FCE6EC) for a few light panels. The logo is set in Dancing Script, the closest open font to the handwritten "Baddie Strands" on her posts. The dark, quiet feel of the original site stays: Cormorant Garamond for headings and prices, Jost for text, and Playfair Display italic for "Your Hair, Your Crown".
+
+The site is kept minimal, but each part borrows one pattern from the reference sites:
+
+| Part | Borrowed from |
+|---|---|
+| Header that floats as a pill; the phone menu opens into tiles | patike.ch |
+| Giant headline with the photo rising through it, and a card in the corner | dialedcoffee.com |
+| Ghost word behind the product photo, feature tags, a product name whose letters sharpen in | brocksbushes.moonshiners.co.uk |
+| Oval buttons with a circled arrow, the length ruler on each product | lofliballs.com |
+| Care steps with outlined numerals, delivery as a timeline | nettiesbees.com |
+| Drifting photos with "Your Hair, Your Crown" blended over them | ruthgriffioen.art |
+| Staggered shop grid, names between bars, a dot under the chosen filter | pistacchioecaffe.it |
+| Quiz answers as big tiles with a full-width bar, the footer wordmark that grows as you reach it | carnilove.ashfall.studio |
+| Labels in brackets, live Abuja time in the header and footer | concretaceramiche.it |
+| Hair basics as numbered chapters that open with a plus | arcteryx.com System_0 |
+| Bestsellers ranked with outlined numerals | enigmascult.com |
 
 Pages fade into each other in browsers that support it, and a product's picture glides from the grid into its page. With "reduce motion" switched on, the motion is turned off and the normal cursor stays.
 
-The dashboard uses the same dark, gold and cream look, kept plain and readable, and always pairs a status colour with a word so nothing depends on colour alone.
+The dashboard uses the same pink and black, kept plain and readable, and always pairs a status colour with a word so nothing depends on colour alone.
 
-Fonts: Cormorant Garamond by Christian Thalmann, Jost by Owen Earl (indestructible type*), Playfair Display by Claus Eggers Sørensen, all SIL Open Font License; a one-character naira subset of Archivo by Omnibus-Type, SIL Open Font License. Supabase JS library: MIT License.
+Fonts: Cormorant Garamond by Christian Thalmann, Jost by Owen Earl (indestructible type*), Playfair Display by Claus Eggers Sørensen, Dancing Script by Impallari Type, all SIL Open Font License; a one-character naira subset of Archivo by Omnibus-Type, SIL Open Font License. Supabase JS library: MIT License.
