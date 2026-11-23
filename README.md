@@ -14,35 +14,32 @@ Both sites are plain static files, so no build command is needed. Pushing to Git
 
 1. **Supabase:** run `supabase/schema.sql` in SQL Editor. Put the Project URL + anon key in `site/js/config.js` and `admin/config.js`.
 2. **Vercel:** import this repo twice: once with Root Directory `site`, once with `admin`. Framework preset: Other.
-3. **Edge Functions** (from this repo's root):
+3. **Edge Functions, secrets and schema deploy automatically** with GitHub Actions (`.github/workflows/supabase.yml`) on every push to `main` that touches `supabase/`. Add these under GitHub → Settings → Secrets and variables → Actions:
+
+| Secret | Value |
+| --- | --- |
+| `SUPABASE_ACCESS_TOKEN` | supabase.com → Account → Access Tokens |
+| `SUPABASE_PROJECT_REF` | first part of the Supabase URL |
+| `SUPABASE_DB_URL` | Project Settings → Database → Connection string → Session pooler URI (with password) |
+| `PAYSTACK_SECRET_KEY` | `sk_test_…` now, `sk_live_…` later |
+| `BREVO_API_KEY` | Brevo → SMTP & API → API keys |
+| `EMAIL_FROM` | `Baddie Strands <your-verified-sender>` |
+| `BANK_ACCOUNT` | real Access Bank number (same as `site/js/config.js`) |
+
+Optional overrides: `ADMIN_EMAIL`, `SHOP_URL`, `ADMIN_URL`, `BANK_NAME`, `BANK_ACCOUNT_NAME`, `WHATSAPP_NUMBER`. To run it by hand (or apply the schema on purpose): Actions → Supabase deploy → Run workflow.
+
+Manual alternative from the repo root (no `init` needed, `supabase/config.toml` is included):
 
 ```bash
-npm install -g supabase
-supabase login
-supabase init                       # keeps the existing supabase/functions and schema.sql
-supabase link --project-ref <your-project-ref>
-supabase functions deploy paystack-verify
-supabase functions deploy order-notify
-supabase functions deploy paystack-webhook --no-verify-jwt
-```
-
-4. **Secrets** (one email provider is enough):
-
-```bash
-supabase secrets set \
-  PAYSTACK_SECRET_KEY=sk_test_xxx \
-  BREVO_API_KEY=xkeysib-xxx \
-  EMAIL_FROM="Baddie Strands <orders@yourdomain.com>" \
-  ADMIN_EMAIL=baddiestrands@gmail.com \
-  SHOP_URL=https://baddie-strands.vercel.app \
-  ADMIN_URL=https://baddie-strands-admin.vercel.app \
-  BANK_NAME="Access Bank" BANK_ACCOUNT=0123456789 BANK_ACCOUNT_NAME="Baddie Strands" \
-  WHATSAPP_NUMBER=2347033247980
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase functions deploy --use-api
+npx supabase secrets set --env-file ./secrets.env    # never commit this file
 ```
 
 ## Email providers
 
-Set the key for **one** of these. If more than one is set, add `EMAIL_PROVIDER=brevo|resend|zeptomail` to choose.
+This shop uses **Brevo**. The code also supports these; set the key for **one** of them. If more than one is set, add `EMAIL_PROVIDER=brevo|resend|zeptomail` to choose.
 
 | Provider | Secret | Free allowance | Notes |
 | --- | --- | --- | --- |
