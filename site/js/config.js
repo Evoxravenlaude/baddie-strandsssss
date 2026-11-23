@@ -8,8 +8,8 @@
 // ============================================================
 
 const BS_CONFIG = {
-  supabaseUrl:       'YOUR_SUPABASE_PROJECT_URL',   // e.g. https://abcd1234.supabase.co
-  supabaseAnonKey:   'YOUR_SUPABASE_ANON_KEY',      // Project Settings → API Keys → Publishable key (sb_publishable_…)
+  supabaseUrl:       'https://lpjdgmxverblkqwtvgie.supabase.co',   // e.g. https://abcd1234.supabase.co
+  supabaseAnonKey:   'sb_publishable_0szYg6a0WMOVGQCSPv2r2g_q7NtPbOH',      // Project Settings → API Keys → Publishable key (sb_publishable_…)
 
   paystackPublicKey: 'pk_live_YOUR_PAYSTACK_PUBLIC_KEY',
   accessBankAcct:    '0000000000',                  // real account number
