@@ -54,6 +54,7 @@
       <button data-view="overview" class="on"><span class="ico">◐</span>Overview</button>
       <button data-view="orders"><span class="ico">▤</span>Orders <b class="pill-count" id="nav-pending" hidden></b></button>
       <button data-view="products"><span class="ico">◇</span>Products</button>
+      <button data-view="haircare"><span class="ico">✎</span>Hair care</button>
       <button data-view="subscribers"><span class="ico">✉</span>Subscribers</button>
       <button data-view="help"><span class="ico">?</span>Help</button>
     </nav>
@@ -109,6 +110,25 @@
       <div class="p-grid" id="products-grid"></div>
     </section>
 
+    <!-- HAIR CARE -->
+    <section class="view" id="v-haircare" hidden>
+      <header class="v-head">
+        <div><p class="eyebrow">Shop page: Hair care</p><h1>Hair care</h1></div>
+        <div class="v-actions"><span class="dirty" id="hc-dirty" hidden>Unsaved changes</span><button class="btn pink" id="hc-save">Save changes</button></div>
+      </header>
+      <p class="note-box" id="hc-note" hidden></p>
+      <div class="hc-block">
+        <div class="hc-head"><div><h2>The basics</h2><p class="muted small">Shown one at a time as shoppers scroll.</p></div><button class="btn oval small" id="hc-add-basic">+ Add</button></div>
+        <div id="hc-basics"></div>
+      </div>
+      <div class="hc-block">
+        <div class="hc-head"><div><h2>Care routine</h2><p class="muted small">Sections shoppers tap between, each with its own steps.</p></div><button class="btn oval small" id="hc-add-section">+ Add section</button></div>
+        <div class="chips" id="hc-tabs"></div>
+        <div class="hc-section" id="hc-section"></div>
+      </div>
+      <button class="link" id="hc-reset">Start again from the original text</button>
+    </section>
+
     <!-- SUBSCRIBERS -->
     <section class="view" id="v-subscribers" hidden>
       <header class="v-head">
@@ -132,6 +152,12 @@
           <p>Switch <b>On shop</b> off on the product card. It stays here so you can switch it back on when it’s restocked. Or set stock to 0 — the shop then shows “Sold out”.</p></details>
         <details><summary>Sales and discounts</summary>
           <p>Edit the product and put the old price in <b>Was (optional)</b>. The shop shows it crossed out next to the new price.</p></details>
+        <details><summary>Changing the hair care text</summary>
+          <p>Go to <b>Hair care</b>. Edit any title or text, add or remove steps, rename the sections, then tap <b>Save changes</b>. The shop’s Hair care page updates straight away.</p></details>
+        <details><summary>Emails customers get</summary>
+          <p>Customers get an email when they order by transfer (with your bank details), when payment is confirmed, when you tap <b>Out for delivery</b>, and when you tap <b>Delivered</b>. You get a copy of new and paid orders.</p></details>
+        <details><summary>“Card payment not finished”</summary>
+          <p>The customer opened the card payment but didn’t complete it. Message them on WhatsApp, or tap <b>Cancel order</b> if they paid another way.</p></details>
         <details><summary>Who can see this dashboard?</summary>
           <p>Only the shop email in config.js can sign in. Anyone else is turned away, and the database refuses to show them orders or customers.</p></details>
       </div>

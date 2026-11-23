@@ -206,3 +206,23 @@ input:focus-visible+.switch{outline:2px solid var(--pink);outline-offset:2px}
   .step-btn.cancel{grid-column:auto}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+
+/* hair care editor */
+.dirty{align-self:center;font-size:.8rem;color:var(--pink)}
+.note-box{padding:12px 16px;border:1px dashed var(--pink);border-radius:14px;font-size:.88rem;margin-bottom:18px}
+.hc-block{border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:20px;margin-bottom:16px}
+.hc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.hc-head h2{font-family:var(--f-serif);font-weight:400;font-size:1.4rem}
+.hc-item{display:grid;grid-template-columns:34px 1fr auto;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.hc-item .n{font-family:var(--f-serif);font-style:italic;color:var(--pink);padding-top:10px}
+.hc-item .fields{display:flex;flex-direction:column;gap:8px}
+.hc-item textarea{resize:vertical;min-height:70px}
+.hc-tools{display:flex;flex-direction:column;gap:6px}
+.hc-tools button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);color:var(--dim);font-size:.9rem}
+.hc-tools button:hover{color:var(--blush);border-color:var(--blush)}
+.hc-tools button:disabled{opacity:.3;pointer-events:none}
+#hc-tabs{margin-bottom:14px}
+.hc-sec-head{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.hc-sec-head .input{max-width:280px}
+.hc-add{margin-top:12px}
+@media (max-width:520px){.hc-item{grid-template-columns:1fr}.hc-item .n{padding:0}.hc-tools{flex-direction:row}}
