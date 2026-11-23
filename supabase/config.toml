@@ -1,0 +1,12 @@
+# Minimal Supabase CLI config — lets `supabase functions deploy` run from CI.
+project_id = "baddie-strands"
+
+[functions.paystack-verify]
+verify_jwt = true
+
+[functions.order-notify]
+verify_jwt = true
+
+# Paystack can't sign in, so the webhook checks Paystack's signature instead.
+[functions.paystack-webhook]
+verify_jwt = false
