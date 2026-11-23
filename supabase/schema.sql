@@ -70,16 +70,22 @@ create table if not exists public.orders (
   payment_ref      text,
   delivery_state   text,
   delivery_address jsonb,
+  delivery_fee     numeric default 0,
   created_at       timestamptz default now(),
   updated_at       timestamptz default now()
 );
+alter table public.orders add column if not exists delivery_fee numeric default 0;
+alter table public.orders drop constraint if exists orders_delivery_fee_range;
+alter table public.orders add constraint orders_delivery_fee_range check (delivery_fee between 0 and 20000);
 alter table public.orders enable row level security;
 drop policy if exists "Users can view own orders" on public.orders;
 drop policy if exists "Users can insert orders"   on public.orders;
 drop policy if exists "Admin reads orders"        on public.orders;
 drop policy if exists "Admin updates orders"      on public.orders;
 create policy "Users can view own orders" on public.orders for select using (auth.uid() = user_id);
-create policy "Users can insert orders"   on public.orders for insert with check (auth.uid() = user_id);
+-- customers can only create orders as "Waiting for payment"; only a verified
+-- Paystack payment (Edge Function) or the admin can mark an order as paid
+create policy "Users can insert orders"   on public.orders for insert with check (auth.uid() = user_id and status = 'Pending');
 create policy "Admin reads orders"        on public.orders for select using (public.is_admin());
 create policy "Admin updates orders"      on public.orders for update using (public.is_admin()) with check (public.is_admin());
 
@@ -108,6 +114,50 @@ create policy "Users can view own order items" on public.order_items for select
 create policy "Users can insert order items" on public.order_items for insert
   with check (exists (select 1 from public.orders where orders.id = order_items.order_id and orders.user_id = auth.uid()));
 create policy "Admin reads order items" on public.order_items for select using (public.is_admin());
+
+
+-- Prices come from the products table, not the shopper's browser:
+-- every item is re-priced on insert and the order total recalculated.
+create or replace function public.price_order_item()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare p record;
+begin
+  select name, price into p from public.products where id = new.product_id;
+  if found then
+    new.unit_price := p.price;
+    new.product_name := coalesce(new.product_name, p.name);
+  end if;
+  return new;
+end $$;
+drop trigger if exists order_items_price on public.order_items;
+create trigger order_items_price before insert on public.order_items
+  for each row execute function public.price_order_item();
+
+create or replace function public.recalc_order_total()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  update public.orders o
+     set total_amount = coalesce((select sum(quantity * unit_price) from public.order_items where order_id = new.order_id), 0)
+                        + coalesce(o.delivery_fee, 0)
+   where o.id = new.order_id and o.status = 'Pending';
+  return null;
+end $$;
+drop trigger if exists order_items_total on public.order_items;
+create trigger order_items_total after insert on public.order_items
+  for each row execute function public.recalc_order_total();
+
+
+-- ── SITE CONTENT (hair-care text, edited in the admin dashboard) ──
+create table if not exists public.site_content (
+  key         text primary key,
+  value       jsonb not null,
+  updated_at  timestamptz default now()
+);
+alter table public.site_content enable row level security;
+drop policy if exists "Anyone reads site content" on public.site_content;
+drop policy if exists "Admin edits site content" on public.site_content;
+create policy "Anyone reads site content" on public.site_content for select using (true);
+create policy "Admin edits site content"  on public.site_content for all using (public.is_admin()) with check (public.is_admin());
 
 
 -- ── NEWSLETTER SUBSCRIBERS ───────────────────────────────────
