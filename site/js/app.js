@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartUI();
   initReveal();
   if (!LIVE) showDemoBar();
-  const page = { index: pageHome, shop: pageShop, care: pageCare, quiz: pageQuiz, delivery: pageDelivery, contact: pageContact }[document.body.dataset.page];
+  const page = { index: pageHome, shop: pageShop, care: pageCare, delivery: pageDelivery, contact: pageContact }[document.body.dataset.page];
   page && page();
   $$('img').forEach(im => { if (im.complete && im.getAttribute('src') && !im.naturalWidth) fallbackFor(im); });
 });
@@ -267,7 +267,7 @@ let revealIO = null;
 function initReveal() {
   if (!('IntersectionObserver' in window)) return;
   revealIO = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); revealIO.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
-  $$('.stats, .pack, .quote, .zone, .channels, .duo-card, .condensed, .wide-italic').forEach(el => { el.classList.add('rv'); revealIO.observe(el); });
+  $$('.stats, .zone, .channels, .duo-card, .condensed').forEach(el => { el.classList.add('rv'); revealIO.observe(el); });
 }
 const reveal = els => els.forEach(el => revealIO ? (el.classList.add('rv'), revealIO.observe(el)) : null);
 
@@ -288,12 +288,6 @@ document.addEventListener('click', e => {
 /* ═════════ HOME ═════════ */
 async function pageHome() {
   initLit();
-  initLazyVideo();
-  $('#quotes').innerHTML = STORE_DATA.testimonials.slice(0, 3).map(t => `
-    <blockquote class="quote"><p>“${esc(t.body)}”</p>
-      <footer><div class="who"><b>${esc(t.name)}</b><span>${esc(t.location)}</span></div><span class="stars" aria-label="${t.stars} stars">${'★'.repeat(t.stars)}</span></footer>
-    </blockquote>`).join('');
-  reveal($$('.quote'));
   await loadProducts();
   const picks = [...PRODUCTS].sort((a, b) => (b.hot - a.hot) || (b.new - a.new)).slice(0, 4);
   $('#home-grid').innerHTML = picks.map(cardHTML).join('');
@@ -302,7 +296,7 @@ async function pageHome() {
 
 function initLit() {
   const el = $('#lit-text'); if (!el) return;
-  const hot = new Set(['inspected', 'scented', 'boxed', 'anywhere']);
+  const hot = new Set(['inspected', 'groomed', 'boxed', 'anywhere']);
   el.innerHTML = el.textContent.trim().split(/\s+/).map(w => `<span class="w${hot.has(w.toLowerCase().replace(/[^a-z]/g, '')) ? ' h' : ''}">${esc(w)}</span>`).join(' ');
   const words = $$('.w', el);
   let lastN = -1;
@@ -318,14 +312,6 @@ function initLit() {
     if (e.isIntersecting && !on) { on = true; window.addEventListener('scroll', run, { passive: true }); run(); }
     else if (!e.isIntersecting && on) { on = false; window.removeEventListener('scroll', run); }
   }).observe(el);
-}
-
-function initLazyVideo() {
-  $$('video[data-lazy-video]').forEach(v => {
-    new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) v.play().catch(() => {}); else v.pause();
-    }, { rootMargin: '100px' }).observe(v);
-  });
 }
 
 /* ═════════ SHOP ═════════ */
@@ -433,24 +419,39 @@ function initSlider(list) {
 }
 
 /* ═════════ HAIR CARE ═════════ */
-function pageCare() {
-  const B = STORE_DATA.knowledge.basics;
-  $('#steps-list').innerHTML = B.map((b, i) => `<div class="step" data-i="${i}"><h3>${esc(b.title)}</h3><p>${esc(b.body)}</p></div>`).join('');
-  $('#step-bars').innerHTML = B.map(() => '<i></i>').join('');
-  const set = i => {
-    $('#step-num').textContent = B[i].num;
-    $('#step-of').textContent = `Step ${i + 1} of ${B.length}`;
-    $$('#step-bars i').forEach((b, j) => b.classList.toggle('on', j <= i));
-    $$('.step').forEach((s, j) => s.classList.toggle('on', j === i));
-  };
-  set(0);
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) set(+e.target.dataset.i); }), { rootMargin: '-45% 0px -45% 0px' });
-  $$('.step').forEach(s => io.observe(s));
-
-  const care = STORE_DATA.knowledge.care, tabs = Object.keys(care);
+async function loadHairCare() {
+  if (!LIVE) return STORE_DATA.knowledge;
+  try {
+    const r = await fetch(`${CFG.supabaseUrl}/rest/v1/site_content?key=eq.hair_care&select=value`, {
+      headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}` },
+    });
+    if (r.ok) { const v = (await r.json())[0]?.value; if (v?.basics?.length || Object.keys(v?.care || {}).length) return v; }
+  } catch {}
+  return STORE_DATA.knowledge;
+}
+async function pageCare() {
+  const K = await loadHairCare();
+  const B = K.basics || [];
+  const care = K.care || {}, tabs = Object.keys(care);
+  const stepsWrap = $('.steps');
+  if (!B.length) stepsWrap.hidden = true;
+  else {
+    $('#steps-list').innerHTML = B.map((b, i) => `<div class="step" data-i="${i}"><h3>${esc(b.title)}</h3><p>${esc(b.body)}</p></div>`).join('');
+    $('#step-bars').innerHTML = B.map(() => '<i></i>').join('');
+    const set = i => {
+      $('#step-num').textContent = String(i + 1).padStart(2, '0');
+      $('#step-of').textContent = `Step ${i + 1} of ${B.length}`;
+      $$('#step-bars i').forEach((b, j) => b.classList.toggle('on', j <= i));
+      $$('.step').forEach((s, j) => s.classList.toggle('on', j === i));
+    };
+    set(0);
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) set(+e.target.dataset.i); }), { rootMargin: '-45% 0px -45% 0px' });
+    $$('.step').forEach(s => io.observe(s));
+  }
+  if (!tabs.length) { $('.care').hidden = true; return; }
   $('#care-tabs').innerHTML = tabs.map((t, i) => `<button class="chip${i ? '' : ' active'}" data-t="${esc(t)}" aria-pressed="${!i}">${esc(t)}</button>`).join('');
   const render = t => {
-    $('#care-list').innerHTML = care[t].map((c, i) => `<details><summary><span>${String(i + 1).padStart(2, '0')}</span>${esc(c.title)}</summary><p>${esc(c.body)}</p></details>`).join('');
+    $('#care-list').innerHTML = (care[t] || []).map((c, i) => `<details><summary><span>${String(i + 1).padStart(2, '0')}</span>${esc(c.title)}</summary><p>${esc(c.body)}</p></details>`).join('');
   };
   $('#care-tabs').addEventListener('click', e => {
     const b = e.target.closest('[data-t]'); if (!b) return;
@@ -458,62 +459,6 @@ function pageCare() {
     render(b.dataset.t);
   });
   render(tabs[0]);
-}
-
-/* ═════════ QUIZ ═════════ */
-const QUIZ_CHAPTERS = ['Lifestyle', 'Styling time', 'Texture', 'Priority', 'Budget'];
-const Q = { step: 0, answers: [] };
-function pageQuiz() {
-  loadProducts();
-  $('#quiz-index').innerHTML = QUIZ_CHAPTERS.map(c => `<li>${c}</li>`).join('') + '<li>Your match</li>';
-  $('#quiz-body').addEventListener('click', async e => {
-    const o = e.target.closest('[data-a]');
-    if (o) { Q.answers[Q.step] = +o.dataset.a; Q.step++; if (Q.step >= STORE_DATA.quiz.length) await loadProducts(); renderQuiz(); return; }
-    if (e.target.closest('#q-back')) { Q.step = Math.max(0, Q.step - 1); renderQuiz(); return; }
-    if (e.target.closest('#q-retake')) { Q.step = 0; Q.answers = []; renderQuiz(); return; }
-    const add = e.target.closest('[data-qadd]');
-    if (add) { const p = byId(add.dataset.qadd); addToCart(p, 1, p.lengths[0], 0); }
-  });
-  renderQuiz();
-}
-function renderQuiz() {
-  const QS = STORE_DATA.quiz, s = Q.step;
-  $$('#quiz-index li').forEach((li, i) => { li.classList.toggle('on', i === s); li.classList.toggle('done', i < s); });
-  $('#quiz-progress').style.width = (s / QS.length * 100) + '%';
-  const body = $('#quiz-body');
-  if (s < QS.length) {
-    body.innerHTML = `
-      <p class="q-count">Question ${s + 1} of ${QS.length}</p>
-      <h2 class="q-title">${esc(QS[s].q)}</h2>
-      <div class="q-opts">${QS[s].options.map((o, i) => `<button class="q-opt" style="animation-delay:${i * 60}ms" data-a="${i}">${esc(o)}</button>`).join('')}</div>
-      ${s ? '<button class="q-back" id="q-back">← Back</button>' : ''}`;
-    return;
-  }
-  const p = quizMatch(Q.answers);
-  body.innerHTML = `
-    <div class="q-result">
-      <div class="card-img">${imgTag(p.image, p.type, true)}</div>
-      <div>
-        <p class="q-count" style="margin:0">Your match</p>
-        <h2>${esc(p.name)}</h2>
-        <p>${esc(p.description)}</p>
-        <div class="btns">
-          <button class="btn pink" data-qadd="${esc(p.id)}">Add to cart — ${fmt(p.price)} <i>→</i></button>
-          <button class="btn oval" data-open="${esc(p.id)}">See details</button>
-        </div>
-        <button class="q-back" id="q-retake">Retake the quiz</button>
-      </div>
-    </div>`;
-}
-function quizMatch(a) {
-  const textures = [/straight|bone|silky/i, /body wave|water wave|loose|wave/i, /deep|curl/i, /kinky|coily|afro|4c/i];
-  const max = [50000, 80000, 120000, Infinity][a[4] ?? 3];
-  const rx = textures[a[2] ?? 0];
-  let pool = PRODUCTS.filter(p => rx.test(`${p.name} ${p.type}`));
-  if (!pool.length) pool = [...PRODUCTS];
-  const easy = a[1] === 0 || a[3] === 3;
-  pool.sort((x, y) => (easy ? (/glueless/i.test(y.name) - /glueless/i.test(x.name)) : 0) || (y.hot - x.hot));
-  return pool.find(p => p.price <= max) || [...pool].sort((x, y) => x.price - y.price)[0] || PRODUCTS[0];
 }
 
 /* ═════════ DELIVERY ═════════ */
@@ -803,7 +748,7 @@ function initCheckout() {
   });
 }
 function openCheckout() {
-  CO.step = 1; CO.delivery = {}; CO.pay = 'card';
+  CO.step = 1; CO.delivery = {}; CO.pay = 'card'; CO.order = null;
   $$('.pay-opt').forEach(x => x.classList.toggle('selected', x.dataset.pay === 'card'));
   $('#acct-copy').hidden = true;
   coStep(1);
@@ -820,6 +765,7 @@ function summary(withFee) {
 }
 function coStep(n) {
   CO.step = n;
+  if (n < 3) CO.order = null;   // details changed → a fresh order is saved at payment
   $$('#co-dots span').forEach((s, i) => { s.classList.toggle('on', i + 1 === n); s.classList.toggle('done', i + 1 < n); });
   for (let i = 1; i <= 4; i++) $(`#co-step-${i}`).hidden = i !== n;
   $('#co-title').textContent = ['Review order', 'Delivery details', 'Payment', 'Order placed'][n - 1];
@@ -847,62 +793,89 @@ function coNext() {
     CO.delivery = Object.fromEntries(['name', 'phone', 'email', 'address', 'city', 'state', 'notes'].map(k => [k, $(`#del-${k}`).value.trim()]));
     return coStep(3);
   }
-  if (CO.step === 3) CO.pay === 'card' ? payCard() : confirmOrder(`BS-TRF-${Date.now()}`, 'Bank Transfer – Access Bank');
+  if (CO.step === 3) CO.pay === 'card' ? payCard() : payTransfer();
+}
+/* LIVE: save the order first (as "Waiting for payment"). The database
+   re-prices the items and recalculates the total, so the amount charged
+   always matches the shop's real prices. */
+async function placeOrder(kind) {
+  const c = await sb();
+  const { data, error } = await c.from('orders').insert([{
+    user_id: AUTH.user.id, status: 'Pending',
+    total_amount: total(), delivery_fee: fee(),
+    payment_method: kind === 'card' ? 'Paystack Card' : 'Bank Transfer – Access Bank',
+    payment_ref: kind === 'card' ? null : `BS-TRF-${Date.now()}`,
+    delivery_state: CO.delivery.state, delivery_address: CO.delivery,
+  }]).select('id').single();
+  if (error) throw error;
+  const { error: e2 } = await c.from('order_items').insert(STATE.cart.map(i => ({
+    order_id: data.id, product_id: Number(i.id) || null, product_name: i.name, length: i.length, color: i.color, quantity: i.qty, unit_price: i.price,
+  })));
+  if (e2) throw e2;
+  const { data: o } = await c.from('orders').select('total_amount').eq('id', data.id).single();
+  return { id: data.id, short: String(data.id).split('-')[0].toUpperCase(), total: Number(o?.total_amount ?? total()) };
+}
+function busy(label) { const n = $('#co-next'); n.disabled = true; n.textContent = label; }
+function unbusy(label) { const n = $('#co-next'); n.disabled = false; n.textContent = label; }
+function orderDone(short, message) {
+  $('#co-order-id').textContent = '#' + short;
+  $('#co-success').textContent = message;
+  STATE.cart = []; saveCart(); CO.order = null;
+  coStep(4);
 }
 async function payCard() {
   if (!LIVE || CFG.paystackPublicKey.includes('YOUR_')) {
     status('#pay-status', 'Card payment switches on once the Paystack key is added. Please choose bank transfer for now.', 'err');
     return;
   }
-  const next = $('#co-next'); next.disabled = true; next.textContent = 'Opening Paystack…';
+  busy('Opening Paystack…');
   try {
+    CO.order = CO.order || await placeOrder('card');
     if (!window.PaystackPop) await loadScript('https://js.paystack.co/v1/inline.js');
+    const o = CO.order;
     PaystackPop.setup({
-      key: CFG.paystackPublicKey, email: CO.delivery.email, amount: total() * 100, currency: 'NGN', ref: `BS-${Date.now()}`,
-      metadata: { custom_fields: [{ display_name: 'Customer', variable_name: 'customer', value: CO.delivery.name }, { display_name: 'Phone', variable_name: 'phone', value: CO.delivery.phone }] },
-      callback: r => confirmOrder(r.reference, 'Paystack Card'),
-      onClose: () => { next.disabled = false; next.textContent = 'Pay now'; status('#pay-status', 'Payment window closed. Try again when you’re ready.', 'err'); },
+      key: CFG.paystackPublicKey, email: CO.delivery.email, amount: Math.round(o.total * 100), currency: 'NGN',
+      metadata: { order_id: o.id, custom_fields: [{ display_name: 'Order', variable_name: 'order', value: '#' + o.short }, { display_name: 'Customer', variable_name: 'customer', value: CO.delivery.name }, { display_name: 'Phone', variable_name: 'phone', value: CO.delivery.phone }] },
+      callback: r => { verifyCard(o, r.reference); },
+      onClose: () => { unbusy('Pay now'); status('#pay-status', 'Payment window closed. Your order is saved — tap Pay now to try again.', 'err'); },
     }).openIframe();
-  } catch {
-    next.disabled = false; next.textContent = 'Pay now';
-    status('#pay-status', 'Couldn’t reach Paystack. Check your connection or pay by transfer.', 'err');
+  } catch (err) {
+    console.error('[BS] card error', err);
+    unbusy('Pay now');
+    status('#pay-status', 'Couldn’t start the payment. Check your connection, or pay by bank transfer.', 'err');
   }
 }
-async function confirmOrder(ref, method) {
-  const next = $('#co-next'); next.disabled = true; next.textContent = 'Placing order…';
-  const amount = total();
-  let id;
+async function verifyCard(o, reference) {
+  busy('Confirming payment…');
+  let paid = false;
   try {
+    const { data, error } = await (await sb()).functions.invoke('paystack-verify', { body: { order_id: o.id, reference } });
+    paid = !error && data?.paid === true;
+  } catch {}
+  orderDone(o.short, paid
+    ? `Payment confirmed — ${fmt(o.total)}. We’ll email you a receipt and send updates on WhatsApp until it’s at your door.`
+    : `Payment received (ref ${reference}). We’re confirming it now and will email you shortly.`);
+}
+async function payTransfer() {
+  busy('Placing order…');
+  try {
+    let short, amount;
     if (LIVE) {
-      const c = await sb();
-      const { data, error } = await c.from('orders').insert([{
-        user_id: AUTH.user.id, status: method.includes('Transfer') ? 'Pending' : 'Processing',
-        total_amount: amount, payment_method: method, payment_ref: ref,
-        delivery_state: CO.delivery.state, delivery_address: CO.delivery,
-      }]).select().single();
-      if (error) throw error;
-      const { error: e2 } = await c.from('order_items').insert(STATE.cart.map(i => ({
-        order_id: data.id, product_id: Number(i.id) || null, product_name: i.name, length: i.length, color: i.color, quantity: i.qty, unit_price: i.price,
-      })));
-      if (e2) throw e2;
-      id = String(data.id).split('-')[0].toUpperCase();
+      const o = await placeOrder('transfer');
+      short = o.short; amount = o.total;
+      (await sb()).functions.invoke('order-notify', { body: { order_id: o.id, event: 'placed' } }).catch(() => {});
     } else {
-      id = Math.random().toString(36).slice(2, 10).toUpperCase();
+      short = Math.random().toString(36).slice(2, 10).toUpperCase(); amount = total();
       const orders = store.get('bs_demo_orders', []);
-      orders.unshift({ id, ref, method, amount, delivery: CO.delivery, items: STATE.cart, at: new Date().toISOString() });
+      orders.unshift({ id: short, method: 'Bank Transfer – Access Bank', amount, delivery: CO.delivery, items: STATE.cart, at: new Date().toISOString() });
       store.set('bs_demo_orders', orders);
     }
-    $('#co-order-id').textContent = '#' + id;
-    $('#co-success').textContent = method.includes('Transfer')
-      ? (acctReady()
-        ? `Please transfer ${fmt(amount)} to Access Bank ${CFG.accessBankAcct} (${CFG.accessBankName}) and send the receipt on WhatsApp with order #${id}. We confirm within 24 hours.`
-        : `We’ll send our bank details on WhatsApp or email shortly. Please quote order #${id} with your payment.`)
-      : `Payment received. Your order is on its way to ${CO.delivery.city}, ${CO.delivery.state}.`;
-    STATE.cart = []; saveCart();
-    coStep(4);
+    orderDone(short, acctReady()
+      ? `Please transfer ${fmt(amount)} to Access Bank ${CFG.accessBankAcct} (${CFG.accessBankName}) and send the receipt on WhatsApp with order #${short}. We confirm within 24 hours.`
+      : `We’ll send our bank details by email or WhatsApp shortly. Please quote order #${short} with your payment.`);
   } catch (err) {
     console.error('[BS] order error', err);
-    next.disabled = false; next.textContent = 'Try again';
+    unbusy('Try again');
     status('#pay-status', 'Something went wrong placing your order. Try again or message us on WhatsApp.', 'err');
   }
 }

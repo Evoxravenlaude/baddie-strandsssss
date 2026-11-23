@@ -1,7 +1,7 @@
 // ============================================================
 // BADDIE STRANDS — Store Data
 // Edit this file to update products, delivery zones,
-// testimonials, quiz questions, and knowledge content.
+// and the starter hair-care text (the admin dashboard can replace both).
 // This file is loaded by index.html via <script src="data.js">
 // ============================================================
 
@@ -415,96 +415,6 @@ const STORE_DATA = {
 
   // ── TESTIMONIALS ──────────────────────────────────────────
   // Add more by copying any object below.
-  testimonials: [
-    {
-      body: "I've bought from so many hair vendors and Baddie Strands is on a different level. My closure wig has been through everything — gym, beach, sweat — and it still looks brand new three months later.",
-      name: "Adaeze O.",
-      location: "Lagos, Nigeria",
-      stars: 5,
-      avatar: "A"
-    },
-    {
-      body: "The quality of their bone straight wig left me speechless. People on the street thought it was my natural hair. The lace literally disappears. Nothing compares.",
-      name: "Fatima K.",
-      location: "Abuja, Nigeria",
-      stars: 5,
-      avatar: "F"
-    },
-    {
-      body: "Fast delivery to Enugu, beautiful packaging — the wig was wrapped so carefully. The 4C afro wig is everything I wanted. Finally a store that celebrates African texture.",
-      name: "Chidinma E.",
-      location: "Enugu, Nigeria",
-      stars: 5,
-      avatar: "C"
-    },
-    {
-      body: "Ordered the deep wave wig and it arrived quickly. Communication was smooth and professional. Best customer experience in the hair game.",
-      name: "Blessing A.",
-      location: "Port Harcourt, Nigeria",
-      stars: 5,
-      avatar: "B"
-    },
-    {
-      body: "I did their hair quiz and they helped me pick the perfect wig for my face shape and lifestyle. That personal touch is why they are the best in the business.",
-      name: "Precious N.",
-      location: "Ibadan, Nigeria",
-      stars: 5,
-      avatar: "P"
-    }
-  ],
-
-
-  // ── HAIR QUIZ ─────────────────────────────────────────────
-  // 5 questions. Each has exactly 4 options.
-  // The quiz logic in index.html uses answer index 2 (texture)
-  // and index 4 (budget) for product matching.
-  quiz: [
-    {
-      q: "What is your lifestyle like?",
-      options: [
-        "Very active — gym, sports, outdoor",
-        "Office life — sleek and professional",
-        "Social butterfly — events and parties",
-        "Stay-at-home — comfort first"
-      ]
-    },
-    {
-      q: "How much styling time do you have daily?",
-      options: [
-        "5 minutes max",
-        "10–20 minutes",
-        "30+ minutes",
-        "I love styling — no limit"
-      ]
-    },
-    {
-      q: "What is your preferred hair texture?",
-      options: [
-        "Straight and sleek",
-        "Wavy and natural",
-        "Curly and bouncy",
-        "Coily and natural"
-      ]
-    },
-    {
-      q: "What is your priority?",
-      options: [
-        "Undetectable lace look",
-        "Maximum volume",
-        "Long-lasting durability",
-        "Easy maintenance"
-      ]
-    },
-    {
-      q: "What is your approximate budget?",
-      options: [
-        "Under ₦50,000",
-        "₦50,000 – ₦80,000",
-        "₦80,000 – ₦120,000",
-        "Price is no object"
-      ]
-    }
-  ]
 
 };
 

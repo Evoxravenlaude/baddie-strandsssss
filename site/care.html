@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Baddie Strands — Your Hair, Your Crown</title>
-  <meta name="description" content="100% virgin human hair wigs, bundles and extensions from Abuja. Delivered nationwide.">
+  <title>Hair care — Baddie Strands</title>
+  <meta name="description" content="How to choose and care for a human hair wig: lace, density, length, washing and storage.">
   <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" type="image/png" href="assets/logo-nav.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,12 +15,12 @@
   <script defer src="js/data.js"></script>
   <script defer src="js/app.js"></script>
 </head>
-<body data-page="index">
+<body data-page="care">
 <a class="skip" href="#main">Skip to content</a>
 <header class="nav" id="nav">
   <div class="nav-pill">
     <a href="index.html" class="logo" aria-label="Baddie Strands — home"><img src="assets/logo-nav.png" alt="Baddie Strands" width="174" height="24"></a>
-    <nav class="nav-links" aria-label="Main"><a href="shop.html">Shop</a><a href="care.html">Hair care</a><a href="quiz.html">Quiz</a><a href="delivery.html">Delivery</a><a href="contact.html">Contact</a></nav>
+    <nav class="nav-links" aria-label="Main"><a href="shop.html">Shop</a><a href="care.html" aria-current="page">Hair care</a><a href="delivery.html">Delivery</a><a href="contact.html">Contact</a></nav>
     <div class="nav-actions">
       <button class="icon-btn" data-open-search aria-label="Search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -37,7 +37,7 @@
   </div>
   <div class="menu-panel" id="menu-panel">
     <a href="shop.html" class="tile wide"><span>Shop the collection</span><i>→</i></a>
-    <a href="care.html" class="tile"><span class="tile-ico">01</span>Hair care</a><a href="quiz.html" class="tile"><span class="tile-ico">02</span>Quiz</a><a href="delivery.html" class="tile"><span class="tile-ico">03</span>Delivery</a><a href="contact.html" class="tile"><span class="tile-ico">04</span>Contact</a>
+    <a href="care.html" class="tile"><span class="tile-ico">01</span>Hair care</a><a href="delivery.html" class="tile"><span class="tile-ico">02</span>Delivery</a><a href="contact.html" class="tile"><span class="tile-ico">03</span>Contact</a>
     <button class="tile wide" id="account-tile" type="button"><span id="account-label">Account</span><i>→</i></button>
     <div class="menu-foot">
       <span>Delivering nationwide</span>
@@ -46,61 +46,29 @@
   </div>
 </header>
 <main id="main">
-<section class="hero">
-  <div class="frame">
-    <div class="hero-top"><span class="eyebrow">Your hair, your crown</span><span class="eyebrow">Est. 2020</span></div>
-    <h1 class="hero-word" aria-label="Baddie Strands"><span class="hw-line"><span>Baddie</span></span><span class="hw-line italic"><span>Strands</span></span></h1>
-    <div class="hero-split"><span>100% Virgin<br>Human Hair</span><span class="center-line"></span><span class="right">Made in Abuja<br>Delivered nationwide</span></div>
-    <div class="banner-wrap">
-      <div class="ghost-b" aria-hidden="true"><span>Your hair,</span><span>your crown.</span></div>
-      <img class="banner-img" src="assets/banner.jpg" alt="Body wave unit on a mannequin" width="700" height="1050" fetchpriority="high" decoding="async">
-      <div class="badge-spin" aria-hidden="true">
-        <svg viewBox="0 0 100 100"><defs><path id="circ" d="M50,50 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0"/></defs><text><textPath href="#circ">100% VIRGIN HUMAN HAIR ✦ HD LACE ✦ </textPath></text></svg>
-        <b>BS</b>
-      </div>
-      <div class="hero-ctas">
-        <a href="shop.html" class="btn pink">Shop now <i>→</i></a>
-        <a href="quiz.html" class="btn oval">Find your match</a>
-      </div>
+<section class="wrap page-head">
+  <p class="overline rule">Hair care</p>
+  <h1 class="display">Hair, decoded.</h1>
+  <p class="sec-lead">Six things worth knowing before you buy. Scroll through them one at a time.</p>
+</section>
+
+<section class="wrap">
+  <div class="steps">
+    <div class="steps-sticky">
+      <div class="step-num" id="step-num">01</div>
+      <span class="eyebrow" id="step-of">Step 1 of 6</span>
+      <div class="step-bars" id="step-bars"></div>
     </div>
+    <div class="steps-list" id="steps-list"></div>
   </div>
 </section>
 
-<section class="statement">
-  <div class="wrap statement-grid">
-    <div>
-      <p class="overline">The Baddie experience</p>
-      <p class="lit" id="lit-text">Every unit is inspected, scented and boxed by hand in Abuja, then delivered to your door anywhere in Nigeria.</p>
-      <div class="stats">
-        <div><b>2020</b><span>Founded in Abuja</span></div>
-        <div><b>500+</b><span>Happy queens</span></div>
-        <div><b>36</b><span>States + FCT</span></div>
-      </div>
-    </div>
-    <div class="pack">
-      <span class="ghost" aria-hidden="true">HAIR</span>
-      <div class="pack-img">
-        <video data-lazy-video src="assets/packaging.mp4" poster="assets/packaging-poster.jpg" muted loop playsinline preload="none" aria-label="The Baddie Strands signature pink box"></video>
-      </div>
-      <span class="pack-cap">The signature box — glitter pink, ribbon-tied.</span>
-    </div>
+<section class="wrap care">
+  <div class="care-head">
+    <h2 class="display small">Care routine</h2>
+    <div class="chips" id="care-tabs"></div>
   </div>
-</section>
-
-<section class="wrap block">
-  <div class="block-head"><h2 class="display small">Bestsellers</h2><a href="shop.html" class="arrow-link">Shop all <i>→</i></a></div>
-  <div class="grid" id="home-grid"></div>
-</section>
-
-<section class="reviews">
-  <div class="wrap"><h2 class="wide-italic">The Baddie Circle</h2></div>
-  <div class="rule-row"><a href="contact.html" class="btn oval">Say hello</a></div>
-  <div class="quotes" id="quotes"></div>
-</section>
-
-<section class="wrap duo">
-  <a href="quiz.html" class="duo-card"><span class="eyebrow">Not sure what to pick?</span><b>Take the 1-minute hair quiz</b><i>→</i></a>
-  <a href="care.html" class="duo-card"><span class="eyebrow">New to wigs?</span><b>Read the hair care basics</b><i>→</i></a>
+  <div class="accordion" id="care-list"></div>
 </section>
 </main>
 <footer class="footer">
@@ -115,7 +83,7 @@
   </div>
   <div class="foot-bottom">
     <div>
-      <p class="foot-note"><span class="diamond"></span>New drops land on Instagram first.</p>
+      <p class="foot-note"><span class="diamond"></span><span>New drops land on <a data-wa href="https://wa.me/2347033247980" target="_blank" rel="noopener">WhatsApp</a> first.</span></p>
       <nav class="foot-links" aria-label="Footer"><a href="shop.html">Shop</a><a href="care.html">Hair care</a><a href="delivery.html">Delivery</a><a href="contact.html">Contact</a></nav>
     </div>
     <div class="follow">

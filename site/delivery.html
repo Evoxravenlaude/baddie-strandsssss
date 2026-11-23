@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Contact — Baddie Strands</title>
-  <meta name="description" content="Questions about length, lace or delivery? Message Baddie Strands on WhatsApp, email or Instagram.">
+  <title>Delivery — Baddie Strands</title>
+  <meta name="description" content="Nationwide delivery across all 36 states and the FCT. Same-day in Abuja.">
   <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" type="image/png" href="assets/logo-nav.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,12 +15,12 @@
   <script defer src="js/data.js"></script>
   <script defer src="js/app.js"></script>
 </head>
-<body data-page="contact">
+<body data-page="delivery">
 <a class="skip" href="#main">Skip to content</a>
 <header class="nav" id="nav">
   <div class="nav-pill">
     <a href="index.html" class="logo" aria-label="Baddie Strands — home"><img src="assets/logo-nav.png" alt="Baddie Strands" width="174" height="24"></a>
-    <nav class="nav-links" aria-label="Main"><a href="shop.html">Shop</a><a href="care.html">Hair care</a><a href="quiz.html">Quiz</a><a href="delivery.html">Delivery</a><a href="contact.html" aria-current="page">Contact</a></nav>
+    <nav class="nav-links" aria-label="Main"><a href="shop.html">Shop</a><a href="care.html">Hair care</a><a href="delivery.html" aria-current="page">Delivery</a><a href="contact.html">Contact</a></nav>
     <div class="nav-actions">
       <button class="icon-btn" data-open-search aria-label="Search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -37,7 +37,7 @@
   </div>
   <div class="menu-panel" id="menu-panel">
     <a href="shop.html" class="tile wide"><span>Shop the collection</span><i>→</i></a>
-    <a href="care.html" class="tile"><span class="tile-ico">01</span>Hair care</a><a href="quiz.html" class="tile"><span class="tile-ico">02</span>Quiz</a><a href="delivery.html" class="tile"><span class="tile-ico">03</span>Delivery</a><a href="contact.html" class="tile"><span class="tile-ico">04</span>Contact</a>
+    <a href="care.html" class="tile"><span class="tile-ico">01</span>Hair care</a><a href="delivery.html" class="tile"><span class="tile-ico">02</span>Delivery</a><a href="contact.html" class="tile"><span class="tile-ico">03</span>Contact</a>
     <button class="tile wide" id="account-tile" type="button"><span id="account-label">Account</span><i>→</i></button>
     <div class="menu-foot">
       <span>Delivering nationwide</span>
@@ -46,31 +46,31 @@
   </div>
 </header>
 <main id="main">
-<section class="wrap contact-grid page-head">
-  <div>
-    <p class="overline rule">Contact</p>
-    <h1 class="display">Talk to us.</h1>
-    <p class="sec-lead">Questions about length, lace or delivery? Your note opens straight in WhatsApp.</p>
-    <div class="channels">
-      <a data-wa href="https://wa.me/2347033247980" target="_blank" rel="noopener"><span>WhatsApp</span>+234 703 324 7980</a>
-      <a href="mailto:baddiestrands@gmail.com"><span>Email</span>baddiestrands@gmail.com</a>
-      <a data-ig href="https://instagram.com/the_baddie_strands" target="_blank" rel="noopener"><span>Instagram</span>@the_baddie_strands</a>
-    </div>
-  </div>
-  <form class="form" id="contact-form" novalidate>
-    <label>Name<input id="c-name" required autocomplete="name"></label>
-    <label>Phone or email<input id="c-reach" required></label>
-    <label>Message<textarea id="c-msg" rows="4" required></textarea></label>
-    <button class="btn pink" type="submit">Send on WhatsApp <i>→</i></button>
-  </form>
+<section class="wrap center delivery-head">
+  <span class="box-tag">Same-day in Abuja</span>
+  <h1 class="condensed">Nationwide<br>delivery</h1>
+  <p class="sec-lead center">We deliver to all 36 states and the FCT. We don’t ship outside Nigeria yet.</p>
 </section>
 
-<section class="wrap news">
-  <p>New drops and restocks, straight to your inbox.</p>
-  <form id="news-form" class="news-form" novalidate>
-    <input type="email" id="news-email" placeholder="Your email" aria-label="Email" required autocomplete="email">
-    <button class="btn oval" type="submit">Subscribe</button>
-  </form>
+<section class="wrap lookup">
+  <label class="lookup-label" for="lookup-state">Where are we sending it?</label>
+  <select id="lookup-state"><option value="">Choose your state</option></select>
+  <div class="lookup-out" id="lookup-out" aria-live="polite"><span class="muted">Fee and time will show here.</span></div>
+</section>
+
+<section class="wrap zones">
+  <div class="zone">
+    <span class="flag">By region <i>▸</i></span>
+    <ul id="zone-local"></ul>
+  </div>
+  <div class="zone">
+    <span class="flag">How it works <i>▸</i></span>
+    <ol class="how">
+      <li><b>You order</b><span>Pay by card or bank transfer at checkout.</span></li>
+      <li><b>We pack</b><span>Inspected, groomed and boxed within 24 hours.</span></li>
+      <li><b>It arrives</b><span>We send updates on WhatsApp until it’s at your door.</span></li>
+    </ol>
+  </div>
 </section>
 </main>
 <footer class="footer">
@@ -85,7 +85,7 @@
   </div>
   <div class="foot-bottom">
     <div>
-      <p class="foot-note"><span class="diamond"></span>New drops land on Instagram first.</p>
+      <p class="foot-note"><span class="diamond"></span><span>New drops land on <a data-wa href="https://wa.me/2347033247980" target="_blank" rel="noopener">WhatsApp</a> first.</span></p>
       <nav class="foot-links" aria-label="Footer"><a href="shop.html">Shop</a><a href="care.html">Hair care</a><a href="delivery.html">Delivery</a><a href="contact.html">Contact</a></nav>
     </div>
     <div class="follow">

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hair quiz — Baddie Strands</title>
-  <meta name="description" content="Five quick questions to find the Baddie Strands unit that suits you.">
+  <title>Contact — Baddie Strands</title>
+  <meta name="description" content="Questions about length, lace or delivery? Message Baddie Strands on WhatsApp, email or Instagram.">
   <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" type="image/png" href="assets/logo-nav.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,12 +15,12 @@
   <script defer src="js/data.js"></script>
   <script defer src="js/app.js"></script>
 </head>
-<body data-page="quiz">
+<body data-page="contact">
 <a class="skip" href="#main">Skip to content</a>
 <header class="nav" id="nav">
   <div class="nav-pill">
     <a href="index.html" class="logo" aria-label="Baddie Strands — home"><img src="assets/logo-nav.png" alt="Baddie Strands" width="174" height="24"></a>
-    <nav class="nav-links" aria-label="Main"><a href="shop.html">Shop</a><a href="care.html">Hair care</a><a href="quiz.html" aria-current="page">Quiz</a><a href="delivery.html">Delivery</a><a href="contact.html">Contact</a></nav>
+    <nav class="nav-links" aria-label="Main"><a href="shop.html">Shop</a><a href="care.html">Hair care</a><a href="delivery.html">Delivery</a><a href="contact.html" aria-current="page">Contact</a></nav>
     <div class="nav-actions">
       <button class="icon-btn" data-open-search aria-label="Search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -37,7 +37,7 @@
   </div>
   <div class="menu-panel" id="menu-panel">
     <a href="shop.html" class="tile wide"><span>Shop the collection</span><i>→</i></a>
-    <a href="care.html" class="tile"><span class="tile-ico">01</span>Hair care</a><a href="quiz.html" class="tile"><span class="tile-ico">02</span>Quiz</a><a href="delivery.html" class="tile"><span class="tile-ico">03</span>Delivery</a><a href="contact.html" class="tile"><span class="tile-ico">04</span>Contact</a>
+    <a href="care.html" class="tile"><span class="tile-ico">01</span>Hair care</a><a href="delivery.html" class="tile"><span class="tile-ico">02</span>Delivery</a><a href="contact.html" class="tile"><span class="tile-ico">03</span>Contact</a>
     <button class="tile wide" id="account-tile" type="button"><span id="account-label">Account</span><i>→</i></button>
     <div class="menu-foot">
       <span>Delivering nationwide</span>
@@ -46,13 +46,31 @@
   </div>
 </header>
 <main id="main">
-<section class="quiz" id="quiz">
-  <div class="quiz-progress"><span id="quiz-progress"></span></div>
-  <div class="quiz-top">
-    <div class="quiz-brand"><h1>THE MATCH</h1><span>Five questions<br>toward your crown</span></div>
-    <ol class="quiz-index" id="quiz-index"></ol>
+<section class="wrap contact-grid page-head">
+  <div>
+    <p class="overline rule">Contact</p>
+    <h1 class="display">Talk to us.</h1>
+    <p class="sec-lead">Questions about length, lace or delivery? Your note opens straight in WhatsApp.</p>
+    <div class="channels">
+      <a data-wa href="https://wa.me/2347033247980" target="_blank" rel="noopener"><span>WhatsApp</span>+234 703 324 7980</a>
+      <a href="mailto:baddiestrands@gmail.com"><span>Email</span>baddiestrands@gmail.com</a>
+      <a data-ig href="https://instagram.com/the_baddie_strands" target="_blank" rel="noopener"><span>Instagram</span>@the_baddie_strands</a>
+    </div>
   </div>
-  <div class="quiz-body" id="quiz-body"></div>
+  <form class="form" id="contact-form" novalidate>
+    <label>Name<input id="c-name" required autocomplete="name"></label>
+    <label>Phone or email<input id="c-reach" required></label>
+    <label>Message<textarea id="c-msg" rows="4" required></textarea></label>
+    <button class="btn pink" type="submit">Send on WhatsApp <i>→</i></button>
+  </form>
+</section>
+
+<section class="wrap news">
+  <p>New drops and restocks, straight to your inbox.</p>
+  <form id="news-form" class="news-form" novalidate>
+    <input type="email" id="news-email" placeholder="Your email" aria-label="Email" required autocomplete="email">
+    <button class="btn oval" type="submit">Subscribe</button>
+  </form>
 </section>
 </main>
 <footer class="footer">
@@ -67,7 +85,7 @@
   </div>
   <div class="foot-bottom">
     <div>
-      <p class="foot-note"><span class="diamond"></span>New drops land on Instagram first.</p>
+      <p class="foot-note"><span class="diamond"></span><span>New drops land on <a data-wa href="https://wa.me/2347033247980" target="_blank" rel="noopener">WhatsApp</a> first.</span></p>
       <nav class="foot-links" aria-label="Footer"><a href="shop.html">Shop</a><a href="care.html">Hair care</a><a href="delivery.html">Delivery</a><a href="contact.html">Contact</a></nav>
     </div>
     <div class="follow">
