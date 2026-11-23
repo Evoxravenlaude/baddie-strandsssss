@@ -55,7 +55,7 @@ function loadProducts() {
     } catch {}
     try {
       const r = await fetch(`${CFG.supabaseUrl}/rest/v1/products?select=*&visible=eq.true&order=sort.asc,id.asc`, {
-        headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}` },
+        headers: { apikey: CFG.supabaseAnonKey },
       });
       if (r.ok) {
         const rows = (await r.json()).map(fromRow);
@@ -423,7 +423,7 @@ async function loadHairCare() {
   if (!LIVE) return STORE_DATA.knowledge;
   try {
     const r = await fetch(`${CFG.supabaseUrl}/rest/v1/site_content?key=eq.hair_care&select=value`, {
-      headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}` },
+      headers: { apikey: CFG.supabaseAnonKey },
     });
     if (r.ok) { const v = (await r.json())[0]?.value; if (v?.basics?.length || Object.keys(v?.care || {}).length) return v; }
   } catch {}
@@ -495,7 +495,7 @@ function pageContact() {
       try {
         await fetch(`${CFG.supabaseUrl}/rest/v1/subscribers?on_conflict=email`, {
           method: 'POST',
-          headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' },
+          headers: { apikey: CFG.supabaseAnonKey, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' },
           body: JSON.stringify({ email }),
         });
       } catch {}
