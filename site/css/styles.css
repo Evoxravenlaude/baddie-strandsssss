@@ -460,3 +460,8 @@ body.pink-mode .lb-black{display:block}
 .legal p,.legal li{color:var(--dim);line-height:1.65}
 .legal ul{padding-left:1.1em;display:grid;gap:8px}
 .legal a{color:var(--pink,#ff3385)}
+
+/* no products yet */
+.empty-note{grid-column:1/-1;text-align:center;color:var(--dim);padding:48px 0}
+.empty-note a{color:var(--pink)}
+.stage[hidden]{display:none}

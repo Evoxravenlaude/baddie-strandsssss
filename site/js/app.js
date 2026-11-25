@@ -43,7 +43,7 @@ document.addEventListener('error', e => { if (e.target.tagName === 'IMG') fallba
 const imgTag = (src, alt, eager) => `<img src="${esc(src)}" alt="${esc(alt)}" ${eager ? '' : 'loading="lazy"'} decoding="async" draggable="false">`;
 
 /* ── products (Supabase if connected, else data.js) ─────── */
-let PRODUCTS = STORE_DATA.products;
+let PRODUCTS = LIVE ? [] : STORE_DATA.products;   // live: only what's in the admin
 let productsReady = null;
 function loadProducts() {
   if (productsReady) return productsReady;
@@ -59,12 +59,10 @@ function loadProducts() {
       });
       if (r.ok) {
         const rows = (await r.json()).map(fromRow);
-        if (rows.length) {
-          PRODUCTS = rows;
-          try { sessionStorage.setItem('bs_products', JSON.stringify({ t: Date.now(), rows })); } catch {}
-        }
+        PRODUCTS = rows;
+        if (rows.length) try { sessionStorage.setItem('bs_products', JSON.stringify({ t: Date.now(), rows })); } catch {}
       }
-    } catch (e) { console.warn('[BS] using data.js products', e); }
+    } catch (e) { console.warn('[BS] could not load products', e); }
     return PRODUCTS;
   })();
   return productsReady;
@@ -273,9 +271,8 @@ const reveal = els => els.forEach(el => revealIO ? (el.classList.add('rv'), reve
 
 /* ── product cards ──────────────────────────────────────── */
 function cardHTML(p) {
-  const badge = p.hot ? 'Bestseller' : p.new ? 'New in' : '';
   return `<a class="card" href="shop.html#p-${esc(p.id)}" data-open="${esc(p.id)}">
-    <div class="card-img">${badge ? `<span class="card-badge">${badge}</span>` : ''}${imgTag(p.image, p.type)}</div>
+    <div class="card-img">${imgTag(p.image, p.type)}</div>
     <div class="card-meta">${esc(p.name)}</div>
     <div class="card-price">${fmt(p.price)}${p.oldPrice ? `<s>${fmt(p.oldPrice)}</s>` : ''}</div>
   </a>`;
@@ -285,12 +282,14 @@ document.addEventListener('click', e => {
   if (o && !o.closest('.slider')) { e.preventDefault(); openProduct(o.dataset.open); }
 });
 
+const emptyHTML = `<p class="empty-note">New pieces are on the way. They land on <a data-wa href="https://wa.me/${esc(CFG.whatsappNum)}" target="_blank" rel="noopener">WhatsApp</a> first.</p>`;
+
 /* ═════════ HOME ═════════ */
 async function pageHome() {
   initLit();
   await loadProducts();
-  const picks = [...PRODUCTS].sort((a, b) => (b.hot - a.hot) || (b.new - a.new)).slice(0, 4);
-  $('#home-grid').innerHTML = picks.map(cardHTML).join('');
+  const picks = PRODUCTS.slice(0, 4);
+  $('#home-grid').innerHTML = picks.length ? picks.map(cardHTML).join('') : emptyHTML;
   reveal($$('#home-grid .card'));
 }
 
@@ -317,9 +316,12 @@ function initLit() {
 /* ═════════ SHOP ═════════ */
 async function pageShop() {
   await loadProducts();
-  let featured = PRODUCTS.filter(p => p.hot || p.new);
-  if (featured.length < 3) featured = PRODUCTS.slice(0, 8);
-  initSlider(featured);
+  if (!PRODUCTS.length) {
+    $('#stage').hidden = true;
+    $('#grid').innerHTML = emptyHTML;
+    return;
+  }
+  initSlider(PRODUCTS.slice(0, 8));
 
   const cats = [['all', 'All'], ['wigs', 'Wigs'], ['bundles', 'Bundles'], ['extensions', 'Extensions']]
     .filter(([k]) => k === 'all' || PRODUCTS.some(p => p.category === k));
@@ -350,7 +352,7 @@ async function pageShop() {
 function initSlider(list) {
   const sl = $('#slider');
   sl.innerHTML = list.map((p, i) => `<div class="slide" data-i="${i}" data-id="${esc(p.id)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${list.length}: ${esc(p.name)}">
-    ${p.hot ? '<span class="card-badge">Bestseller</span>' : p.new ? '<span class="card-badge">New in</span>' : ''}${imgTag(p.image, p.type, i < 3)}</div>`).join('');
+    ${imgTag(p.image, p.type, i < 3)}</div>`).join('');
   const slides = $$('.slide', sl);
   let cur = -1;
   const setActive = i => {
