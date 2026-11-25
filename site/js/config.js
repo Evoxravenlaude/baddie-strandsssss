@@ -18,4 +18,5 @@ const BS_CONFIG = {
   whatsappNum:       '2347033247980',               // digits only
   email:             'baddiestrands@gmail.com',
   instagram:         'the_baddie_strands',
+  googleSignIn: false,
 };
