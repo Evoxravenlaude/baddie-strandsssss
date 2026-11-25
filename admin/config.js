@@ -9,5 +9,5 @@ const ADMIN_CONFIG = {
   supabaseUrl:     'https://lpjdgmxverblkqwtvgie.supabase.co',
   supabaseAnonKey: 'sb_publishable_0szYg6a0WMOVGQCSPv2r2g_q7NtPbOH',
   adminEmail:      'baddiestrands@gmail.com',          // the only email that can sign in
-  shopUrl:         'https://baddie-strands.vercel.app', // "View shop" link
+  shopUrl:         'https://baddiestrands.shop', // "View shop" link
 };
