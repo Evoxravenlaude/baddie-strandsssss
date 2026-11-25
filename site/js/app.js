@@ -179,8 +179,8 @@ function injectOverlays() {
   <div class="auth-step" id="auth-step-email">
     <input class="field" type="email" id="auth-email" placeholder="you@email.com" autocomplete="email" aria-label="Email">
     <button class="btn pink full" id="auth-send">Send code</button>
-    <div class="or"><span>or</span></div>
-    <button class="btn oval full" id="auth-google">Continue with Google</button>
+    ${CFG.googleSignIn ? `<div class="or"><span>or</span></div>
+    <button class="btn oval full" id="auth-google">Continue with Google</button>` : ''}
     <button class="link" id="auth-toggle">New here? Create an account</button>
   </div>
   <div class="auth-step" id="auth-step-otp" hidden>
@@ -654,7 +654,7 @@ function initAuth() {
   $('#auth-verify').addEventListener('click', authVerify);
   $('#auth-back').addEventListener('click', () => { cells.forEach(c => c.value = ''); authStep('email'); });
   $('#auth-finish').addEventListener('click', authFinish);
-  $('#auth-google').addEventListener('click', async () => (await sb())?.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.href.split('#')[0] } }));
+  $('#auth-google')?.addEventListener('click', async () => (await sb())?.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.href.split('#')[0] } }));
   // returning from Google sign-in, or a saved session: restore quietly
   if (LIVE && (/access_token|code=/.test(location.href) || Object.keys(localStorage).some(k => k.startsWith('sb-')))) {
     (window.requestIdleCallback || setTimeout)(() => ensureSession());
