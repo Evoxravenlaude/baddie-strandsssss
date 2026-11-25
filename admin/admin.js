@@ -216,7 +216,7 @@ function initShell() {
   $('#product-search').addEventListener('input', e => { S.pSearch = e.target.value.trim().toLowerCase(); renderProducts(); });
   $('#product-filters').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { S.pFilter = b.dataset.f; renderProducts(); } });
   $('#add-product').addEventListener('click', () => openProduct(null));
-  $('#import-starter').addEventListener('click', async e => {
+  $('#import-starter')?.addEventListener('click', async e => {
     e.target.disabled = true; e.target.textContent = 'Loading…';
     try { await api.importStarter(); S.products = await api.products(); renderProducts(); toast('Starter products loaded.'); }
     catch (err) { console.error(err); toast('Couldn’t load them — has the database setup been run?'); }

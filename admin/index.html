@@ -103,8 +103,7 @@
         <div class="v-actions"><button class="btn pink" id="add-product">+ Add product</button></div>
       </header>
       <div class="import" id="import-box" hidden>
-        <p><b>Your shop has no products yet.</b> Load the starter catalogue (12 products from the old site) and edit from there.</p>
-        <button class="btn pink" id="import-starter">Load starter products</button>
+        <p><b>Your shop has no products yet.</b> Tap <b>+ Add product</b> to add the first one. Until then the shop shows a “new pieces are on the way” note.</p>
       </div>
       <div class="toolbar"><div class="chips" id="product-filters"></div><input class="input search" id="product-search" placeholder="Search products" aria-label="Search products"></div>
       <div class="p-grid" id="products-grid"></div>
@@ -189,7 +188,7 @@
       <label>Price (₦)<input class="input" id="pd-price" inputmode="numeric" required placeholder="85000"></label>
       <label>Was (optional)<input class="input" id="pd-old" inputmode="numeric" placeholder="110000"></label>
       <label>In stock<input class="input" id="pd-stock" inputmode="numeric" placeholder="10"></label>
-      <label>Label<select class="input" id="pd-badge"><option value="">None</option><option value="hot">Bestseller</option><option value="new">New in</option></select></label>
+      <label hidden>Label<select class="input" id="pd-badge"><option value="">None</option><option value="hot">Bestseller</option><option value="new">New in</option></select></label>
     </div>
     <label>Lengths <span class="hint">separate with commas</span><input class="input" id="pd-lengths" placeholder='14", 16", 18", 20"'></label>
     <div class="colours">
