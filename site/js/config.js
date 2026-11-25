@@ -11,9 +11,9 @@ const BS_CONFIG = {
   supabaseUrl:       'https://lpjdgmxverblkqwtvgie.supabase.co',   // e.g. https://abcd1234.supabase.co
   supabaseAnonKey:   'sb_publishable_0szYg6a0WMOVGQCSPv2r2g_q7NtPbOH',      // Project Settings → API Keys → Publishable key (sb_publishable_…)
 
-  paystackPublicKey: 'pk_live_YOUR_PAYSTACK_PUBLIC_KEY',
-  accessBankAcct:    '0000000000',                  // real account number
-  accessBankName:    'Baddie Strands',
+  paystackPublicKey: 'pk_test_1d88a00e562ac39d2e9a9a7498bae9b7e4510016',
+  accessBankAcct:    '1410406048',                  // real account number
+  accessBankName:    'Lukman Oluwatosin Hikmah',
 
   whatsappNum:       '2347033247980',               // digits only
   email:             'baddiestrands@gmail.com',
