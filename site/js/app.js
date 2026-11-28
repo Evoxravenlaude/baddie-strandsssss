@@ -43,15 +43,17 @@ document.addEventListener('error', e => { if (e.target.tagName === 'IMG') fallba
 const imgTag = (src, alt, eager) => `<img src="${esc(src)}" alt="${esc(alt)}" ${eager ? '' : 'loading="lazy"'} decoding="async" draggable="false">`;
 
 /* ── products (Supabase if connected, else data.js) ─────── */
-let PRODUCTS = LIVE ? [] : STORE_DATA.products;   // live: only what's in the admin
+let PRODUCTS = LIVE ? [] : STORE_DATA.products.map(withOptions);   // live: only what's in the admin
 let productsReady = null;
 function loadProducts() {
   if (productsReady) return productsReady;
   productsReady = (async () => {
     if (!LIVE) return PRODUCTS;
+    // free stock held by card checkouts that were never paid (2h+)
+    try { await fetch(`${CFG.supabaseUrl}/rest/v1/rpc/release_stale_orders`, { method: 'POST', headers: { apikey: CFG.supabaseAnonKey, 'Content-Type': 'application/json' }, body: '{}' }); } catch {}
     try {
       const c = JSON.parse(sessionStorage.getItem('bs_products') || 'null');
-      if (c && Date.now() - c.t < 5 * 60e3 && c.rows.length) return (PRODUCTS = c.rows);
+      if (c && Date.now() - c.t < 60e3 && c.rows.length) return (PRODUCTS = c.rows);
     } catch {}
     try {
       const r = await fetch(`${CFG.supabaseUrl}/rest/v1/products?select=*&visible=eq.true&order=sort.asc,id.asc`, {
@@ -68,15 +70,42 @@ function loadProducts() {
   return productsReady;
 }
 function fromRow(r) {
-  return {
+  return withOptions({
     id: r.id, name: r.name, type: r.type || '', category: r.category || 'wigs',
     price: +r.price, oldPrice: r.old_price ? +r.old_price : null,
     lengths: r.lengths?.length ? r.lengths : ['Standard'],
     colors: r.colors?.length ? r.colors : ['#1a1008'], colorNames: r.color_names?.length ? r.color_names : ['Natural Black'],
     description: r.description || '', features: r.features || [],
     image: r.image_url || '', stock: r.stock ?? 0, hot: r.badge === 'hot', new: r.badge === 'new',
-  };
+    options: Array.isArray(r.length_options) ? r.length_options : [],
+  });
 }
+/* Every product gets `options`: one per length, each with its own price,
+   "was" price and stock. Older products without them share one price/stock. */
+function withOptions(p) {
+  let opts = (p.options || []).filter(o => o && o.length)
+    .map(o => ({ length: String(o.length), price: +o.price || +p.price, oldPrice: +o.old_price || null, stock: Math.max(0, parseInt(o.stock) || 0) }));
+  if (!opts.length) {
+    const stock = p.stock === undefined ? 99 : Math.max(0, +p.stock || 0);
+    opts = (p.lengths?.length ? p.lengths : ['Standard']).map(l => ({ length: l, price: +p.price, oldPrice: p.oldPrice || null, stock }));
+    opts.shared = true;           // one stock count for all lengths
+  }
+  const avail = opts.filter(o => o.stock > 0);
+  const prices = (avail.length ? avail : opts).map(o => o.price);
+  const from = Math.min(...prices);
+  const cheapest = opts.find(o => o.price === from);
+  return { ...p, options: opts, lengths: opts.map(o => o.length), price: from, oldPrice: cheapest.oldPrice,
+           varies: prices.some(x => x !== from),
+           stock: opts.shared ? opts[0].stock : opts.reduce((n, o) => n + o.stock, 0) };
+}
+const optionFor = (p, length) => p?.options.find(o => o.length === length);
+/* how many more of this product+length can go in the cart */
+function roomFor(p, length) {
+  const o = optionFor(p, length); if (!o) return 0;
+  const inCart = STATE.cart.filter(i => String(i.id) === String(p.id) && (p.options.shared || i.length === length)).reduce((n, i) => n + i.qty, 0);
+  return Math.max(0, o.stock - inCart);
+}
+const priceText = p => (p.varies ? 'From ' : '') + fmt(p.price);
 const byId = id => PRODUCTS.find(p => String(p.id) === String(id));
 const typeWord = p => (p.type || p.category).replace(/\s*(wig|deal|extensions?)$/i, '') || p.category;
 
@@ -106,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCheckout();
   initAuth();
   updateCartUI();
+  if (STATE.cart.length) loadProducts().then(syncCart);
   initReveal();
   if (!LIVE) showDemoBar();
   const page = { index: pageHome, shop: pageShop, care: pageCare, delivery: pageDelivery, contact: pageContact }[document.body.dataset.page];
@@ -149,7 +179,7 @@ function injectOverlays() {
     </div>
     <div class="pm-price" id="pm-price"></div>
     <div class="pm-opt"><span class="eyebrow">Colour — <b id="pm-color-name"></b></span><div class="swatches" id="pm-colors"></div></div>
-    <div class="pm-opt"><span class="eyebrow">Length</span><div class="chips small" id="pm-lengths"></div></div>
+    <div class="pm-opt"><span class="eyebrow">Length</span><div class="chips small" id="pm-lengths"></div><span class="pm-left" id="pm-left" aria-live="polite"></span></div>
     <div class="pm-buy">
       <div class="qty"><button id="pm-minus" aria-label="One less">−</button><span id="pm-qty" aria-live="polite">1</span><button id="pm-plus" aria-label="One more">+</button></div>
       <button class="btn pink grow" id="pm-add">Add to cart</button>
@@ -274,7 +304,7 @@ function cardHTML(p) {
   return `<a class="card" href="shop.html#p-${esc(p.id)}" data-open="${esc(p.id)}">
     <div class="card-img">${imgTag(p.image, p.type)}</div>
     <div class="card-meta">${esc(p.name)}</div>
-    <div class="card-price">${fmt(p.price)}${p.oldPrice ? `<s>${fmt(p.oldPrice)}</s>` : ''}</div>
+    <div class="card-price">${p.stock <= 0 ? 'Sold out' : priceText(p)}${p.oldPrice && !p.varies && p.stock > 0 ? `<s>${fmt(p.oldPrice)}</s>` : ''}</div>
   </a>`;
 }
 document.addEventListener('click', e => {
@@ -363,7 +393,7 @@ function initSlider(list) {
     $('#stage-ghost').textContent = typeWord(p);
     $('#stage-type').textContent = p.type;
     $('#stage-name').textContent = p.name;
-    $('#stage-price').textContent = p.oldPrice ? `${fmt(p.price)} — was ${fmt(p.oldPrice)}` : fmt(p.price);
+    $('#stage-price').textContent = p.stock <= 0 ? 'Sold out' : p.oldPrice && !p.varies ? `${fmt(p.price)} — was ${fmt(p.oldPrice)}` : priceText(p);
     $('#stage-counter').textContent = `${String(i + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
   };
   const nearest = () => {
@@ -513,34 +543,82 @@ function pageContact() {
 async function openProduct(id) {
   await loadProducts();
   const p = byId(id); if (!p) return;
-  Object.assign(PM, { p, qty: 1, length: p.lengths[0], color: 0 });
+  const first = p.options.find(o => roomFor(p, o.length) > 0) || p.options[0];
+  Object.assign(PM, { p, qty: 1, length: first.length, color: 0 });
   $('#pm-img').innerHTML = imgTag(p.image, p.type, true);
   $('#pm-type').textContent = p.type;
   $('#pm-name').textContent = p.name;
-  $('#pm-price').innerHTML = fmt(p.price) + (p.oldPrice ? `<s>${fmt(p.oldPrice)}</s>` : '');
+
   $('#pm-colors').innerHTML = p.colors.map((c, i) => `<button class="swatch${i ? '' : ' active'}" style="background:${esc(c)}" data-c="${i}" aria-label="${esc(p.colorNames[i] || 'Colour ' + (i + 1))}" aria-pressed="${!i}"></button>`).join('');
   $('#pm-color-name').textContent = p.colorNames[0] || '';
-  $('#pm-lengths').innerHTML = p.lengths.map((l, i) => `<button class="chip${i ? '' : ' active'}" data-l="${esc(l)}" aria-pressed="${!i}">${esc(l)}</button>`).join('');
+  $('#pm-lengths').innerHTML = p.options.map(o => {
+    const out = optionFor(p, o.length).stock <= 0;
+    return `<button class="chip${out ? ' out' : ''}" data-l="${esc(o.length)}" aria-pressed="false"${out ? ' disabled aria-disabled="true" title="Sold out"' : ''}>${esc(o.length)}${p.varies ? `<small>${fmt(o.price)}</small>` : ''}</button>`;
+  }).join('');
   $('#pm-desc').textContent = p.description;
   $('#pm-features').innerHTML = (p.features || []).map(f => `<li>${esc(f)}</li>`).join('');
   $('.pm-more').open = false;
-  $('#pm-qty').textContent = 1;
-  const out = p.stock !== undefined && p.stock <= 0;
-  $('#pm-add').disabled = out; $('#pm-add').textContent = out ? 'Sold out' : 'Add to cart';
+  pmRefresh();
   openLayer('#product-modal');
+}
+
+/* price, stock note, quantity and button for the chosen length */
+function pmRefresh() {
+  const p = PM.p, o = optionFor(p, PM.length), room = roomFor(p, PM.length);
+  PM.qty = Math.max(1, Math.min(PM.qty, room || 1));
+  $$('.chip', $('#pm-lengths')).forEach(c => { const on = c.dataset.l === PM.length; c.classList.toggle('active', on); c.setAttribute('aria-pressed', on); });
+  $('#pm-price').innerHTML = fmt(o.price) + (o.oldPrice && o.oldPrice > o.price ? `<s>${fmt(o.oldPrice)}</s>` : '');
+  $('#pm-qty').textContent = PM.qty;
+  $('#pm-plus').disabled = PM.qty >= room;
+  $('#pm-minus').disabled = PM.qty <= 1;
+  const left = $('#pm-left');
+  if (left) left.textContent = o.stock <= 0 ? 'Sold out' : o.stock <= 3 ? `Only ${o.stock} left` : '';
+  const btn = $('#pm-add');
+  btn.disabled = room <= 0;
+  btn.textContent = p.stock <= 0 || o.stock <= 0 ? 'Sold out' : room <= 0 ? 'All in your cart' : 'Add to cart';
 }
 
 /* ═════════ CART ═════════ */
 function addToCart(p, qty, length, color) {
+  const room = roomFor(p, length);
+  if (room <= 0) { toast('That’s all we have', `${p.name} · ${length} is already in your cart.`); return; }
+  qty = Math.min(qty, room);
+  const price = optionFor(p, length).price;
   const key = `${p.id}-${length}-${color}`;
   const ex = STATE.cart.find(i => i.key === key);
-  if (ex) ex.qty += qty;
-  else STATE.cart.push({ key, id: p.id, name: p.name, price: p.price, qty, length, color: p.colorNames[color] || '', image: p.image });
+  if (ex) { ex.qty += qty; ex.price = price; }
+  else STATE.cart.push({ key, id: p.id, name: p.name, price, qty, length, color: p.colorNames[color] || '', image: p.image });
   saveCart();
   toast('Added to cart', `${p.name} · ${length}`);
   $$('[data-cart-count]').forEach(c => { c.classList.add('bump'); setTimeout(() => c.classList.remove('bump'), 300); });
 }
 function saveCart() { store.set('bs_cart', STATE.cart); updateCartUI(); }
+/* Keep the cart honest: latest prices, never more than what's in stock,
+   and items that are gone are taken out (with a note). */
+function syncCart() {
+  if (!PRODUCTS.length && LIVE) return;
+  const notes = [];
+  const kept = [];
+  for (const it of STATE.cart) {
+    const p = byId(it.id), o = p && optionFor(p, it.length);
+    if (!o || o.stock <= 0) { notes.push(`${it.name} · ${it.length} sold out`); continue; }
+    it.price = o.price;
+    const used = kept.filter(k => String(k.id) === String(p.id) && (p.options.shared || k.length === it.length)).reduce((n, k) => n + k.qty, 0);
+    const max = o.stock - used;
+    if (max <= 0) { notes.push(`${it.name} · ${it.length} sold out`); continue; }
+    if (it.qty > max) { notes.push(`${it.name} · ${it.length}: only ${o.stock} left`); it.qty = max; }
+    kept.push(it);
+  }
+  STATE.cart = kept; saveCart();
+  if (notes.length) toast('Cart updated', notes.join(' · '));
+}
+async function refreshStock() {
+  try { sessionStorage.removeItem('bs_products'); } catch {}
+  productsReady = null;
+  await loadProducts();
+  syncCart();
+  if (CO.step === 3) $('#co-pay-summary').innerHTML = summary(true);   // totals may have changed
+}
 const subtotal = () => STATE.cart.reduce((s, i) => s + i.price * i.qty, 0);
 function updateCartUI() {
   const count = STATE.cart.reduce((s, i) => s + i.qty, 0);
@@ -554,7 +632,7 @@ function updateCartUI() {
       <div>
         <div class="c-name">${esc(i.name)}</div>
         <div class="c-sub">${esc(i.length)}${i.color ? ' · ' + esc(i.color) : ''}</div>
-        <div class="c-qty"><button data-q="${esc(i.key)}" data-d="-1" aria-label="One less">−</button>${i.qty}<button data-q="${esc(i.key)}" data-d="1" aria-label="One more">+</button></div>
+        <div class="c-qty"><button data-q="${esc(i.key)}" data-d="-1" aria-label="One less">−</button>${i.qty}<button data-q="${esc(i.key)}" data-d="1" aria-label="One more"${(() => { const p = byId(i.id); return p && roomFor(p, i.length) <= 0 ? ' disabled' : ''; })()}>+</button></div>
       </div>
       <div class="c-right">${fmt(i.price * i.qty)}<button data-rm="${esc(i.key)}">Remove</button></div>
     </div>`).join('')
@@ -599,7 +677,12 @@ function initOverlays() {
 
   $('#cart-items').addEventListener('click', e => {
     const q = e.target.closest('[data-q]');
-    if (q) { const it = STATE.cart.find(i => i.key === q.dataset.q); if (it) { it.qty = Math.max(1, it.qty + +q.dataset.d); saveCart(); } return; }
+    if (q) {
+      const it = STATE.cart.find(i => i.key === q.dataset.q); if (!it) return;
+      const d = +q.dataset.d, p = byId(it.id);
+      if (d > 0 && p && roomFor(p, it.length) <= 0) { toast('That’s all we have', `No more ${it.name} · ${it.length} in stock.`); return; }
+      it.qty = Math.max(1, it.qty + d); saveCart(); return;
+    }
     const rm = e.target.closest('[data-rm]');
     if (rm) { STATE.cart = STATE.cart.filter(i => i.key !== rm.dataset.rm); saveCart(); }
   });
@@ -612,11 +695,11 @@ function initOverlays() {
   });
   $('#pm-lengths').addEventListener('click', e => {
     const b = e.target.closest('[data-l]'); if (!b) return;
-    PM.length = b.dataset.l;
-    $$('.chip', $('#pm-lengths')).forEach(s => { s.classList.toggle('active', s === b); s.setAttribute('aria-pressed', s === b); });
+    if (b.disabled) return;
+    PM.length = b.dataset.l; PM.qty = 1; pmRefresh();
   });
-  $('#pm-minus').addEventListener('click', () => { PM.qty = Math.max(1, PM.qty - 1); $('#pm-qty').textContent = PM.qty; });
-  $('#pm-plus').addEventListener('click', () => { PM.qty = Math.min(10, PM.qty + 1); $('#pm-qty').textContent = PM.qty; });
+  $('#pm-minus').addEventListener('click', () => { PM.qty = Math.max(1, PM.qty - 1); pmRefresh(); });
+  $('#pm-plus').addEventListener('click', () => { PM.qty = Math.min(roomFor(PM.p, PM.length), PM.qty + 1); pmRefresh(); });
   $('#pm-add').addEventListener('click', () => { addToCart(PM.p, PM.qty, PM.length, PM.color); closeLayer(true); });
 
   const input = $('#search-input'), out = $('#search-results');
@@ -625,7 +708,7 @@ function initOverlays() {
     if (!q) { out.innerHTML = ''; return; }
     const hits = PRODUCTS.filter(p => [p.name, p.type, p.category, p.description, ...(p.features || [])].join(' ').toLowerCase().includes(q)).slice(0, 8);
     out.innerHTML = hits.length
-      ? hits.map(p => `<button class="sr" data-open="${esc(p.id)}">${esc(p.name)}<span>${esc(p.type)} · ${fmt(p.price)}</span></button>`).join('')
+      ? hits.map(p => `<button class="sr" data-open="${esc(p.id)}">${esc(p.name)}<span>${esc(p.type)} · ${p.stock <= 0 ? 'Sold out' : priceText(p)}</span></button>`).join('')
       : `<p class="muted" style="padding:16px 0">Nothing for “${esc(input.value)}”. Try “wig”, “bundle” or “lace”.</p>`;
   });
 }
@@ -802,20 +885,14 @@ function coNext() {
    always matches the shop's real prices. */
 async function placeOrder(kind) {
   const c = await sb();
-  const { data, error } = await c.from('orders').insert([{
-    user_id: AUTH.user.id, status: 'Pending',
-    total_amount: total(), delivery_fee: fee(),
-    payment_method: kind === 'card' ? 'Paystack Card' : 'Bank Transfer – Access Bank',
-    payment_ref: kind === 'card' ? null : `BS-TRF-${Date.now()}`,
-    delivery_state: CO.delivery.state, delivery_address: CO.delivery,
-  }]).select('id').single();
-  if (error) throw error;
-  const { error: e2 } = await c.from('order_items').insert(STATE.cart.map(i => ({
-    order_id: data.id, product_id: Number(i.id) || null, product_name: i.name, length: i.length, color: i.color, quantity: i.qty, unit_price: i.price,
-  })));
-  if (e2) throw e2;
-  const { data: o } = await c.from('orders').select('total_amount').eq('id', data.id).single();
-  return { id: data.id, short: String(data.id).split('-')[0].toUpperCase(), total: Number(o?.total_amount ?? total()) };
+  const { data, error } = await c.rpc('place_order', {
+    p_items: STATE.cart.map(i => ({ product_id: Number(i.id) || null, product_name: i.name, length: i.length, color: i.color, quantity: i.qty })),
+    p_delivery: CO.delivery, p_state: CO.delivery.state, p_fee: fee(),
+    p_method: kind === 'card' ? 'Paystack Card' : 'Bank Transfer – Access Bank',
+    p_ref: kind === 'card' ? null : `BS-TRF-${Date.now()}`,
+  });
+  if (error) { const e = new Error(error.message); e.stock = /left of|sold out|no longer available/i.test(error.message); throw e; }
+  return { id: data.id, short: String(data.id).split('-')[0].toUpperCase(), total: Number(data.total ?? total()) };
 }
 function busy(label) { const n = $('#co-next'); n.disabled = true; n.textContent = label; }
 function unbusy(label) { const n = $('#co-next'); n.disabled = false; n.textContent = label; }
@@ -844,6 +921,7 @@ async function payCard() {
   } catch (err) {
     console.error('[BS] card error', err);
     unbusy('Pay now');
+    if (err.stock) { status('#pay-status', err.message, 'err'); refreshStock(); return; }
     status('#pay-status', 'Couldn’t start the payment. Check your connection, or pay by bank transfer.', 'err');
   }
 }
@@ -878,6 +956,7 @@ async function payTransfer() {
   } catch (err) {
     console.error('[BS] order error', err);
     unbusy('Try again');
+    if (err.stock) { status('#pay-status', err.message, 'err'); refreshStock(); return; }
     status('#pay-status', 'Something went wrong placing your order. Try again or message us on WhatsApp.', 'err');
   }
 }

@@ -465,3 +465,11 @@ body.pink-mode .lb-black{display:block}
 .empty-note{grid-column:1/-1;text-align:center;color:var(--dim);padding:48px 0}
 .empty-note a{color:var(--pink)}
 .stage[hidden]{display:none}
+
+/* sizes with their own price / stock */
+.chips.small .chip small{display:block;font-size:.62rem;letter-spacing:.02em;opacity:.7;margin-top:2px;text-transform:none}
+.chip.out,.chip:disabled{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.chip.out:hover{border-color:var(--line)}
+.pm-left{display:block;margin-top:8px;font-size:.72rem;color:var(--pink)}
+.pm-left:empty{display:none}
+.qty button:disabled,.c-qty button:disabled{opacity:.3;cursor:not-allowed}
