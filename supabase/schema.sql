@@ -81,7 +81,8 @@ create table if not exists public.orders (
 );
 alter table public.orders add column if not exists delivery_fee numeric default 0;
 alter table public.orders drop constraint if exists orders_delivery_fee_range;
-alter table public.orders add constraint orders_delivery_fee_range check (delivery_fee between 0 and 20000);
+-- the delivery fee is paid to the rider; the admin records it per order
+alter table public.orders add constraint orders_delivery_fee_range check (delivery_fee is null or delivery_fee between 0 and 1000000);
 alter table public.orders enable row level security;
 drop policy if exists "Users can view own orders" on public.orders;
 drop policy if exists "Users can insert orders"   on public.orders;
@@ -188,7 +189,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   update public.orders o
      set total_amount = coalesce((select sum(quantity * unit_price) from public.order_items where order_id = new.order_id), 0)
-                        + coalesce(o.delivery_fee, 0)
+                        -- delivery is paid to the rider, so it's not part of what the shopper pays online
    where o.id = new.order_id and o.status = 'Pending';
   return null;
 end $$;
@@ -225,7 +226,7 @@ begin
   if jsonb_array_length(coalesce(p_items, '[]')) = 0 then raise exception 'Your cart is empty.'; end if;
   if p_method not in ('Paystack Card', 'Bank Transfer – Access Bank') then raise exception 'Unknown payment method'; end if;
   insert into public.orders (user_id, status, total_amount, payment_method, payment_ref, delivery_state, delivery_address, delivery_fee)
-  values (auth.uid(), 'Pending', 0, p_method, p_ref, p_state, p_delivery, coalesce(p_fee, 0))
+  values (auth.uid(), 'Pending', 0, p_method, p_ref, p_state, p_delivery, null)   -- fee set later by the admin
   returning id into new_id;
   for it in select * from jsonb_array_elements(p_items) loop
     insert into public.order_items (order_id, product_id, product_name, length, color, quantity, unit_price)
