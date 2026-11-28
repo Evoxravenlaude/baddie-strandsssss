@@ -193,7 +193,7 @@ function injectOverlays() {
   <div class="drawer-items" id="cart-items"></div>
   <div class="drawer-foot">
     <div class="row"><span>Subtotal</span><b id="cart-subtotal">₦0</b></div>
-    <p class="muted small">Delivery fee is added at checkout. Nigeria only.</p>
+    <p class="muted small">Delivery is paid to the rider when it arrives. We confirm the fee after you order. Nigeria only.</p>
     <button class="btn pink full" id="checkout-btn">Checkout <i>→</i></button>
     <a class="btn oval full" id="wa-order" target="_blank" rel="noopener">Order on WhatsApp</a>
   </div>
@@ -240,6 +240,7 @@ function injectOverlays() {
       <label class="span2">Notes (optional)<input id="del-notes" placeholder="Landmark, gate code…"></label>
     </div>
     <div class="row line"><span>Delivery</span><b id="del-fee">— choose state</b></div>
+    <p class="muted small del-note">The delivery fee depends on your exact address. We’ll confirm it on WhatsApp or email, and you pay the rider when your order arrives.</p>
     <p class="note">We deliver within Nigeria only.</p>
   </div>
   <div class="co-step" id="co-step-3" hidden>
@@ -495,14 +496,14 @@ async function pageCare() {
 
 /* ═════════ DELIVERY ═════════ */
 function pageDelivery() {
-  $('#zone-local').innerHTML = DELIVERY.local.map(z => `<li><span>${esc(z.zone)}</span><span>${esc(z.price)}</span><span>${esc(z.time)}</span></li>`).join('');
+  $('#zone-local').innerHTML = DELIVERY.local.map(z => `<li><span>${esc(z.zone)}</span><span>${esc(z.time)}</span></li>`).join('');
   const sel = $('#lookup-state');
   sel.insertAdjacentHTML('beforeend', stateOptions());
   sel.addEventListener('change', () => {
     const s = sel.value, f = DELIVERY_FEES[s];
     $('#lookup-out').innerHTML = s
-      ? `<div><b>${fmt(f)}</b><span>Delivery fee</span></div><div><b>${esc(DELIVERY_TIMES[f] || '2–4 days')}</b><span>Arrives in</span></div>`
-      : '<span class="muted">Fee and time will show here.</span>';
+      ? `<div><b>${esc(DELIVERY_TIMES[f] || '2–4 days')}</b><span>Arrives in</span></div><div><b>Pay on arrival</b><span>Fee confirmed after you order</span></div>`
+      : '<span class="muted">Delivery time will show here.</span>';
   });
 }
 const stateOptions = () => Object.keys(DELIVERY_FEES)
@@ -807,15 +808,16 @@ function authDone() {
 }
 
 /* ═════════ CHECKOUT ═════════ */
-const fee = () => DELIVERY_FEES[CO.delivery.state] ?? 3500;
-const total = () => subtotal() + (CO.delivery.state ? fee() : 0);
+// Delivery is paid to the rider on arrival; the admin confirms the fee per order.
+const fee = () => 0;
+const total = () => subtotal();
 const acctReady = () => !/^0+$/.test(CFG.accessBankAcct);
 
 function initCheckout() {
   $('#del-state').insertAdjacentHTML('beforeend', stateOptions());
   $('#del-state').addEventListener('change', e => {
     const s = e.target.value;
-    $('#del-fee').textContent = s ? `${fmt(DELIVERY_FEES[s] ?? 3500)} · ${DELIVERY_TIMES[DELIVERY_FEES[s]] || '2–4 days'}` : '— choose state';
+    $('#del-fee').textContent = s ? `Pay rider on arrival · ${DELIVERY_TIMES[DELIVERY_FEES[s]] || '2–4 days'}` : '— choose state';
   });
   $('#checkout-btn').addEventListener('click', async () => {
     if (!STATE.cart.length) return;
@@ -848,8 +850,8 @@ function openCheckout() {
 }
 function summary(withFee) {
   const rows = STATE.cart.map(i => `<div class="r"><span>${esc(i.name)} (${esc(i.length)}) × ${i.qty}</span><span>${fmt(i.price * i.qty)}</span></div>`).join('');
-  const f = withFee && CO.delivery.state ? `<div class="r"><span>Delivery — ${esc(CO.delivery.state)}</span><span>${fmt(fee())}</span></div>` : '';
-  return `<div class="sum">${rows}${f}<div class="r t"><span>Total</span><span>${fmt(withFee ? total() : subtotal())}</span></div></div>`;
+  const f = withFee && CO.delivery.state ? `<div class="r"><span>Delivery — ${esc(CO.delivery.state)}</span><span>Pay rider on arrival</span></div>` : '';
+  return `<div class="sum">${rows}${f}<div class="r t"><span>${withFee ? 'To pay now' : 'Total'}</span><span>${fmt(subtotal())}</span></div></div>`;
 }
 function coStep(n) {
   CO.step = n;

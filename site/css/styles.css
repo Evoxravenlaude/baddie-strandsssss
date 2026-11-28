@@ -473,3 +473,9 @@ body.pink-mode .lb-black{display:block}
 .pm-left{display:block;margin-top:8px;font-size:.72rem;color:var(--pink)}
 .pm-left:empty{display:none}
 .qty button:disabled,.c-qty button:disabled{opacity:.3;cursor:not-allowed}
+
+/* delivery paid to the rider */
+.zone li{grid-template-columns:1.4fr 1fr}
+.zone li span:nth-child(2){font-family:inherit;font-size:.92rem;text-align:right;color:var(--dim)}
+.del-note{margin:8px 0 0;line-height:1.5}
+@media (max-width:520px){.zone li{grid-template-columns:1fr auto}.zone li span:last-child{grid-column:auto;text-align:right}}
