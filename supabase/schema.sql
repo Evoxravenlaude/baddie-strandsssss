@@ -53,6 +53,11 @@ create table if not exists public.products (
   sort         integer default 0,
   created_at   timestamptz default now()
 );
+-- sizes: one entry per length, each with its own price and stock, e.g.
+-- [{"length":"14\"","price":85000,"old_price":null,"stock":3}, …]
+-- (price / stock / lengths above are kept in step by the admin:
+--  lowest price, total stock, list of lengths)
+alter table public.products add column if not exists length_options jsonb not null default '[]'::jsonb;
 alter table public.products enable row level security;
 drop policy if exists "Anyone sees visible products" on public.products;
 drop policy if exists "Admin manages products"       on public.products;
@@ -116,17 +121,62 @@ create policy "Users can insert order items" on public.order_items for insert
 create policy "Admin reads order items" on public.order_items for select using (public.is_admin());
 
 
--- Prices come from the products table, not the shopper's browser:
--- every item is re-priced on insert and the order total recalculated.
+-- Prices AND stock come from the products table, not the shopper's browser.
+-- Every item is re-priced for its length on insert, checked against what's
+-- in stock, and the stock is taken off straight away (so two people can't
+-- buy the last unit). Cancelling an order puts the stock back.
+create or replace function public.adjust_stock(pid bigint, len text, delta integer)
+returns void language plpgsql security definer set search_path = public as $$
+declare opts jsonb; i int;
+begin
+  select length_options into opts from public.products where id = pid for update;
+  if not found then return; end if;
+  if jsonb_array_length(coalesce(opts, '[]')) > 0 then
+    for i in 0 .. jsonb_array_length(opts) - 1 loop
+      if opts->i->>'length' = len then
+        opts := jsonb_set(opts, array[i::text, 'stock'],
+                  to_jsonb(greatest(0, coalesce((opts->i->>'stock')::int, 0) + delta)));
+      end if;
+    end loop;
+    update public.products
+       set length_options = opts,
+           stock = (select coalesce(sum(greatest(0, coalesce((e->>'stock')::int, 0))), 0) from jsonb_array_elements(opts) e)
+     where id = pid;
+  else
+    update public.products set stock = greatest(0, coalesce(stock, 0) + delta) where id = pid;
+  end if;
+end $$;
+revoke all on function public.adjust_stock(bigint, text, integer) from public, anon, authenticated;
+
 create or replace function public.price_order_item()
 returns trigger language plpgsql security definer set search_path = public as $$
-declare p record;
+declare p record; opt jsonb; avail int; unit numeric;
 begin
-  select name, price into p from public.products where id = new.product_id;
-  if found then
-    new.unit_price := p.price;
-    new.product_name := coalesce(new.product_name, p.name);
+  if new.quantity is null or new.quantity < 1 then raise exception 'Quantity must be at least 1'; end if;
+  select id, name, price, stock, length_options into p from public.products where id = new.product_id for update;
+  if not found then
+    raise exception '% is no longer available. Please remove it from your cart.', coalesce(new.product_name, 'An item');
   end if;
+  if jsonb_array_length(coalesce(p.length_options, '[]')) > 0 then
+    select e into opt from jsonb_array_elements(p.length_options) e where e->>'length' = new.length limit 1;
+    if opt is null then
+      raise exception '% in % is no longer available. Please remove it from your cart.', p.name, coalesce(new.length, 'that size');
+    end if;
+    unit  := coalesce((opt->>'price')::numeric, p.price);
+    avail := coalesce((opt->>'stock')::int, 0);
+  else
+    unit  := p.price;
+    avail := coalesce(p.stock, 0);
+  end if;
+  if new.quantity > avail then
+    if avail <= 0 then
+      raise exception '% (%) just sold out. Please remove it from your cart.', p.name, coalesce(new.length, 'one size');
+    end if;
+    raise exception 'Only % left of % (%). Please lower the quantity in your cart.', avail, p.name, coalesce(new.length, 'one size');
+  end if;
+  new.unit_price   := unit;
+  new.product_name := coalesce(new.product_name, p.name);
+  perform public.adjust_stock(p.id, new.length, -new.quantity);
   return new;
 end $$;
 drop trigger if exists order_items_price on public.order_items;
@@ -145,6 +195,58 @@ end $$;
 drop trigger if exists order_items_total on public.order_items;
 create trigger order_items_total after insert on public.order_items
   for each row execute function public.recalc_order_total();
+
+-- Cancelled → stock goes back. Un-cancelled (e.g. a late payment) → taken again.
+create or replace function public.order_stock_on_status()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare it record; d int;
+begin
+  if new.status = old.status then return null; end if;
+  if new.status = 'Cancelled' then d := 1;
+  elsif old.status = 'Cancelled' then d := -1;
+  else return null; end if;
+  for it in select product_id, length, quantity from public.order_items where order_id = new.id and product_id is not null loop
+    perform public.adjust_stock(it.product_id, it.length, d * it.quantity);
+  end loop;
+  return null;
+end $$;
+drop trigger if exists orders_stock_status on public.orders;
+create trigger orders_stock_status after update of status on public.orders
+  for each row execute function public.order_stock_on_status();
+
+-- Checkout in one step: the order and its items are saved together, or not
+-- at all (e.g. if something sold out a moment ago).
+create or replace function public.place_order(p_items jsonb, p_delivery jsonb, p_state text,
+                                              p_fee numeric, p_method text, p_ref text)
+returns json language plpgsql security definer set search_path = public as $$
+declare new_id uuid; tot numeric; it jsonb;
+begin
+  if auth.uid() is null then raise exception 'Please sign in to place an order.'; end if;
+  if jsonb_array_length(coalesce(p_items, '[]')) = 0 then raise exception 'Your cart is empty.'; end if;
+  if p_method not in ('Paystack Card', 'Bank Transfer – Access Bank') then raise exception 'Unknown payment method'; end if;
+  insert into public.orders (user_id, status, total_amount, payment_method, payment_ref, delivery_state, delivery_address, delivery_fee)
+  values (auth.uid(), 'Pending', 0, p_method, p_ref, p_state, p_delivery, coalesce(p_fee, 0))
+  returning id into new_id;
+  for it in select * from jsonb_array_elements(p_items) loop
+    insert into public.order_items (order_id, product_id, product_name, length, color, quantity, unit_price)
+    values (new_id, (it->>'product_id')::int, it->>'product_name', it->>'length', it->>'color',
+            coalesce((it->>'quantity')::int, 1), 0);
+  end loop;
+  select total_amount into tot from public.orders where id = new_id;
+  return json_build_object('id', new_id, 'total', tot);
+end $$;
+revoke all on function public.place_order(jsonb, jsonb, text, numeric, text, text) from public, anon;
+grant execute on function public.place_order(jsonb, jsonb, text, numeric, text, text) to authenticated;
+
+-- Card checkouts that were never paid hold stock; after 2 hours they're
+-- cancelled so the stock comes back. The shop calls this when it loads.
+create or replace function public.release_stale_orders()
+returns void language sql security definer set search_path = public as $$
+  update public.orders set status = 'Cancelled', updated_at = now()
+   where status = 'Pending' and payment_method = 'Paystack Card'
+     and created_at < now() - interval '2 hours';
+$$;
+grant execute on function public.release_stale_orders() to anon, authenticated;
 
 
 -- ── SITE CONTENT (hair-care text, edited in the admin dashboard) ──
