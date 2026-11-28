@@ -1,10 +1,11 @@
 // Sends order emails.
 //  - The shop calls { order_id, event: 'placed' } after a bank-transfer order.
-//  - The admin dashboard calls 'paid' | 'shipped' | 'delivered' when the stage changes.
+//  - The admin dashboard calls 'paid' | 'shipped' | 'delivered' when the stage changes,
+//    and 'fee' when it sets the delivery fee (paid to the rider on arrival).
 import { cors, json, caller, isAdmin, getOrder } from '../_shared/util.ts';
 import { orderEmails } from '../_shared/email.ts';
 
-const EVENTS = ['placed', 'paid', 'shipped', 'delivered'] as const;
+const EVENTS = ['placed', 'paid', 'fee', 'shipped', 'delivered'] as const;
 type Ev = typeof EVENTS[number];
 
 Deno.serve(async req => {

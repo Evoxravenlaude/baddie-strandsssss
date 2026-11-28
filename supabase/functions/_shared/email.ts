@@ -68,14 +68,19 @@ function layout(title: string, intro: string, o: Order, extra = '') {
       ${extra}
       <p style="font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:18px 0 6px">Order ${shortId(o.id)}</p>
       <table style="width:100%;border-collapse:collapse;font-size:14px">${rows}
-        ${o.delivery_fee ? `<tr><td style="padding:8px 0">Delivery — ${esc(o.delivery_state)}</td><td style="padding:8px 0;text-align:right">${naira(o.delivery_fee)}</td></tr>` : ''}
-        <tr><td style="padding:12px 0;font-family:Georgia,serif;font-size:18px">Total</td><td style="padding:12px 0;text-align:right;font-family:Georgia,serif;font-size:18px;color:#d6006a">${naira(o.total_amount)}</td></tr>
+        <tr><td style="padding:12px 0;font-family:Georgia,serif;font-size:18px">Total for your hair</td><td style="padding:12px 0;text-align:right;font-family:Georgia,serif;font-size:18px;color:#d6006a">${naira(o.total_amount)}</td></tr>
       </table>
+      ${deliveryBox(o)}
       <p style="font-size:13px;line-height:1.5;margin:14px 0 0"><b>Delivering to:</b> ${esc(a.name)}, ${esc(a.address)}, ${esc(a.city)}, ${esc(a.state ?? o.delivery_state)} · ${esc(a.phone)}</p>
     </div>
     <p style="color:#ffd3e4;font-size:13px;line-height:1.6;margin:18px 4px">Questions? Reply to this email or chat with us on <a style="color:#ff3385" href="https://wa.me/${WHATSAPP}">WhatsApp</a>.<br><a style="color:#ff3385" href="${SHOP}">${SHOP.replace(/^https?:\/\//, '')}</a></p>
   </div></body></html>`;
 }
+
+// Delivery is paid to the rider on arrival; the admin sets the fee per order.
+const deliveryBox = (o: Order) => o.delivery_fee
+  ? `<p style="font-size:14px;line-height:1.5;margin:10px 0 0;padding:12px 14px;border:1px solid #f3c6d8;border-radius:12px"><b>Delivery to ${esc(o.delivery_state)}: ${naira(o.delivery_fee)}</b><br>Please pay this to the rider when your order arrives.</p>`
+  : `<p style="font-size:13px;line-height:1.5;margin:10px 0 0;color:#5a3a46">Delivery is paid to the rider on arrival. We’ll confirm the fee for your address shortly.</p>`;
 
 const bankBox = (o: Order) => {
   const acct = env('BANK_ACCOUNT'), name = env('BANK_ACCOUNT_NAME', 'Baddie Strands'), bank = env('BANK_NAME', 'Access Bank');
@@ -86,7 +91,7 @@ const bankBox = (o: Order) => {
 };
 
 /** Sends the right emails for an order event. */
-export async function orderEmails(o: Order, event: 'placed' | 'paid' | 'shipped' | 'delivered') {
+export async function orderEmails(o: Order, event: 'placed' | 'paid' | 'fee' | 'shipped' | 'delivered') {
   const a = address(o), first = (a.name ?? '').split(' ')[0] || 'queen';
   const to = a.email ?? '';
   const adminView = env('ADMIN_URL') ? `<p style="margin:0 0 14px"><a href="${env('ADMIN_URL')}#orders" style="color:#d6006a">Open the dashboard →</a></p>` : '';
@@ -98,6 +103,7 @@ export async function orderEmails(o: Order, event: 'placed' | 'paid' | 'shipped'
     await sendEmail(to, `Payment confirmed — order ${shortId(o.id)}`, layout(`It’s yours, ${first}.`, 'Payment confirmed. We’re grooming and boxing your order now and will message you when it’s on its way.', o));
     await sendEmail(ADMIN_EMAIL, `Paid order ${shortId(o.id)} — ${naira(o.total_amount)}`, layout('Paid order to send', `${esc(a.name)}’s payment is confirmed. Time to pack it.`, o, adminView));
   }
+  if (event === 'fee') await sendEmail(to, `Delivery fee for order ${shortId(o.id)}`, layout('Your delivery fee', `Hi ${esc(first)}, delivery to your address is <b>${naira(o.delivery_fee ?? 0)}</b>. You pay this to the rider when your order arrives. Nothing else to pay online.`, o));
   if (event === 'shipped') await sendEmail(to, `Your order is on its way — ${shortId(o.id)}`, layout('On its way', `Good news, ${esc(first)} — your order is with the rider. We’ll keep you posted on WhatsApp.`, o));
   if (event === 'delivered') await sendEmail(to, `Delivered — ${shortId(o.id)}`, layout('Delivered', `Your order has arrived. Enjoy it, ${esc(first)} — and tag us when you slay.`, o));
 }
