@@ -37,6 +37,11 @@ const api = {
     const { data, error } = await sb.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }).limit(500);
     if (error) throw error; return data;
   },
+  async setFee(id, fee) {
+    if (DEMO) { D.orders.find(o => o.id === id).delivery_fee = fee; return; }
+    const { error } = await sb.from('orders').update({ delivery_fee: fee, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) throw error;
+  },
   async setStatus(id, status) {
     if (DEMO) { const o = D.orders.find(o => o.id === id); o.status = status; return; }
     const { error } = await sb.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
@@ -107,7 +112,7 @@ function sampleData() {
     const fee = DELIVERY_FEES[state] ?? 3500;
     return {
       id: `${n}a7c${n}e2-0000-4000-8000-00000000000${n}`, created_at: new Date(now - hoursAgo * h).toISOString(), status,
-      total_amount: order_items.reduce((s, i) => s + i.unit_price * i.quantity, 0) + fee,
+      total_amount: order_items.reduce((s, i) => s + i.unit_price * i.quantity, 0),
       payment_method: method, payment_ref: method.includes('Transfer') ? `BS-TRF-${n}` : `BS-${n}9921`,
       delivery_state: state, delivery_fee: fee, order_items,
       delivery_address: { name, phone, email: name.split(' ')[0].toLowerCase() + '@example.com', address: `${n * 7} Sample Street`, city, state, notes: n === 2 ? 'Call on arrival' : '' },
@@ -313,8 +318,23 @@ function openOrder(id) {
       <div class="kv">${esc(a.name || '')}<br><span>${esc(a.phone || '')} · ${esc(a.email || '')}</span></div>
       <div class="contact-btns">${phone ? `<a class="btn pink small" href="${wa}" target="_blank" rel="noopener">WhatsApp</a><a class="btn oval small" href="tel:${esc(a.phone)}">Call</a>` : ''}${a.email ? `<a class="btn oval small" href="mailto:${esc(a.email)}">Email</a>` : ''}</div></div>
     <div class="od-sec"><h3>Deliver to</h3><div class="kv">${esc(a.address || '')}<br>${esc(a.city || '')}, ${esc(a.state || o.delivery_state || '')}${a.notes ? `<br><span>Note: ${esc(a.notes)}</span>` : ''}</div></div>
-    <div class="od-sec items"><h3>Items</h3>${items || '<p class="muted">No items recorded.</p>'}${o.delivery_fee ? `<div class="it"><div>Delivery — ${esc(o.delivery_state || '')}</div><div>${fmt(o.delivery_fee)}</div></div>` : ''}<div class="tot"><span>${o.status === 'Pending' ? 'Total due' : 'Total paid'}</span><b>${fmt(o.total_amount)}</b></div></div>
+    <div class="od-sec items"><h3>Items</h3>${items || '<p class="muted">No items recorded.</p>'}<div class="tot"><span>${o.status === 'Pending' ? 'Total due online' : 'Paid online'}</span><b>${fmt(o.total_amount)}</b></div></div>
+    <div class="od-sec"><h3>Delivery fee <span class="hint">paid to the rider on arrival</span></h3>
+      <div class="fee-row"><input class="input" id="od-fee" inputmode="numeric" placeholder="e.g. 3500" value="${o.delivery_fee ? esc(String(Math.round(o.delivery_fee))) : ''}" aria-label="Delivery fee in naira">
+        <button class="btn pink small" id="od-fee-save">${o.delivery_fee ? 'Update &amp; tell customer' : 'Save &amp; tell customer'}</button></div>
+      <p class="muted small">${o.delivery_fee ? `Customer was told ${fmt(o.delivery_fee)} for ${esc(o.delivery_state || 'their address')}.` : 'Not set yet. The customer is emailed the amount when you save.'}</p></div>
     <div class="od-sec"><h3>Payment</h3><div class="kv">${esc(o.payment_method || '—')}<br><span>Reference: ${esc(o.payment_ref || '—')}</span></div></div>`;
+  $('#od-fee-save').addEventListener('click', async () => {
+    const raw = $('#od-fee').value.replace(/[^\d]/g, '');
+    if (!raw) { toast('Type the delivery fee in naira, e.g. 3500.'); $('#od-fee').focus(); return; }
+    const fee = parseInt(raw, 10);
+    if (fee === Math.round(o.delivery_fee || 0)) { toast('That’s already the fee.'); return; }
+    try {
+      await api.setFee(o.id, fee); o.delivery_fee = fee; openOrder(o.id);
+      api.notify(o.id, 'fee');
+      toast(`Delivery fee set to ${fmt(fee)}.${DEMO ? '' : ' Customer emailed.'}`);
+    } catch { toast('Couldn’t save the fee. Try again.'); }
+  });
   $$('#od-body [data-set]').forEach(b => b.addEventListener('click', async () => {
     const st = b.dataset.set; if (st === o.status) return;
     const was = o.status;
@@ -329,8 +349,8 @@ function openOrder(id) {
   openDrawer('#order-drawer');
 }
 function exportOrders() {
-  const rows = [['Order', 'Date', 'Customer', 'Phone', 'Email', 'Address', 'City', 'State', 'Items', 'Total', 'Payment', 'Status']];
-  S.orders.forEach(o => { const a = addr(o); rows.push([shortId(o.id), dayTime(o.created_at), a.name, a.phone, a.email, a.address, a.city, o.delivery_state, (o.order_items || []).map(i => `${i.product_name || i.product_id} ${i.length || ''} x${i.quantity}`).join('; '), o.total_amount, o.payment_method, STATUS[o.status]?.label || o.status]); });
+  const rows = [['Order', 'Date', 'Customer', 'Phone', 'Email', 'Address', 'City', 'State', 'Items', 'Total', 'Delivery fee (rider)', 'Payment', 'Status']];
+  S.orders.forEach(o => { const a = addr(o); rows.push([shortId(o.id), dayTime(o.created_at), a.name, a.phone, a.email, a.address, a.city, o.delivery_state, (o.order_items || []).map(i => `${i.product_name || i.product_id} ${i.length || ''} x${i.quantity}`).join('; '), o.total_amount, o.delivery_fee || '', o.payment_method, STATUS[o.status]?.label || o.status]); });
   download('orders.csv', rows);
 }
 function download(name, rows) {

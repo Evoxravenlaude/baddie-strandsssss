@@ -249,3 +249,7 @@ input:focus-visible+.switch{outline:2px solid var(--pink);outline-offset:2px}
   .s-f small{display:block;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
   .s-row .s-f:nth-child(3){grid-column:1}.s-row .s-f:nth-child(4){grid-column:2}
 }
+
+/* delivery fee per order */
+.od-sec h3 .hint{font-family:inherit;font-size:.72rem;color:var(--dim);font-weight:400;margin-left:6px;text-transform:none;letter-spacing:0}
+.fee-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:6px}
