@@ -595,6 +595,9 @@ function addToCart(p, qty, length, color) {
 function saveCart() { store.set('bs_cart', STATE.cart); updateCartUI(); }
 /* Keep the cart honest: latest prices, never more than what's in stock,
    and items that are gone are taken out (with a note). */
+/* a real network failure vs. an error from the shop's server */
+const offline = e => !navigator.onLine || (e instanceof TypeError && /fetch|network|load/i.test(e.message || ''));
+const shortErr = e => String(e?.message || e || 'unknown error').replace(/\s+/g, ' ').slice(0, 120);
 function syncCart() {
   if (!PRODUCTS.length && LIVE) return;
   const notes = [];
@@ -922,7 +925,7 @@ async function payCard() {
     console.error('[BS] card error', err);
     unbusy('Pay now');
     if (err.stock) { status('#pay-status', err.message, 'err'); refreshStock(); return; }
-    status('#pay-status', 'Couldn’t start the payment. Check your connection, or pay by bank transfer.', 'err');
+    status('#pay-status', offline(err) ? 'Couldn’t reach the shop. Check your connection, or pay by bank transfer.' : `Couldn’t start the payment (${shortErr(err)}). Please message us on WhatsApp.`, 'err');
   }
 }
 async function verifyCard(o, reference) {
@@ -957,6 +960,6 @@ async function payTransfer() {
     console.error('[BS] order error', err);
     unbusy('Try again');
     if (err.stock) { status('#pay-status', err.message, 'err'); refreshStock(); return; }
-    status('#pay-status', 'Something went wrong placing your order. Try again or message us on WhatsApp.', 'err');
+    status('#pay-status', offline(err) ? 'Couldn’t reach the shop. Check your connection and try again.' : `We couldn’t place your order (${shortErr(err)}). Please message us on WhatsApp.`, 'err');
   }
 }
