@@ -19,8 +19,10 @@ export async function confirmPayment(reference: string, orderIdHint?: string): P
   const o = await getOrder(orderId);
   if (!o) return { paid: false, reason: 'order not found' };
 
-  // already confirmed (e.g. webhook arrived first)
-  if (o.status !== 'Pending') return { paid: ['Processing', 'Shipped', 'Delivered'].includes(o.status) };
+  // already confirmed (e.g. webhook arrived first). A 'Cancelled' order can
+  // still be paid: unpaid card checkouts are auto-cancelled after 2 hours to
+  // free their stock, and a late payment brings the order back.
+  if (o.status !== 'Pending' && o.status !== 'Cancelled') return { paid: ['Processing', 'Shipped', 'Delivered'].includes(o.status) };
 
   const expected = Math.round(Number(o.total_amount) * 100);
   if (tx.currency !== 'NGN' || Number(tx.amount) < expected) {
@@ -30,7 +32,7 @@ export async function confirmPayment(reference: string, orderIdHint?: string): P
 
   const { data, error } = await db().from('orders')
     .update({ status: 'Processing', payment_ref: reference, payment_method: 'Paystack Card', updated_at: new Date().toISOString() })
-    .eq('id', orderId).eq('status', 'Pending').select('id');
+    .eq('id', orderId).in('status', ['Pending', 'Cancelled']).select('id');
   if (error) { console.error(error); return { paid: false, reason: 'update failed' }; }
   if (data?.length) {
     const fresh = await getOrder(orderId);
