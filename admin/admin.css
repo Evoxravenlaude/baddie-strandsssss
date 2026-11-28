@@ -226,3 +226,26 @@ input:focus-visible+.switch{outline:2px solid var(--pink);outline-offset:2px}
 .hc-sec-head .input{max-width:280px}
 .hc-add{margin-top:12px}
 @media (max-width:520px){.hc-item{grid-template-columns:1fr}.hc-item .n{padding:0}.hc-tools{flex-direction:row}}
+
+/* sizes, prices & stock */
+.sizes .lab{font-size:.8rem;color:var(--dim);display:block;margin-bottom:8px}
+.sizes .hint{display:block;margin-top:2px}
+.s-head,.s-row{display:grid;grid-template-columns:1.1fr 1.3fr 1.2fr .9fr 36px;gap:8px;align-items:center}
+.s-head{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.s-row{margin-bottom:8px}
+.s-row .input{min-width:0;padding-left:10px;padding-right:10px}
+.s-row .x{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);color:var(--dim)}
+.s-row.zero .s-stock{border-color:var(--pink,#ff3385)}
+@media (max-width:520px){
+  .s-head{display:none}
+  .s-row{grid-template-columns:1fr 1fr 36px;padding:10px;border:1px solid var(--line);border-radius:14px}
+  
+  .s-row .x{grid-row:1;grid-column:3}
+  .s-row .input::placeholder{opacity:.8}
+}
+.s-f{display:block;min-width:0;margin:0}
+.s-f small{display:none}
+@media (max-width:520px){
+  .s-f small{display:block;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  .s-row .s-f:nth-child(3){grid-column:1}.s-row .s-f:nth-child(4){grid-column:2}
+}

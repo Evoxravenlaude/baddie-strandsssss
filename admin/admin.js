@@ -354,17 +354,66 @@ function renderProducts() {
   $('#products-grid').innerHTML = list.map(p => `
     <div class="p-card${p.visible ? '' : ' off'}">
       <div class="p-img" data-edit="${p.id}">${p.badge ? `<span class="p-badge">${p.badge === 'hot' ? 'Bestseller' : 'New in'}</span>` : ''}${p.image_url ? `<img src="${esc(p.image_url)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('img'),{src:'logo-pink.png',className:'ph',alt:''}))">` : '<img src="logo-pink.png" class="ph" alt="">'}</div>
-      <div class="p-info" data-edit="${p.id}"><b>${esc(p.name)}</b><span>${fmt(p.price)}${p.old_price ? ` · was ${fmt(p.old_price)}` : ''}</span><span>${(p.stock ?? 0) > 0 ? `${p.stock} in stock` : 'Sold out'}</span></div>
+      <div class="p-info" data-edit="${p.id}"><b>${esc(p.name)}</b><span>${listPrice(p)}</span><span>${stockLine(p)}</span></div>
       <div class="p-foot"><label class="mini-toggle"><input type="checkbox" data-vis="${p.id}" ${p.visible ? 'checked' : ''}><span class="switch"></span>On shop</label><button class="link" data-edit="${p.id}">Edit</button></div>
     </div>`).join('') || (S.products.length ? '<p class="empty">No products match.</p>' : '');
 }
 
+function listPrice(p) {
+  const o = Array.isArray(p.length_options) ? p.length_options : [];
+  const prices = o.map(x => +x.price).filter(Boolean);
+  if (prices.length > 1 && new Set(prices).size > 1) return `${fmt(Math.min(...prices))} – ${fmt(Math.max(...prices))}`;
+  return fmt(p.price) + (p.old_price ? ` · was ${fmt(p.old_price)}` : '');
+}
+function stockLine(p) {
+  const o = Array.isArray(p.length_options) ? p.length_options : [];
+  if ((p.stock ?? 0) <= 0) return 'Sold out';
+  const out = o.filter(x => (+x.stock || 0) <= 0).map(x => x.length);
+  return `${p.stock} in stock` + (out.length ? ` · ${out.join(', ')} sold out` : '');
+}
 let EDIT = null, PHOTO = null;
+/* one row per length: its own price, optional "was" price and stock */
+function sizeRow(o = {}) {
+  const v = x => (x === null || x === undefined || x === '') ? '' : esc(String(x));
+  return `<div class="s-row">
+    <label class="s-f"><small>Length</small><input class="input s-len" value="${v(o.length)}" placeholder='e.g. 14"' aria-label="Length"></label>
+    <label class="s-f"><small>Price ₦</small><input class="input s-price" value="${v(o.price)}" inputmode="numeric" placeholder="85000" aria-label="Price in naira"></label>
+    <label class="s-f"><small>Was ₦</small><input class="input s-old" value="${v(o.old_price)}" inputmode="numeric" placeholder="Optional" aria-label="Was price (optional)"></label>
+    <label class="s-f"><small>In stock</small><input class="input s-stock" value="${v(o.stock)}" inputmode="numeric" placeholder="0" aria-label="How many in stock"></label>
+    <button type="button" class="x" aria-label="Remove this length">×</button>
+  </div>`;
+}
+function readSizes() {
+  const n0 = v => { const t = String(v).replace(/[^\d]/g, ''); return t === '' ? null : parseInt(t, 10); };
+  return $$('#pd-sizes .s-row').map(r => ({
+    length: r.querySelector('.s-len').value.trim(),
+    price: num(r.querySelector('.s-price').value),
+    old_price: num(r.querySelector('.s-old').value),
+    stock: n0(r.querySelector('.s-stock').value),
+    el: r,
+  })).filter(o => o.length || o.price || o.stock !== null);
+}
+function sizeSummary() {
+  const rows = readSizes();
+  $$('#pd-sizes .s-row').forEach(r => r.classList.toggle('zero', r.querySelector('.s-stock').value.trim() === '0'));
+  const total = rows.reduce((n, o) => n + (o.stock || 0), 0);
+  const prices = rows.map(o => o.price).filter(Boolean);
+  $('#pd-size-sum').textContent = rows.length
+    ? `${total} in stock in total${prices.length ? ` · from ${fmt(Math.min(...prices))}` : ''}. Lengths at 0 show as sold out.`
+    : '';
+}
 function colourRow(hex = '#1a1008', name = '') {
   return `<div class="c-row"><input type="color" value="${esc(hex)}" aria-label="Colour"><input class="input" value="${esc(name)}" placeholder="Colour name, e.g. Jet Black" aria-label="Colour name"><button type="button" class="x" aria-label="Remove colour">×</button></div>`;
 }
 function initProductForm() {
   $('#pd-add-color').addEventListener('click', () => $('#pd-colors').insertAdjacentHTML('beforeend', colourRow()));
+  $('#pd-add-size').addEventListener('click', () => {
+    const last = readSizes().pop();
+    $('#pd-sizes').insertAdjacentHTML('beforeend', sizeRow({ price: last?.price ?? '' }));
+    $('#pd-sizes .s-row:last-child .s-len').focus(); sizeSummary();
+  });
+  $('#pd-sizes').addEventListener('click', e => { if (e.target.closest('.x')) { e.target.closest('.s-row').remove(); sizeSummary(); } });
+  $('#pd-sizes').addEventListener('input', sizeSummary);
   $('#pd-colors').addEventListener('click', e => { if (e.target.closest('.x')) e.target.closest('.c-row').remove(); });
   $('#pd-file').addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
@@ -387,9 +436,14 @@ function openProduct(id) {
   $('#pd-title').textContent = EDIT ? 'Edit product' : 'Add product';
   $('#pd-photo').innerHTML = p.image_url ? `<img src="${esc(p.image_url)}" alt="" onerror="this.parentNode.innerHTML='<span>Photo not loading</span>'">` : '<span>No photo</span>';
   $('#pd-name').value = p.name; $('#pd-type').value = p.type || ''; $('#pd-category').value = p.category || 'wigs';
-  $('#pd-price').value = p.price || ''; $('#pd-old').value = p.old_price || ''; $('#pd-stock').value = p.stock ?? '';
   $('#pd-badge').value = p.badge || '';
-  $('#pd-lengths').value = (p.lengths || []).join(', ');
+  let sizes = Array.isArray(p.length_options) && p.length_options.length ? p.length_options : null;
+  if (!sizes) {   // older product: one price for every length
+    const ls = p.lengths?.length ? p.lengths : (EDIT ? ['Standard'] : ['']);
+    sizes = ls.map(l => ({ length: l, price: p.price || '', old_price: p.old_price || '', stock: ls.length === 1 ? (p.stock ?? '') : '' }));
+  }
+  $('#pd-sizes').innerHTML = sizes.map(sizeRow).join('');
+  sizeSummary();
   $('#pd-colors').innerHTML = (p.colors || []).map((c, i) => colourRow(c, (p.color_names || [])[i] || '')).join('');
   $('#pd-desc').value = p.description || ''; $('#pd-features').value = (p.features || []).join('\n');
   $('#pd-visible').checked = p.visible !== false;
@@ -401,20 +455,32 @@ const num = v => { const n = Number(String(v).replace(/[^\d.]/g, '')); return Nu
 async function saveProduct(e) {
   e.preventDefault();
   const st = $('#pd-status');
-  const name = $('#pd-name').value.trim(), price = num($('#pd-price').value);
+  const name = $('#pd-name').value.trim();
   if (!name) { st.textContent = 'Give the product a name.'; $('#pd-name').focus(); return; }
-  if (!price) { st.textContent = 'Add a price in Naira, e.g. 85000.'; $('#pd-price').focus(); return; }
+  const sizes = readSizes();
+  if (!sizes.length) { st.textContent = 'Add at least one length with its price and stock (use “One size” if it has no lengths).'; $('#pd-add-size').focus(); return; }
+  const seen = new Set();
+  for (const o of sizes) {
+    if (!o.length) { st.textContent = 'Every row needs a length, e.g. 14" (or “One size”).'; o.el.querySelector('.s-len').focus(); return; }
+    const k = o.length.toLowerCase();
+    if (seen.has(k)) { st.textContent = `${o.length} is listed twice.`; o.el.querySelector('.s-len').focus(); return; }
+    seen.add(k);
+    if (!o.price) { st.textContent = `Add a price for ${o.length}, e.g. 85000.`; o.el.querySelector('.s-price').focus(); return; }
+    if (o.stock === null) { st.textContent = `How many ${o.length} are in stock? Put 0 if sold out.`; o.el.querySelector('.s-stock').focus(); return; }
+  }
+  const opts = sizes.map(({ length, price, old_price, stock }) => ({ length, price, old_price: old_price && old_price > price ? old_price : null, stock }));
+  const cheapest = opts.reduce((a, b) => (b.price < a.price ? b : a));
+  const price = cheapest.price;
   const rows = $$('#pd-colors .c-row');
   const row = {
-    name, type: $('#pd-type').value.trim(), category: $('#pd-category').value, price, old_price: num($('#pd-old').value),
-    stock: num($('#pd-stock').value) ?? 0, badge: $('#pd-badge').value || null,
-    lengths: $('#pd-lengths').value.split(',').map(s => s.trim()).filter(Boolean),
+    name, type: $('#pd-type').value.trim(), category: $('#pd-category').value, price, old_price: cheapest.old_price,
+    stock: opts.reduce((n, o) => n + o.stock, 0), badge: $('#pd-badge').value || null,
+    lengths: opts.map(o => o.length), length_options: opts,
     colors: rows.map(r => r.querySelector('input[type=color]').value),
     color_names: rows.map(r => r.querySelector('.input').value.trim() || 'Colour'),
     description: $('#pd-desc').value.trim(), features: $('#pd-features').value.split('\n').map(s => s.trim()).filter(Boolean),
     visible: $('#pd-visible').checked,
   };
-  if (row.old_price && row.old_price <= price) row.old_price = null;
   const btn = $('#pd-save'); btn.disabled = true; btn.textContent = 'Saving…'; st.textContent = '';
   try {
     if (PHOTO) row.image_url = await api.uploadPhoto(PHOTO);

@@ -185,12 +185,15 @@
     <div class="grid2">
       <label>Kind of product<input class="input" id="pd-type" placeholder="e.g. Frontal wig"></label>
       <label>Section on shop<select class="input" id="pd-category"><option value="wigs">Wigs</option><option value="bundles">Bundles</option><option value="extensions">Extensions</option></select></label>
-      <label>Price (₦)<input class="input" id="pd-price" inputmode="numeric" required placeholder="85000"></label>
-      <label>Was (optional)<input class="input" id="pd-old" inputmode="numeric" placeholder="110000"></label>
-      <label>In stock<input class="input" id="pd-stock" inputmode="numeric" placeholder="10"></label>
       <label hidden>Label<select class="input" id="pd-badge"><option value="">None</option><option value="hot">Bestseller</option><option value="new">New in</option></select></label>
     </div>
-    <label>Lengths <span class="hint">separate with commas</span><input class="input" id="pd-lengths" placeholder='14", 16", 18", 20"'></label>
+    <div class="sizes">
+      <span class="lab">Sizes, prices &amp; stock <span class="hint">one row per length. Customers can’t buy more than “In stock”.</span></span>
+      <div class="s-head" aria-hidden="true"><span>Length</span><span>Price (₦)</span><span>Was (₦)</span><span>In stock</span><span></span></div>
+      <div id="pd-sizes"></div>
+      <button type="button" class="link" id="pd-add-size">+ Add length</button>
+      <p class="muted small" id="pd-size-sum"></p>
+    </div>
     <div class="colours">
       <span class="lab">Colours</span>
       <div id="pd-colors"></div>
